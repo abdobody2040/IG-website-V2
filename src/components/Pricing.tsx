@@ -286,11 +286,11 @@ export default function Pricing() {
           </p>
 
           {/* Region Tabs (US, UK, UAE, Oman) */}
-          <div className="flex justify-center">
-            <div className="inline-flex flex-wrap justify-center bg-white border border-gray-200 shadow-sm rounded-[20px] p-1 gap-1 max-w-full">
+          <div className="flex justify-center mb-8">
+            <div className="inline-flex flex-wrap justify-center bg-white border border-gray-200 shadow-sm rounded-[20px] p-1.5 gap-1.5 max-w-full">
               <button
                 onClick={() => setRegion('us')}
-                className={`flex items-center gap-1.5 px-4.5 py-2.5 rounded-[15px] text-sm font-semibold transition-all duration-200 ${
+                className={`flex items-center justify-center px-6 py-2.5 rounded-[15px] text-sm font-semibold transition-all duration-200 ${
                   region === 'us'
                     ? 'bg-[#2563EB] text-white shadow-md shadow-blue-500/20'
                     : 'text-slate-500 hover:text-slate-800 hover:bg-slate-50'
@@ -300,7 +300,7 @@ export default function Pricing() {
               </button>
               <button
                 onClick={() => setRegion('uk')}
-                className={`flex items-center gap-1.5 px-4.5 py-2.5 rounded-[15px] text-sm font-semibold transition-all duration-200 ${
+                className={`flex items-center justify-center px-6 py-2.5 rounded-[15px] text-sm font-semibold transition-all duration-200 ${
                   region === 'uk'
                     ? 'bg-[#2563EB] text-white shadow-md shadow-blue-500/20'
                     : 'text-slate-500 hover:text-slate-800 hover:bg-slate-50'
@@ -310,7 +310,7 @@ export default function Pricing() {
               </button>
               <button
                 onClick={() => setRegion('uae')}
-                className={`flex items-center gap-1.5 px-4.5 py-2.5 rounded-[15px] text-sm font-semibold transition-all duration-200 ${
+                className={`flex items-center justify-center px-6 py-2.5 rounded-[15px] text-sm font-semibold transition-all duration-200 ${
                   region === 'uae'
                     ? 'bg-[#2563EB] text-white shadow-md shadow-blue-500/20'
                     : 'text-slate-500 hover:text-slate-800 hover:bg-slate-50'
@@ -320,7 +320,7 @@ export default function Pricing() {
               </button>
               <button
                 onClick={() => setRegion('oman')}
-                className={`flex items-center gap-1.5 px-4.5 py-2.5 rounded-[15px] text-sm font-semibold transition-all duration-200 ${
+                className={`flex items-center justify-center px-6 py-2.5 rounded-[15px] text-sm font-semibold transition-all duration-200 ${
                   region === 'oman'
                     ? 'bg-[#2563EB] text-white shadow-md shadow-blue-500/20'
                     : 'text-slate-500 hover:text-slate-800 hover:bg-slate-50'
