@@ -423,6 +423,42 @@ const setupRoute = createRoute({
   component: lazyImport(() => import('./pages/SetupPage')),
 })
 
+const privacyPolicyRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/privacy-policy',
+  component: lazyImport(() => import('./pages/PrivacyPolicyPage')),
+})
+
+const termsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/terms-of-service',
+  component: lazyImport(() => import('./pages/TermsPage')),
+})
+
+const refundRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/refund-policy',
+  component: lazyImport(() => import('./pages/RefundPage')),
+})
+
+const disclaimerRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/legal-disclaimer',
+  component: lazyImport(() => import('./pages/DisclaimerPage')),
+})
+
+const accessibilityRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/accessibility',
+  component: lazyImport(() => import('./pages/AccessibilityPage')),
+})
+
+const kycAmlRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/kyc-aml',
+  component: lazyImport(() => import('./pages/KycAmlPage')),
+})
+
 // ── Route tree ─────────────────────────────────────────────────────────────
 
 const adminTree = adminLayoutRoute.addChildren([
@@ -479,6 +515,12 @@ const routeTree = rootRoute.addChildren([
   // Other
   contactRoute,
   setupRoute,
+  privacyPolicyRoute,
+  termsRoute,
+  refundRoute,
+  disclaimerRoute,
+  accessibilityRoute,
+  kycAmlRoute,
 ])
 
 export const router = createRouter({ routeTree })

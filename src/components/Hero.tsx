@@ -289,7 +289,7 @@ export default function Hero() {
               <img
                 src="/mascot.png"
                 alt="Instant Grow Mascot"
-                className="w-full h-auto select-none"
+                className="w-full h-auto select-none mix-blend-multiply"
                 onError={(e) => {
                   // fallback to a styled G if mascot image not found
                   e.currentTarget.style.display = 'none'

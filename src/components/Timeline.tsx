@@ -94,9 +94,9 @@ export default function Timeline() {
             transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
           >
             <motion.img
-              src="/mascot.png"
+              src="/mascot-clock.png"
               alt="Instant Grow Mascot"
-              className="w-full h-auto drop-shadow-xl"
+              className="w-full h-auto drop-shadow-xl mix-blend-multiply"
               animate={{ y: [-8, 6, -8] }}
               transition={{ duration: 5.5, repeat: Infinity, ease: 'easeInOut' }}
               onError={(e) => { e.currentTarget.style.display = 'none' }}

@@ -123,7 +123,7 @@ export default function HowItWorks() {
             <motion.img
               src="/mascot.png"
               alt="Instant Grow Mascot"
-              className="w-full h-auto drop-shadow-xl"
+              className="w-full h-auto drop-shadow-xl mix-blend-multiply"
               animate={{ y: [-8, 6, -8] }}
               transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}
               onError={(e) => { e.currentTarget.style.display = 'none' }}

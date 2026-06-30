@@ -4,7 +4,15 @@ export const PRICING_DATA = {
     premium: 349,
   },
   uk: {
-    basic: 379,
-    premium: 499,
+    basic: 149,
+    premium: 249,
+  },
+  uae: {
+    basic: 599,
+    premium: 1299,
+  },
+  oman: {
+    basic: 799,
+    premium: 1499,
   }
 } as const

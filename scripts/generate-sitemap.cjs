@@ -43,6 +43,12 @@ async function main() {
   add(`${SITE_URL}/`, '1.0', 'weekly')
   add(`${SITE_URL}/blog`, '0.8', 'weekly')
   add(`${SITE_URL}/contact`, '0.6', 'monthly')
+  add(`${SITE_URL}/privacy-policy`, '0.4', 'monthly')
+  add(`${SITE_URL}/terms-of-service`, '0.4', 'monthly')
+  add(`${SITE_URL}/refund-policy`, '0.4', 'monthly')
+  add(`${SITE_URL}/legal-disclaimer`, '0.4', 'monthly')
+  add(`${SITE_URL}/accessibility`, '0.4', 'monthly')
+  add(`${SITE_URL}/kyc-aml`, '0.4', 'monthly')
 
   blogs.forEach(b => add(`${SITE_URL}/blog/${b.slug}`, '0.7', 'monthly', b.updated?.split('T')[0]))
   seoPages.forEach(s => add(`${SITE_URL}/us-company/${s.slug}`, '0.9', 'monthly', s.updated?.split('T')[0]))
