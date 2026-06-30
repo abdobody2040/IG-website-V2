@@ -1,0 +1,306 @@
+@import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=Inter:wght@200;300;400;500;600;700;800;900&family=Cairo:wght@300;400;500;600;700;800;900&family=Noto+Sans+Arabic:wght@300;400;500;600;700;800;900&display=swap');
+
+/* ── Theme CSS Variables ──────────────────────────────────────────────────── */
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: 'Inter', 'Sora', -apple-system, 'Segoe UI', 'Roboto', sans-serif;
+    letter-spacing: 0;
+  }
+}
+
+/* ── Shared form input ────────────────────────────────────────────────────── */
+.input {
+  @apply w-full px-4 py-2.5 rounded-xl border border-slate-300 text-slate-900 text-sm bg-white;
+  @apply focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-500 transition-colors;
+}
+.input::placeholder {
+  @apply text-slate-400;
+}
+
+/* ── Force light mode on all order/form inputs ───────────────────────────── */
+/* Prevents dark mode color-scheme from making inputs appear dark */
+.force-light input,
+.force-light textarea,
+.force-light select {
+  background-color: #ffffff !important;
+  color: #1e293b !important;
+  color-scheme: light !important;
+}
+.force-light input::placeholder,
+.force-light textarea::placeholder {
+  color: #94a3b8 !important;
+}
+
+/* ── RTL / Arabic support ─────────────────────────────────────────────────── */
+[dir='rtl'] body,
+[lang='ar'] body {
+  font-family: 'Cairo', 'Noto Sans Arabic', 'Inter', sans-serif;
+}
+
+[dir='rtl'] {
+  text-align: right;
+}
+
+/* Flip horizontal decorative elements for RTL */
+[dir='rtl'] .rtl-flip {
+  transform: scaleX(-1);
+}
+
+/* Ensure proper spacing in RTL for flex gaps */
+[dir='rtl'] .hero-cta-row {
+  flex-direction: row-reverse;
+}
+
+/* ── App palette ──────────────────────────────────────────────────────────── */
+:root {
+  /* Instant Grow Brand: Dark Navy + Blue (#1a56ff) */
+  --background: 0 0% 100%;
+  --foreground: 225 52% 8%;
+  --card: 0 0% 100%;
+  --card-foreground: 225 52% 8%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 225 52% 8%;
+  --primary: 224 100% 55%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 225 52% 8%;
+  --secondary-foreground: 0 0% 100%;
+  --muted: 220 14% 96%;
+  --muted-foreground: 220 9% 46%;
+  --accent: 193 100% 42%;
+  --accent-foreground: 0 0% 100%;
+  --destructive: 0 84% 60%;
+  --destructive-foreground: 0 0% 100%;
+  --border: 220 13% 91%;
+  --input: 220 13% 91%;
+  --ring: 224 100% 55%;
+
+  --chart-1: 224 100% 55%;
+  --chart-2: 225 52% 8%;
+  --chart-3: 151 55% 35%;
+  --chart-4: 47 96% 53%;
+  --chart-5: 193 100% 42%;
+
+  --sidebar: 225 52% 8%;
+  --sidebar-foreground: 0 0% 100%;
+  --sidebar-primary: 224 100% 55%;
+  --sidebar-primary-foreground: 0 0% 100%;
+  --sidebar-accent: 225 30% 18%;
+  --sidebar-accent-foreground: 0 0% 100%;
+  --sidebar-border: 225 30% 18%;
+  --sidebar-ring: 224 100% 55%;
+
+  /* Fonts */
+  --radius: 0.625rem;
+}
+
+:root.dark {
+
+  --background: 225 52% 6%;
+  --foreground: 216 12% 84%;
+  --card: 225 40% 12%;
+  --card-foreground: 216 12% 84%;
+  --popover: 225 40% 12%;
+  --popover-foreground: 216 12% 84%;
+
+  --primary: 224 100% 60%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 225 30% 18%;
+  --secondary-foreground: 240 5% 65%;
+  --muted: 225 40% 12%;
+  --muted-foreground: 220 9% 46%;
+  --accent: 193 100% 50%;
+  --accent-foreground: 225 52% 8%;
+  --destructive: 0 84% 60%;
+  --destructive-foreground: 0 0% 100%;
+  --border: 225 30% 22%;
+  --input: 225 30% 22%;
+  --ring: 224 100% 60%;
+
+
+  --chart-1: 224 100% 60%;
+  --chart-2: 151 55% 55%;
+  --chart-3: 47 96% 65%;
+  --chart-4: 193 100% 50%;
+  --chart-5: 262 52% 65%;
+
+
+  --sidebar: 225 40% 12%;
+  --sidebar-foreground: 216 12% 84%;
+  --sidebar-primary: 224 100% 60%;
+  --sidebar-primary-foreground: 0 0% 100%;
+  --sidebar-accent: 225 30% 18%;
+  --sidebar-accent-foreground: 240 5% 65%;
+  --sidebar-border: 225 30% 22%;
+  --sidebar-ring: 224 100% 60%;
+}
+
+/* ── RTL / Arabic support ─────────────────────────────────────────────────── */
+html[dir="rtl"] body {
+  font-family: 'Cairo', 'Noto Sans Arabic', 'Inter', sans-serif;
+}
+
+html[dir="rtl"] h1,
+html[dir="rtl"] h2,
+html[dir="rtl"] h3,
+html[dir="rtl"] h4 {
+  font-family: 'Cairo', 'Noto Sans Arabic', sans-serif !important;
+}
+
+html[dir="ltr"] body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+
+@keyframes marquee-reverse {
+  from { transform: translateX(-50%); }
+  to   { transform: translateX(0); }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  33%      { transform: translateY(-20px) rotate(1deg); }
+  66%      { transform: translateY(-10px) rotate(-1deg); }
+}
+
+@keyframes pulse-glow {
+  0%, 100% { opacity: 0.4; transform: scale(1); }
+  50%      { opacity: 0.8; transform: scale(1.05); }
+}
+
+@keyframes spotlight {
+  0% { transform: translate(-50%, -50%) rotate(0deg); }
+  100% { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes border-glow {
+  0%, 100% { border-color: rgba(59, 130, 246, 0.2); }
+  50%      { border-color: rgba(59, 130, 246, 0.5); }
+}
+
+@keyframes count-up {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+html.lenis, html.lenis body {
+  height: auto;
+}
+
+.lenis.lenis-smooth {
+  scroll-behavior: auto;
+}
+
+.lenis.lenis-smooth [data-lenis-prevent] {
+  overscroll-behavior: contain;
+}
+
+/* Tilt card effect */
+.tilt-card {
+  transform-style: preserve-3d;
+  perspective: 800px;
+}
+
+.tilt-card-inner {
+  transition: transform 0.3s ease;
+}
+
+/* Spotlight card effect */
+.spotlight-card {
+  position: relative;
+  overflow: hidden;
+}
+
+.spotlight-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(600px circle at var(--mouse-x, 50%) var(--mouse-y, 50%), rgba(59, 130, 246, 0.06), transparent 40%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.spotlight-card:hover::before {
+  opacity: 1;
+}
+
+/* Border glow card */
+.border-glow-card {
+  position: relative;
+}
+
+.border-glow-card::after {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  background: linear-gradient(135deg, rgba(59,130,246,0), rgba(59,130,246,0.3), rgba(6,182,212,0.3), rgba(59,130,246,0));
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  pointer-events: none;
+  z-index: -1;
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+  padding: 1px;
+}
+
+.border-glow-card:hover::after {
+  opacity: 1;
+}
+
+/* Glassmorphism base */
+.glass {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.glass-dark {
+  background: rgba(10, 10, 15, 0.6);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* Scroll progress indicator */
+.scroll-progress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  z-index: 100;
+  background: linear-gradient(90deg, #3b82f6, #06b6d4);
+  transform-origin: 0 50%;
+  transform: scaleX(0);
+}

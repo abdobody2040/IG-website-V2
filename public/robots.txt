@@ -1,0 +1,18 @@
+User-agent: *
+Allow: /
+Allow: /blog
+Allow: /blog/*
+Allow: /us-company
+Allow: /us-company/*
+Allow: /contact
+
+Disallow: /admin/
+Disallow: /admin/*
+Disallow: /client/
+Disallow: /client/*
+Disallow: /auth/
+Disallow: /auth/*
+Disallow: /order/
+Disallow: /order/*
+
+Sitemap: https://www.instantgrow-llc.com/sitemap.xml

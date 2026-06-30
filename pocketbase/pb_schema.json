@@ -1,0 +1,1055 @@
+[
+  {
+    "id": "_pb_users_auth_",
+    "name": "users",
+    "type": "auth",
+    "system": false,
+    "schema": [
+      {
+        "name": "display_name",
+        "type": "text",
+        "required": false,
+        "options": {
+          "min": null,
+          "max": null,
+          "pattern": ""
+        }
+      },
+      {
+        "name": "role",
+        "type": "select",
+        "required": true,
+        "options": {
+          "maxSelect": 1,
+          "values": [
+            "client",
+            "admin"
+          ]
+        }
+      },
+      {
+        "name": "phone",
+        "type": "text",
+        "required": false,
+        "options": {
+          "min": null,
+          "max": null,
+          "pattern": ""
+        }
+      },
+      {
+        "name": "country",
+        "type": "text",
+        "required": false,
+        "options": {
+          "min": null,
+          "max": null,
+          "pattern": ""
+        }
+      },
+      {
+        "name": "address",
+        "type": "text",
+        "required": false,
+        "options": {
+          "min": null,
+          "max": null,
+          "pattern": ""
+        }
+      },
+      {
+        "name": "metadata",
+        "type": "json",
+        "required": false,
+        "options": {
+          "maxSize": 2000000
+        }
+      },
+      {
+        "name": "last_sign_in",
+        "type": "date",
+        "required": false,
+        "options": {}
+      },
+      {
+        "name": "name",
+        "type": "text",
+        "required": false,
+        "options": {
+          "min": null,
+          "max": null,
+          "pattern": ""
+        }
+      },
+      {
+        "name": "avatar",
+        "type": "file",
+        "required": false,
+        "options": {
+          "maxSelect": 1,
+          "maxSize": 5242880,
+          "mimeTypes": [
+            "image/jpeg",
+            "image/png",
+            "image/svg+xml",
+            "image/gif",
+            "image/webp"
+          ],
+          "thumbs": [],
+          "protected": false
+        }
+      }
+    ],
+    "listRule": "id = @request.auth.id || @request.auth.role = 'admin'",
+    "viewRule": "id = @request.auth.id || @request.auth.role = 'admin'",
+    "createRule": "",
+    "updateRule": "id = @request.auth.id || @request.auth.role = 'admin'",
+    "deleteRule": "@request.auth.role = 'admin'",
+    "options": {
+      "allowEmailAuth": true,
+      "allowOAuth2Auth": true,
+      "allowUsernameAuth": false,
+      "requireEmail": true
+    }
+  },
+  {
+    "name": "orders",
+    "type": "base",
+    "system": false,
+    "schema": [
+      {
+        "name": "user",
+        "type": "relation",
+        "required": true,
+        "options": {
+          "collectionId": "_pb_users_auth_",
+          "cascadeDelete": true,
+          "maxSelect": 1
+        }
+      },
+      {
+        "name": "order_number",
+        "type": "text",
+        "required": true,
+        "options": {
+          "min": null,
+          "max": null,
+          "pattern": ""
+        }
+      },
+      {
+        "name": "package_name",
+        "type": "text",
+        "required": true,
+        "options": {}
+      },
+      {
+        "name": "company_name",
+        "type": "text",
+        "required": true,
+        "options": {}
+      },
+      {
+        "name": "company_state",
+        "type": "text",
+        "required": true,
+        "options": {}
+      },
+      {
+        "name": "company_type",
+        "type": "text",
+        "required": true,
+        "options": {}
+      },
+      {
+        "name": "status",
+        "type": "select",
+        "required": true,
+        "options": {
+          "maxSelect": 1,
+          "values": [
+            "pending",
+            "in_review",
+            "processing",
+            "documents_filed",
+            "ein_processing",
+            "completed",
+            "cancelled",
+            "in_progress"
+          ]
+        }
+      },
+      {
+        "name": "amount",
+        "type": "number",
+        "required": true,
+        "options": {}
+      },
+      {
+        "name": "currency",
+        "type": "text",
+        "required": true,
+        "options": {}
+      },
+      {
+        "name": "notes",
+        "type": "text",
+        "required": false,
+        "options": {}
+      },
+      {
+        "name": "customer_name",
+        "type": "text",
+        "required": false,
+        "options": {}
+      },
+      {
+        "name": "customer_email",
+        "type": "text",
+        "required": false,
+        "options": {}
+      },
+      {
+        "name": "customer_phone",
+        "type": "text",
+        "required": false,
+        "options": {}
+      },
+      {
+        "name": "customer_country",
+        "type": "text",
+        "required": false,
+        "options": {}
+      },
+      {
+        "name": "customer_address",
+        "type": "text",
+        "required": false,
+        "options": {}
+      },
+      {
+        "name": "business_activity",
+        "type": "text",
+        "required": false,
+        "options": {}
+      },
+      {
+        "name": "stripe_session_id",
+        "type": "text",
+        "required": false,
+        "options": {}
+      }
+    ],
+    "listRule": "user = @request.auth.id || @request.auth.role = 'admin'",
+    "viewRule": "user = @request.auth.id || @request.auth.role = 'admin'",
+    "createRule": "@request.auth.id != ''",
+    "updateRule": "@request.auth.role = 'admin'",
+    "deleteRule": "@request.auth.role = 'admin'",
+    "id": "orders_col_id12"
+  },
+  {
+    "name": "companies",
+    "type": "base",
+    "system": false,
+    "schema": [
+      {
+        "name": "user",
+        "type": "relation",
+        "required": true,
+        "options": {
+          "collectionId": "_pb_users_auth_",
+          "cascadeDelete": true,
+          "maxSelect": 1
+        }
+      },
+      {
+        "name": "order",
+        "type": "relation",
+        "required": false,
+        "options": {
+          "collectionId": "orders_col_id12",
+          "maxSelect": 1
+        }
+      },
+      {
+        "name": "company_name",
+        "type": "text",
+        "required": true,
+        "options": {}
+      },
+      {
+        "name": "company_type",
+        "type": "text",
+        "required": true,
+        "options": {}
+      },
+      {
+        "name": "state",
+        "type": "text",
+        "required": true,
+        "options": {}
+      },
+      {
+        "name": "ein_number",
+        "type": "text",
+        "required": false,
+        "options": {}
+      },
+      {
+        "name": "formation_date",
+        "type": "date",
+        "required": false,
+        "options": {}
+      },
+      {
+        "name": "registered_agent",
+        "type": "text",
+        "required": false,
+        "options": {}
+      },
+      {
+        "name": "renewal_due_date",
+        "type": "date",
+        "required": false,
+        "options": {}
+      },
+      {
+        "name": "annual_report_due_date",
+        "type": "date",
+        "required": false,
+        "options": {}
+      },
+      {
+        "name": "tax_filing_due_date",
+        "type": "date",
+        "required": false,
+        "options": {}
+      },
+      {
+        "name": "registered_agent_renewal_date",
+        "type": "date",
+        "required": false,
+        "options": {}
+      },
+      {
+        "name": "compliance_status",
+        "type": "text",
+        "required": false,
+        "options": {}
+      },
+      {
+        "name": "compliance_notes",
+        "type": "text",
+        "required": false,
+        "options": {}
+      },
+      {
+        "name": "status",
+        "type": "text",
+        "required": false,
+        "options": {}
+      }
+    ],
+    "listRule": "user = @request.auth.id || @request.auth.role = 'admin'",
+    "viewRule": "user = @request.auth.id || @request.auth.role = 'admin'",
+    "createRule": "@request.auth.role = 'admin'",
+    "updateRule": "@request.auth.role = 'admin'",
+    "deleteRule": "@request.auth.role = 'admin'",
+    "id": "companies_col_i"
+  },
+  {
+    "name": "documents",
+    "type": "base",
+    "system": false,
+    "schema": [
+      {
+        "name": "user",
+        "type": "relation",
+        "required": true,
+        "options": {
+          "collectionId": "_pb_users_auth_",
+          "cascadeDelete": true,
+          "maxSelect": 1
+        }
+      },
+      {
+        "name": "order",
+        "type": "relation",
+        "required": false,
+        "options": {
+          "collectionId": "orders_col_id12",
+          "maxSelect": 1
+        }
+      },
+      {
+        "name": "company",
+        "type": "relation",
+        "required": false,
+        "options": {
+          "collectionId": "companies_col_i",
+          "maxSelect": 1
+        }
+      },
+      {
+        "name": "name",
+        "type": "text",
+        "required": true,
+        "options": {}
+      },
+      {
+        "name": "doc_type",
+        "type": "text",
+        "required": false,
+        "options": {}
+      },
+      {
+        "name": "file_url",
+        "type": "text",
+        "required": false,
+        "options": {}
+      },
+      {
+        "name": "file_name",
+        "type": "text",
+        "required": false,
+        "options": {}
+      },
+      {
+        "name": "status",
+        "type": "text",
+        "required": false,
+        "options": {}
+      },
+      {
+        "name": "notes",
+        "type": "text",
+        "required": false,
+        "options": {}
+      },
+      {
+        "name": "file",
+        "type": "file",
+        "required": false,
+        "options": {
+          "maxSelect": 1,
+          "maxSize": 10485760,
+          "mimeTypes": [],
+          "thumbs": [],
+          "protected": false
+        }
+      }
+    ],
+    "listRule": "user = @request.auth.id || @request.auth.role = 'admin'",
+    "viewRule": "user = @request.auth.id || @request.auth.role = 'admin'",
+    "createRule": "@request.auth.id != ''",
+    "updateRule": "@request.auth.role = 'admin'",
+    "deleteRule": "@request.auth.role = 'admin'",
+    "id": "documents_col_i"
+  },
+  {
+    "name": "notifications",
+    "type": "base",
+    "system": false,
+    "schema": [
+      {
+        "name": "user",
+        "type": "relation",
+        "required": true,
+        "options": {
+          "collectionId": "_pb_users_auth_",
+          "cascadeDelete": true,
+          "maxSelect": 1
+        }
+      },
+      {
+        "name": "type",
+        "type": "text",
+        "required": true,
+        "options": {}
+      },
+      {
+        "name": "title",
+        "type": "text",
+        "required": true,
+        "options": {}
+      },
+      {
+        "name": "message",
+        "type": "text",
+        "required": false,
+        "options": {}
+      },
+      {
+        "name": "data",
+        "type": "json",
+        "required": false,
+        "options": {
+          "maxSize": 2000000
+        }
+      },
+      {
+        "name": "link",
+        "type": "text",
+        "required": false,
+        "options": {}
+      },
+      {
+        "name": "read",
+        "type": "bool",
+        "required": false,
+        "options": {}
+      }
+    ],
+    "listRule": "user = @request.auth.id || @request.auth.role = 'admin'",
+    "viewRule": "user = @request.auth.id || @request.auth.role = 'admin'",
+    "createRule": "@request.auth.id != ''",
+    "updateRule": "user = @request.auth.id || @request.auth.role = 'admin'",
+    "deleteRule": "user = @request.auth.id || @request.auth.role = 'admin'",
+    "id": "notif_col_id123"
+  },
+  {
+    "name": "payments",
+    "type": "base",
+    "system": false,
+    "schema": [
+      {
+        "name": "user",
+        "type": "relation",
+        "required": true,
+        "options": {
+          "collectionId": "_pb_users_auth_",
+          "cascadeDelete": true,
+          "maxSelect": 1
+        }
+      },
+      {
+        "name": "order",
+        "type": "relation",
+        "required": false,
+        "options": {
+          "collectionId": "orders_col_id12",
+          "maxSelect": 1
+        }
+      },
+      {
+        "name": "service",
+        "type": "text",
+        "required": true,
+        "options": {}
+      },
+      {
+        "name": "invoice_id",
+        "type": "text",
+        "required": true,
+        "options": {}
+      },
+      {
+        "name": "amount",
+        "type": "number",
+        "required": true,
+        "options": {}
+      },
+      {
+        "name": "currency",
+        "type": "text",
+        "required": true,
+        "options": {}
+      },
+      {
+        "name": "status",
+        "type": "text",
+        "required": true,
+        "options": {}
+      },
+      {
+        "name": "stripe_payment_id",
+        "type": "text",
+        "required": false,
+        "options": {}
+      },
+      {
+        "name": "notes",
+        "type": "text",
+        "required": false,
+        "options": {}
+      }
+    ],
+    "listRule": "user = @request.auth.id || @request.auth.role = 'admin'",
+    "viewRule": "user = @request.auth.id || @request.auth.role = 'admin'",
+    "createRule": "@request.auth.role = 'admin'",
+    "updateRule": "@request.auth.role = 'admin'",
+    "deleteRule": "@request.auth.role = 'admin'",
+    "id": "payments_col_id"
+  },
+  {
+    "name": "blogs",
+    "type": "base",
+    "system": false,
+    "schema": [
+      {
+        "name": "title",
+        "type": "text",
+        "required": true,
+        "options": {}
+      },
+      {
+        "name": "slug",
+        "type": "text",
+        "required": true,
+        "options": {}
+      },
+      {
+        "name": "excerpt",
+        "type": "text",
+        "required": false,
+        "options": {}
+      },
+      {
+        "name": "content",
+        "type": "text",
+        "required": true,
+        "options": {}
+      },
+      {
+        "name": "cover_image",
+        "type": "text",
+        "required": false,
+        "options": {}
+      },
+      {
+        "name": "author",
+        "type": "text",
+        "required": false,
+        "options": {}
+      },
+      {
+        "name": "tags",
+        "type": "json",
+        "required": false,
+        "options": {
+          "maxSize": 2000000
+        }
+      },
+      {
+        "name": "published",
+        "type": "bool",
+        "required": false,
+        "options": {}
+      },
+      {
+        "name": "featured",
+        "type": "bool",
+        "required": false,
+        "options": {}
+      },
+      {
+        "name": "language",
+        "type": "text",
+        "required": false,
+        "options": {}
+      },
+      {
+        "name": "title_ar",
+        "type": "text",
+        "required": false,
+        "options": {}
+      },
+      {
+        "name": "slug_ar",
+        "type": "text",
+        "required": false,
+        "options": {}
+      },
+      {
+        "name": "excerpt_ar",
+        "type": "text",
+        "required": false,
+        "options": {}
+      },
+      {
+        "name": "content_ar",
+        "type": "text",
+        "required": false,
+        "options": {}
+      },
+      {
+        "name": "created_by",
+        "type": "relation",
+        "required": false,
+        "options": {
+          "collectionId": "_pb_users_auth_",
+          "maxSelect": 1
+        }
+      }
+    ],
+    "listRule": "published = true || @request.auth.role = 'admin'",
+    "viewRule": "published = true || @request.auth.role = 'admin'",
+    "createRule": "@request.auth.role = 'admin'",
+    "updateRule": "@request.auth.role = 'admin'",
+    "deleteRule": "@request.auth.role = 'admin'",
+    "id": "blogs_col_id123"
+  },
+  {
+    "name": "countries_seo_pages",
+    "type": "base",
+    "system": false,
+    "schema": [
+      {
+        "name": "slug",
+        "type": "text",
+        "required": true,
+        "options": {}
+      },
+      {
+        "name": "country_name",
+        "type": "text",
+        "required": true,
+        "options": {}
+      },
+      {
+        "name": "country_code",
+        "type": "text",
+        "required": true,
+        "options": {}
+      },
+      {
+        "name": "meta_title",
+        "type": "text",
+        "required": false,
+        "options": {}
+      },
+      {
+        "name": "meta_description",
+        "type": "text",
+        "required": false,
+        "options": {}
+      },
+      {
+        "name": "hero_title",
+        "type": "text",
+        "required": false,
+        "options": {}
+      },
+      {
+        "name": "hero_description",
+        "type": "text",
+        "required": false,
+        "options": {}
+      },
+      {
+        "name": "main_keyword",
+        "type": "text",
+        "required": false,
+        "options": {}
+      },
+      {
+        "name": "secondary_keywords",
+        "type": "json",
+        "required": false,
+        "options": {
+          "maxSize": 2000000
+        }
+      },
+      {
+        "name": "pain_points",
+        "type": "json",
+        "required": false,
+        "options": {
+          "maxSize": 2000000
+        }
+      },
+      {
+        "name": "benefits",
+        "type": "json",
+        "required": false,
+        "options": {
+          "maxSize": 2000000
+        }
+      },
+      {
+        "name": "best_bank",
+        "type": "text",
+        "required": false,
+        "options": {}
+      },
+      {
+        "name": "bank_notes",
+        "type": "text",
+        "required": false,
+        "options": {}
+      },
+      {
+        "name": "tax_notes",
+        "type": "text",
+        "required": false,
+        "options": {}
+      },
+      {
+        "name": "faq_json",
+        "type": "json",
+        "required": false,
+        "options": {
+          "maxSize": 2000000
+        }
+      },
+      {
+        "name": "cta_text",
+        "type": "text",
+        "required": false,
+        "options": {}
+      },
+      {
+        "name": "featured_image",
+        "type": "text",
+        "required": false,
+        "options": {}
+      },
+      {
+        "name": "schema_json",
+        "type": "json",
+        "required": false,
+        "options": {
+          "maxSize": 2000000
+        }
+      },
+      {
+        "name": "published",
+        "type": "bool",
+        "required": false,
+        "options": {}
+      },
+      {
+        "name": "created_by",
+        "type": "relation",
+        "required": false,
+        "options": {
+          "collectionId": "_pb_users_auth_",
+          "maxSelect": 1
+        }
+      }
+    ],
+    "listRule": "published = true || @request.auth.role = 'admin'",
+    "viewRule": "published = true || @request.auth.role = 'admin'",
+    "createRule": "@request.auth.role = 'admin'",
+    "updateRule": "@request.auth.role = 'admin'",
+    "deleteRule": "@request.auth.role = 'admin'",
+    "id": "countries_seo_c"
+  },
+  {
+    "name": "admin_audit_log",
+    "type": "base",
+    "system": false,
+    "schema": [
+      {
+        "name": "admin",
+        "type": "relation",
+        "required": true,
+        "options": {
+          "collectionId": "_pb_users_auth_",
+          "maxSelect": 1
+        }
+      },
+      {
+        "name": "action",
+        "type": "text",
+        "required": true,
+        "options": {}
+      },
+      {
+        "name": "table_name",
+        "type": "text",
+        "required": true,
+        "options": {}
+      },
+      {
+        "name": "record_id",
+        "type": "text",
+        "required": true,
+        "options": {}
+      },
+      {
+        "name": "details",
+        "type": "text",
+        "required": false,
+        "options": {}
+      }
+    ],
+    "listRule": "@request.auth.role = 'admin'",
+    "viewRule": "@request.auth.role = 'admin'",
+    "createRule": "@request.auth.role = 'admin'",
+    "updateRule": "@request.auth.role = 'admin'",
+    "deleteRule": "@request.auth.role = 'admin'",
+    "id": "audit_log_col_i"
+  },
+  {
+    "name": "invitations",
+    "type": "base",
+    "system": false,
+    "schema": [
+      {
+        "name": "email",
+        "type": "email",
+        "required": true,
+        "options": {}
+      },
+      {
+        "name": "company_name",
+        "type": "text",
+        "required": false,
+        "options": {}
+      },
+      {
+        "name": "role",
+        "type": "text",
+        "required": true,
+        "options": {}
+      },
+      {
+        "name": "invited_by",
+        "type": "relation",
+        "required": false,
+        "options": {
+          "collectionId": "_pb_users_auth_",
+          "maxSelect": 1
+        }
+      },
+      {
+        "name": "status",
+        "type": "text",
+        "required": true,
+        "options": {}
+      },
+      {
+        "name": "expires_at",
+        "type": "date",
+        "required": true,
+        "options": {}
+      },
+      {
+        "name": "accepted",
+        "type": "bool",
+        "required": false,
+        "options": {}
+      }
+    ],
+    "listRule": "",
+    "viewRule": "",
+    "createRule": "@request.auth.role = 'admin'",
+    "updateRule": "",
+    "deleteRule": "@request.auth.role = 'admin'",
+    "id": "invitation_col_"
+  },
+  {
+    "name": "contact_messages",
+    "type": "base",
+    "system": false,
+    "schema": [
+      {
+        "name": "name",
+        "type": "text",
+        "required": true,
+        "options": {}
+      },
+      {
+        "name": "email",
+        "type": "text",
+        "required": true,
+        "options": {}
+      },
+      {
+        "name": "subject",
+        "type": "text",
+        "required": false,
+        "options": {}
+      },
+      {
+        "name": "message",
+        "type": "text",
+        "required": true,
+        "options": {}
+      }
+    ],
+    "listRule": "@request.auth.role = 'admin'",
+    "viewRule": "@request.auth.role = 'admin'",
+    "createRule": "",
+    "updateRule": "@request.auth.role = 'admin'",
+    "deleteRule": "@request.auth.role = 'admin'",
+    "id": "contact_msg_col"
+  },
+  {
+    "id": "site_content_col",
+    "name": "site_content",
+    "type": "base",
+    "system": false,
+    "schema": [
+      {
+        "name": "key",
+        "type": "text",
+        "required": true,
+        "options": { "min": 1, "max": 200, "pattern": "" }
+      },
+      {
+        "name": "value_en",
+        "type": "text",
+        "required": false,
+        "options": { "min": null, "max": null, "pattern": "" }
+      },
+      {
+        "name": "value_ar",
+        "type": "text",
+        "required": false,
+        "options": { "min": null, "max": null, "pattern": "" }
+      }
+    ],
+    "listRule": "",
+    "viewRule": "",
+    "createRule": "@request.auth.role = 'admin'",
+    "updateRule": "@request.auth.role = 'admin'",
+    "deleteRule": "@request.auth.role = 'admin'",
+    "indexes": ["CREATE UNIQUE INDEX idx_site_content_key ON site_content (key)"]
+  },
+  {
+    "id": "pricing_config_col",
+    "name": "pricing_config",
+    "type": "base",
+    "system": false,
+    "schema": [
+      {
+        "name": "region",
+        "type": "select",
+        "required": true,
+        "options": { "maxSelect": 1, "values": ["us", "uk"] }
+      },
+      {
+        "name": "plan",
+        "type": "select",
+        "required": true,
+        "options": { "maxSelect": 1, "values": ["basic", "premium"] }
+      },
+      {
+        "name": "price",
+        "type": "number",
+        "required": true,
+        "options": { "min": 0, "max": null, "noDecimal": false }
+      },
+      {
+        "name": "features_en",
+        "type": "json",
+        "required": false,
+        "options": {}
+      },
+      {
+        "name": "features_ar",
+        "type": "json",
+        "required": false,
+        "options": {}
+      }
+    ],
+    "listRule": "",
+    "viewRule": "",
+    "createRule": "@request.auth.role = 'admin'",
+    "updateRule": "@request.auth.role = 'admin'",
+    "deleteRule": "@request.auth.role = 'admin'",
+    "indexes": ["CREATE UNIQUE INDEX idx_pricing_config ON pricing_config (region, plan)"]
+  }
+]
