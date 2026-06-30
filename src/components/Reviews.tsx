@@ -64,7 +64,7 @@ export default function Reviews() {
                 <BadgeCheck size={13} className="text-blue-500 shrink-0" />
               </div>
               <p className="text-xs text-slate-400 mt-0.5">
-                {meta.flag} {meta.company}
+                {meta.company}
               </p>
             </div>
           </div>

@@ -32,7 +32,7 @@ export function StepServicePackage({
               <div className="flex items-start justify-between mb-3">
                 <div>
                   <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">{t.order.plans[plan.id]?.label ?? plan.label}</span>
-                  <p className="font-bold text-slate-900 text-lg">{plan.flag} {t.order.plans[plan.id]?.name ?? plan.name}</p>
+                  <p className="font-bold text-slate-900 text-lg">{t.order.plans[plan.id]?.name ?? plan.name}</p>
                 </div>
                 <div className={`w-5 h-5 rounded-full border-2 flex-shrink-0 mt-1 transition-all ${
                   selected ? 'border-[#1a56ff] bg-[#1a56ff]' : 'border-slate-300'

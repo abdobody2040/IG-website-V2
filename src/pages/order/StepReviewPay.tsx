@@ -25,7 +25,7 @@ export function StepReviewPay({
           <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">{t.order.formationPackage}</p>
           <div className="flex items-center justify-between">
             <div>
-              <p className="font-bold text-slate-900">{plan?.flag} {plan ? (t.order.plans[plan.id]?.name ?? plan.name) : ''}</p>
+              <p className="font-bold text-slate-900">{plan ? (t.order.plans[plan.id]?.name ?? plan.name) : ''}</p>
               <p className="text-sm text-slate-500">{plan ? (t.order.plans[plan.id]?.description ?? plan.description) : ''}</p>
             </div>
             <p className="text-2xl font-extrabold text-[#1a56ff]">${plan?.price}</p>
