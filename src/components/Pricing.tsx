@@ -453,6 +453,7 @@ export default function Pricing() {
 
           {/* Card 3: Consultation / Need Something Custom */}
           <motion.div
+            key={`consultation-${region}`}
             initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.15 }}
