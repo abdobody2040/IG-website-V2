@@ -2,6 +2,7 @@ import { Star, ArrowRight, CheckCircle, Phone } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { useLang } from '../i18n/LanguageContext'
 import { useSiteContent } from '../hooks/useSiteContent'
+import TransparentMascot from './TransparentMascot'
 
 /* ── Dotted world map SVG (simplified continent outlines as dot clusters) ── */
 function WorldMapDots() {
@@ -286,18 +287,10 @@ export default function Hero() {
               animate={{ y: [-12, 8, -12] }}
               transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
             >
-              <img
-                src="/mascot.png"
+              <TransparentMascot
+                src="/mascot-hero.png"
                 alt="Instant Grow Mascot"
-                className="w-full h-auto select-none mix-blend-multiply"
-                onError={(e) => {
-                  // fallback to a styled G if mascot image not found
-                  e.currentTarget.style.display = 'none'
-                  const fallback = document.createElement('div')
-                  fallback.className = 'w-full aspect-square flex items-center justify-center'
-                  fallback.innerHTML = '<div style="font-size:200px;font-weight:900;color:#2563EB;font-family:Sora,sans-serif;line-height:1;text-shadow:0 20px 60px rgba(37,99,235,0.3)">G</div>'
-                  e.currentTarget.parentElement?.appendChild(fallback)
-                }}
+                className="w-full h-auto select-none"
               />
             </motion.div>
 

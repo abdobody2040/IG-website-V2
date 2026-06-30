@@ -3,6 +3,7 @@ import { motion } from 'framer-motion'
 import { useLang } from '../i18n/LanguageContext'
 import Particles from './effects/Particles'
 import { useMagneticButton } from '../hooks/useMagneticButton'
+import TransparentMascot from './TransparentMascot'
 
 const CAL_BASE = 'https://cal.com/instant-grow-llc'
 
@@ -144,14 +145,17 @@ export default function CTASection() {
           >
             {/* Glow behind mascot */}
             <div className="absolute bottom-0 inset-x-0 h-48 bg-blue-500/10 rounded-full blur-3xl" />
-            <motion.img
-              src="/mascot.png"
-              alt="Instant Grow Mascot"
-              className="relative z-10 w-full h-auto drop-shadow-[0_20px_40px_rgba(37,99,235,0.25)] brightness-110"
+            <motion.div
               animate={{ y: [-8, 6, -8] }}
               transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}
-              onError={(e) => { e.currentTarget.style.display = 'none' }}
-            />
+              className="relative z-10 w-full"
+            >
+              <TransparentMascot
+                src="/mascot-cta.png"
+                alt="Instant Grow Mascot"
+                className="w-full h-auto drop-shadow-[0_20px_40px_rgba(37,99,235,0.25)] brightness-110"
+              />
+            </motion.div>
           </motion.div>
         </div>
       </div>

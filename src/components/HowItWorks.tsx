@@ -2,6 +2,7 @@ import { motion, useInView } from 'framer-motion'
 import { useRef } from 'react'
 import { ArrowRight, MousePointer, FileText, Settings, CheckCircle } from 'lucide-react'
 import { useLang } from '../i18n/LanguageContext'
+import TransparentMascot from './TransparentMascot'
 
 const stepIcons = [MousePointer, FileText, Settings, CheckCircle]
 const stepColors = ['#2563EB', '#7C3AED', '#059669', '#D97706']
@@ -120,14 +121,17 @@ export default function HowItWorks() {
             viewport={{ once: true }}
             transition={{ delay: 0.4, duration: 0.7 }}
           >
-            <motion.img
-              src="/mascot.png"
-              alt="Instant Grow Mascot"
-              className="w-full h-auto drop-shadow-xl mix-blend-multiply"
+            <motion.div
               animate={{ y: [-8, 6, -8] }}
               transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}
-              onError={(e) => { e.currentTarget.style.display = 'none' }}
-            />
+              className="w-full"
+            >
+              <TransparentMascot
+                src="/mascot-how-it-works.png"
+                alt="Instant Grow Mascot"
+                className="w-full h-auto drop-shadow-xl"
+              />
+            </motion.div>
           </motion.div>
         </div>
 

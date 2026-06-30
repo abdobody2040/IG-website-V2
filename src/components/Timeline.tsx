@@ -2,6 +2,7 @@ import { motion, useInView } from 'framer-motion'
 import { useRef } from 'react'
 import { FileText, CheckCircle, Hash, Landmark, Zap } from 'lucide-react'
 import { useLang } from '../i18n/LanguageContext'
+import TransparentMascot from './TransparentMascot'
 
 const timelineSteps = [
   {
@@ -93,14 +94,17 @@ export default function Timeline() {
             viewport={{ once: true }}
             transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
           >
-            <motion.img
-              src="/mascot-clock.png"
-              alt="Instant Grow Mascot"
-              className="w-full h-auto drop-shadow-xl mix-blend-multiply"
+            <motion.div
               animate={{ y: [-8, 6, -8] }}
               transition={{ duration: 5.5, repeat: Infinity, ease: 'easeInOut' }}
-              onError={(e) => { e.currentTarget.style.display = 'none' }}
-            />
+              className="w-full"
+            >
+              <TransparentMascot
+                src="/mascot-timeline.png"
+                alt="Instant Grow Mascot"
+                className="w-full h-auto drop-shadow-xl"
+              />
+            </motion.div>
           </motion.div>
 
           {/* Timeline steps */}

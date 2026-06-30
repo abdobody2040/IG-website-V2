@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Mail, ArrowRight } from 'lucide-react'
 import { useLang } from '../i18n/LanguageContext'
+import TransparentMascot from './TransparentMascot'
 
 export default function Footer() {
   const { t, lang, setLang } = useLang()
@@ -90,11 +91,10 @@ export default function Footer() {
             </div>
 
             {/* Small mascot */}
-            <img
-              src="/mascot.png"
+            <TransparentMascot
+              src="/mascot-footer.png"
               alt=""
               className="w-20 h-auto opacity-60 mt-2"
-              onError={(e) => { e.currentTarget.style.display = 'none' }}
             />
           </div>
 
