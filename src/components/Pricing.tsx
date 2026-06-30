@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { Check, Phone, Calendar } from 'lucide-react'
+import { Check, Phone } from 'lucide-react'
 import { useLang } from '../i18n/LanguageContext'
 import { useMagneticButton } from '../hooks/useMagneticButton'
 import { usePricingConfig, resolvePrice } from '../hooks/usePricingConfig'
