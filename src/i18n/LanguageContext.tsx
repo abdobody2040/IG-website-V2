@@ -5,13 +5,14 @@ interface LanguageContextType {
   lang: Lang
   t: (typeof translations)[Lang]
   toggleLang: () => void
+  setLang: (lang: Lang) => void
   isRTL: boolean
 }
 
 const LanguageContext = createContext<LanguageContextType | null>(null)
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
-  const [lang, setLang] = useState<Lang>(() => {
+  const [lang, setLangState] = useState<Lang>(() => {
     const saved = localStorage.getItem('ig-lang')
     return (saved === 'ar' || saved === 'en') ? saved : 'en'
   })
@@ -25,10 +26,11 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     document.documentElement.dir = isRTL ? 'rtl' : 'ltr'
   }, [lang, isRTL])
 
-  const toggleLang = () => setLang((prev) => (prev === 'en' ? 'ar' : 'en'))
+  const toggleLang = () => setLangState((prev) => (prev === 'en' ? 'ar' : 'en'))
+  const setLang = (newLang: Lang) => setLangState(newLang)
 
   return (
-    <LanguageContext.Provider value={{ lang, t, toggleLang, isRTL }}>
+    <LanguageContext.Provider value={{ lang, t, toggleLang, setLang, isRTL }}>
       {children}
     </LanguageContext.Provider>
   )

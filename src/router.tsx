@@ -11,13 +11,18 @@ import { lazyImport } from './lib/lazyImport'
 import { waitForAuthReady, getAuthInfo } from './lib/authState'
 import Navbar from './components/Navbar'
 import Hero from './components/Hero'
+import TrustLogos from './components/TrustLogos'
+import Services from './components/Services'
 import HowItWorks from './components/HowItWorks'
 import Features from './components/Features'
-import Pricing from './components/Pricing'
+import Timeline from './components/Timeline'
 import Reviews from './components/Reviews'
+import ComparisonTable from './components/ComparisonTable'
+import Pricing from './components/Pricing'
 import FAQ from './components/FAQ'
 import CTASection from './components/CTASection'
 import Footer from './components/Footer'
+import StickyCTABar from './components/StickyCTABar'
 import { MouseGlow, AmbientBackground } from './components/effects'
 import Lenis from 'lenis'
 import { useLang } from './i18n/LanguageContext'
@@ -73,7 +78,7 @@ function LandingPage() {
 
 
   return (
-    <div className="min-h-screen bg-white font-sans">
+    <div className="min-h-screen bg-white font-sans pb-[72px] md:pb-0">
       <MouseGlow />
       <AmbientBackground />
       <div
@@ -82,15 +87,32 @@ function LandingPage() {
       />
       <Navbar />
       <main className="relative z-10">
+        {/* 2. Hero — 2-col split, world map, mascot, country pins, dashboard overlap */}
         <Hero />
+        {/* 3. Trust Logos — continuous marquee */}
+        <TrustLogos />
+        {/* 5. Services — 5 premium cards */}
+        <Services />
+        {/* 6. How It Works — 4-step horizontal timeline */}
         <HowItWorks />
+        {/* 7. Why Entrepreneurs Choose — 6 icon cards */}
         <Features />
-        <Pricing />
+        {/* 8. Timeline — mascot left, 5-day steps */}
+        <Timeline />
+        {/* 9. Reviews — dual marquee */}
         <Reviews />
+        {/* 10. Comparison Table */}
+        <ComparisonTable />
+        {/* 11. Pricing — 3 cards */}
+        <Pricing />
+        {/* FAQ */}
         <FAQ />
+        {/* 12. CTA — dark, mascot right */}
         <CTASection />
       </main>
       <Footer />
+      {/* 13. Sticky mobile CTA bar */}
+      <StickyCTABar />
     </div>
   )
 }

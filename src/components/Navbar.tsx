@@ -34,7 +34,7 @@ export default function Navbar() {
           : 'bg-transparent backdrop-blur-none border-b border-transparent'
       }`}
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-[1280px] mx-auto px-5 sm:px-8 lg:px-10">
         <div className="flex items-center justify-between h-[80px]">
           {/* Logo */}
           <a href="/" className="flex items-center">
@@ -43,14 +43,14 @@ export default function Navbar() {
 
           {/* Desktop Nav */}
           <nav className="hidden md:flex items-center gap-10">
-            <a href="/#features" className="text-base font-medium text-slate-500 hover:text-slate-800 transition-colors duration-200">{n.features}</a>
-            <a href="/#pricing" className="text-base font-medium text-slate-500 hover:text-slate-800 transition-colors duration-200">{n.pricing}</a>
-            <a href="/#faq" className="text-base font-medium text-slate-500 hover:text-slate-800 transition-colors duration-200">{n.faq}</a>
-            <a href="/blog" className="text-base font-medium text-slate-500 hover:text-slate-800 transition-colors duration-200">{n.blog}</a>
+            <a href="/#features" className="text-[15px] font-semibold text-slate-500 hover:text-[#0F172A] transition-all duration-200 hover:scale-[1.03]">{n.features}</a>
+            <a href="/#pricing" className="text-[15px] font-semibold text-slate-500 hover:text-[#0F172A] transition-all duration-200 hover:scale-[1.03]">{n.pricing}</a>
+            <a href="/#faq" className="text-[15px] font-semibold text-slate-500 hover:text-[#0F172A] transition-all duration-200 hover:scale-[1.03]">{n.faq}</a>
+            <a href="/blog" className="text-[15px] font-semibold text-slate-500 hover:text-[#0F172A] transition-all duration-200 hover:scale-[1.03]">{n.blog}</a>
           </nav>
 
           {/* Desktop Actions */}
-          <div className="hidden md:flex items-center gap-4">
+          <div className="hidden md:flex items-center gap-6">
             <button
               onClick={toggleLang}
               className="flex items-center gap-1.5 text-base font-semibold text-slate-400 hover:text-slate-700 transition-colors px-2 py-1.5"
@@ -58,24 +58,24 @@ export default function Navbar() {
               <Globe size={16} />
               <span>{lang === 'en' ? 'العربية' : 'EN'}</span>
             </button>
-            <a href="/auth/login" className="text-base font-medium text-slate-400 hover:text-slate-700 transition-colors">{n.login}</a>
+            <a href="/auth/login" className="text-base font-semibold text-slate-400 hover:text-slate-700 transition-colors">{n.login}</a>
             <div className="relative" ref={bookRef}>
               <button
                 onClick={() => setBookOpen(o => !o)}
-                className="flex items-center gap-1.5 text-base font-semibold text-slate-600 hover:text-slate-900 transition-colors px-3.5 py-2.5 rounded-lg border border-slate-200 hover:border-slate-300 hover:bg-slate-50"
+                className="flex items-center gap-1.5 text-base font-semibold text-slate-600 hover:text-slate-900 transition-colors px-4 py-3 rounded-xl border border-slate-200 hover:border-slate-300 hover:bg-slate-50"
               >
                 <Calendar size={16} />
                 {n.bookCall}
                 <ChevronDown size={13} className={`transition-transform ${bookOpen ? 'rotate-180' : ''}`} />
               </button>
               {bookOpen && (
-                <div className="absolute right-0 top-full mt-1 w-52 bg-white rounded-xl border border-slate-200 shadow-lg py-1 z-50">
+                <div className="absolute right-0 top-full mt-1.5 w-52 bg-white rounded-xl border border-slate-200 shadow-xl py-1.5 z-50">
                   <a href={`${CAL_BASE}/15min`} target="_blank" rel="noopener noreferrer"
                     className="flex items-center gap-3 px-4 py-3 text-sm text-slate-600 hover:bg-slate-50 transition-colors"
                     onClick={() => setBookOpen(false)}>
                     <div className="w-8 h-8 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-500 text-xs font-bold">15</div>
                     <div>
-                      <p className="font-medium text-slate-800">{n.bookCall15}</p>
+                      <p className="font-semibold text-slate-800">{n.bookCall15}</p>
                       <p className="text-xs text-slate-400">{n.bookCall15Desc}</p>
                     </div>
                   </a>
@@ -84,7 +84,7 @@ export default function Navbar() {
                     onClick={() => setBookOpen(false)}>
                     <div className="w-8 h-8 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-500 text-xs font-bold">30</div>
                     <div>
-                      <p className="font-medium text-slate-800">{n.bookCall30}</p>
+                      <p className="font-semibold text-slate-800">{n.bookCall30}</p>
                       <p className="text-xs text-slate-400">{n.bookCall30Desc}</p>
                     </div>
                   </a>
@@ -93,7 +93,7 @@ export default function Navbar() {
             </div>
             <a
               href="/order"
-              className="bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white text-base font-semibold px-6 py-3 rounded-lg transition-all duration-200 shadow-sm hover:shadow-md hover:shadow-indigo-500/20"
+              className="shimmer-btn inline-flex items-center gap-1.5 bg-[#2563EB] text-white text-[15px] font-bold px-6 py-3 rounded-[16px] hover:bg-[#1d4ed8] transition-all shadow-[0_4px_16px_rgba(37,99,235,0.25)] hover:shadow-[0_6px_24px_rgba(37,99,235,0.35)] hover:-translate-y-0.5"
             >
               {n.cta}
             </a>

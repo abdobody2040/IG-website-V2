@@ -9,19 +9,19 @@ export default function FAQ() {
   const f = t.faq
 
   return (
-    <section id="faq" className="py-24 bg-[#f8f9fa]">
-      <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+    <section id="faq" className="ig-section bg-white">
+      <div className="max-w-[1000px] mx-auto px-5 sm:px-8 lg:px-10">
         <div className="text-center mb-4">
           <p className="text-blue-500 text-sm font-semibold uppercase tracking-wider">{f.label}</p>
         </div>
         <h2
-          className="text-4xl sm:text-5xl font-bold text-[#0a0a0f] text-center mb-12"
+          className="text-4xl sm:text-[54px] font-bold text-[#0F172A] text-center mb-12"
           style={{ fontFamily: 'Sora, Inter, sans-serif' }}
         >
           {f.heading}
         </h2>
 
-        <div className="space-y-3">
+        <div className="space-y-4.5">
           {f.items.map((faq, index) => (
             <motion.div
               key={index}
@@ -32,15 +32,15 @@ export default function FAQ() {
               className="bg-white/80 backdrop-blur-sm rounded-2xl border border-gray-200/60 overflow-hidden shadow-sm hover:shadow-md hover:border-gray-300/60 transition-all duration-200"
             >
               <button
-                className="w-full flex items-center justify-between px-6 py-5 text-left group"
+                className="w-full flex items-center justify-between px-8 py-6 text-left group"
                 onClick={() => setOpenIndex(openIndex === index ? null : index)}
               >
-                <span className="font-semibold text-[#0a0a0f] pr-4 group-hover:text-blue-600 transition-colors">{faq.question}</span>
+                <span className="text-[17px] font-bold text-[#0F172A] pr-4 group-hover:text-blue-600 transition-colors">{faq.question}</span>
                 <motion.div
                   animate={{ rotate: openIndex === index ? 180 : 0 }}
                   transition={{ duration: 0.2 }}
                 >
-                  <ChevronDown size={20} className="text-gray-400 flex-shrink-0" />
+                  <ChevronDown size={22} className="text-gray-400 flex-shrink-0" />
                 </motion.div>
               </button>
 
@@ -53,8 +53,8 @@ export default function FAQ() {
                     transition={{ duration: 0.2 }}
                     className="overflow-hidden"
                   >
-                    <div className="px-6 pb-5">
-                      <p className="text-gray-500 leading-relaxed text-sm">{faq.answer}</p>
+                    <div className="px-8 pb-6">
+                      <p className="text-slate-500 leading-relaxed text-[15px]">{faq.answer}</p>
                     </div>
                   </motion.div>
                 )}

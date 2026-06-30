@@ -1,418 +1,447 @@
-import { useRef } from 'react'
-import { Star, ArrowRight, Building2, Globe, CheckCircle, ChevronRight, Clock, FileText } from 'lucide-react'
+import { Star, ArrowRight, CheckCircle, Phone } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { useLang } from '../i18n/LanguageContext'
-import CountUp from './effects/CountUp'
 import { useSiteContent } from '../hooks/useSiteContent'
+
+/* ── Dotted world map SVG (simplified continent outlines as dot clusters) ── */
+function WorldMapDots() {
+  return (
+    <svg
+      viewBox="0 0 800 420"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className="absolute inset-0 w-full h-full"
+      style={{ opacity: 0.12 }}
+    >
+      <defs>
+        <pattern id="dots" x="0" y="0" width="16" height="16" patternUnits="userSpaceOnUse">
+          <circle cx="2" cy="2" r="1.8" fill="#2563EB" />
+        </pattern>
+        <mask id="worldMask">
+          {/* North America */}
+          <ellipse cx="180" cy="160" rx="110" ry="80" fill="white" />
+          <ellipse cx="220" cy="220" rx="70" ry="60" fill="white" />
+          {/* South America */}
+          <ellipse cx="240" cy="310" rx="55" ry="75" fill="white" />
+          {/* Europe */}
+          <ellipse cx="400" cy="130" rx="55" ry="55" fill="white" />
+          {/* Africa */}
+          <ellipse cx="410" cy="260" rx="60" ry="80" fill="white" />
+          {/* Asia */}
+          <ellipse cx="570" cy="150" rx="130" ry="90" fill="white" />
+          {/* Southeast Asia */}
+          <ellipse cx="640" cy="240" rx="60" ry="50" fill="white" />
+          {/* Australia */}
+          <ellipse cx="650" cy="330" rx="60" ry="40" fill="white" />
+          {/* Greenland */}
+          <ellipse cx="250" cy="70" rx="40" ry="30" fill="white" />
+        </mask>
+      </defs>
+      <rect width="800" height="420" fill="url(#dots)" mask="url(#worldMask)" />
+    </svg>
+  )
+}
+
+/* ── Country Pin Card ─────────────────────────────────────────────────────── */
+interface PinCardProps {
+  flag: string
+  country: string
+  label: string
+  style: React.CSSProperties
+  delay?: number
+}
+function PinCard({ flag, country, label, style, delay = 0 }: PinCardProps) {
+  return (
+    <motion.div
+      className="absolute bg-white rounded-2xl shadow-xl border border-gray-100/80 px-4.5 py-3.5 flex items-center gap-3 z-20"
+      style={{ ...style, minWidth: 156 }}
+      initial={{ opacity: 0, scale: 0.8, y: 10 }}
+      animate={{ opacity: 1, scale: 1, y: 0 }}
+      transition={{ delay: 0.8 + delay, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+    >
+      {/* Pulse dot */}
+      <span className="relative flex shrink-0">
+        <span className="absolute inset-0 rounded-full bg-blue-500 opacity-35 animate-ping" style={{ animationDuration: '2s' }} />
+        <span className="w-2.5 h-2.5 rounded-full bg-blue-500 relative" />
+      </span>
+      <div className="min-w-0">
+        <p className="text-xs font-bold text-slate-800 leading-none">{flag} {country}</p>
+        <p className="text-[11px] text-slate-400 mt-1 truncate">{label}</p>
+      </div>
+    </motion.div>
+  )
+}
+
+/* ── Floating Notification Card ───────────────────────────────────────────── */
+interface NotifCardProps {
+  icon: string
+  title: string
+  subtitle: string
+  bgColor: string
+  style: React.CSSProperties
+  delay?: number
+}
+function NotifCard({ icon, title, subtitle, bgColor, style, delay = 0 }: NotifCardProps) {
+  return (
+    <motion.div
+      className="absolute bg-white/95 backdrop-blur-md rounded-2xl border border-gray-100/90 px-4.5 py-3.5 z-30 flex items-center gap-3"
+      style={{
+        ...style,
+        boxShadow: '0 12px 40px rgba(15,23,42,0.14)',
+        minWidth: 200,
+      }}
+      initial={{ opacity: 0, scale: 0.85, y: 12 }}
+      animate={{ opacity: 1, scale: 1, y: 0 }}
+      transition={{ delay: 1 + delay, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+    >
+      <div
+        className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 text-lg"
+        style={{ background: bgColor }}
+      >
+        {icon}
+      </div>
+      <div>
+        <p className="text-xs font-bold text-slate-800 leading-none">{title}</p>
+        <p className="text-[11px] text-slate-400 mt-1">{subtitle}</p>
+      </div>
+    </motion.div>
+  )
+}
+
+const ease = [0.16, 1, 0.3, 1] as const
+
+const containerV = {
+  hidden: {},
+  visible: { transition: { staggerChildren: 0.08, delayChildren: 0.1 } },
+}
+const childV = {
+  hidden: { opacity: 0, y: 20 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.65, ease } },
+}
 
 export default function Hero() {
   const { t, lang } = useLang()
   const isAr = lang === 'ar'
   const h = t.hero
-  const mockupRef = useRef<HTMLDivElement>(null)
-
   const { content } = useSiteContent()
   const val = (k: string) => isAr ? content[k]?.value_ar : content[k]?.value_en
 
-  const trustItems = [
-    val('hero_badge1') || h.badge1,
-    val('hero_badge2') || h.badge2,
-    val('hero_badge3') || h.badge3,
-    val('hero_badge4') || h.badge4
+  const trustBadges = [
+    { icon: '🌐', text: '100% Online' },
+    { icon: '🔒', text: 'Fast & Secure' },
+    { icon: '👥', text: 'Trusted by 2,500+ Entrepreneurs' },
+    { icon: '💰', text: 'Money-Back Guarantee' },
   ]
 
-
-
-  const ease = [0.16, 1, 0.3, 1] as any
-
-  const containerV = {
-    hidden: {},
-    visible: { transition: { staggerChildren: 0.1, delayChildren: 0.2 } },
-  }
-  const childV = {
-    hidden: { opacity: 0, y: 24 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.7, ease } },
-  }
-  const mockupV = {
-    hidden: { opacity: 0, y: 60 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.9, delay: 0.6, ease } },
-  }
-
-  const activities = [
-    { icon: CheckCircle, text: 'Articles of Organization filed', time: '2h ago', color: 'text-emerald-500', bg: 'bg-emerald-50' },
-    { icon: Clock, text: 'EIN application submitted', time: '1h ago', color: 'text-blue-500', bg: 'bg-blue-50' },
-    { icon: FileText, text: 'Operating agreement pending', time: 'Now', color: 'text-amber-500', bg: 'bg-amber-50', pulse: true },
+  const partnerLogos = [
+    { name: 'stripe', text: 'stripe' },
+    { name: 'paypal', text: 'PayPal' },
+    { name: 'wise', text: '𝗐𝗂𝗌𝖾' },
+    { name: 'brex', text: 'brex' },
+    { name: 'mercury', text: 'mercury' },
+    { name: 'shopify', text: 'Shopify' },
   ]
 
   return (
-    <section
-      className="relative min-h-screen flex items-center bg-[#F8FAFC] overflow-hidden"
-    >
-      {/* ── LAYER 5 — Subtle Grid Texture ── */}
-      <div
-        className="absolute inset-0 opacity-[0.15] pointer-events-none"
-        style={{
-          backgroundImage:
-            'linear-gradient(rgba(99,102,241,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(99,102,241,0.04) 1px, transparent 1px)',
-          backgroundSize: '72px 72px',
-        }}
-      />
+    <section className="relative bg-white overflow-hidden pb-12 lg:pb-16" style={{ minHeight: 900 }}>
+      {/* Background gradient blobs */}
+      <div className="absolute top-0 left-0 w-[700px] h-[600px] rounded-full pointer-events-none"
+        style={{ background: 'radial-gradient(ellipse at 0% 0%, rgba(37,99,235,0.08) 0%, transparent 70%)', filter: 'blur(50px)' }} />
+      <div className="absolute top-0 right-0 w-[600px] h-[500px] rounded-full pointer-events-none"
+        style={{ background: 'radial-gradient(ellipse at 100% 0%, rgba(99,102,241,0.06) 0%, transparent 70%)', filter: 'blur(70px)' }} />
 
-      {/* ── LAYER 3 — Soft Gradient Blobs ── */}
-      <motion.div
-        className="absolute top-[5%] left-[5%] w-[50%] h-[40%] rounded-full bg-gradient-to-tr from-blue-100/30 via-indigo-100/15 to-transparent blur-[100px] pointer-events-none"
-        animate={{ x: ['0%', '3%', '-2%', '0%'], y: ['0%', '4%', '-1%', '0%'], scale: [1, 1.03, 0.98, 1] }}
-        transition={{ duration: 20, repeat: Infinity, ease: 'easeInOut' }}
-      />
-      <motion.div
-        className="absolute bottom-[10%] right-[5%] w-[45%] h-[35%] rounded-full bg-gradient-to-bl from-sky-100/25 via-blue-100/15 to-transparent blur-[120px] pointer-events-none"
-        animate={{ x: ['0%', '-4%', '2%', '0%'], y: ['0%', '-3%', '2%', '0%'], scale: [1, 1.04, 0.97, 1] }}
-        transition={{ duration: 22, repeat: Infinity, ease: 'easeInOut' }}
-      />
-      <motion.div
-        className="absolute top-[40%] left-[30%] w-[30%] h-[25%] rounded-full bg-gradient-to-r from-cyan-100/15 to-transparent blur-[90px] pointer-events-none"
-        animate={{ x: ['0%', '5%', '-3%', '0%'], y: ['0%', '-2%', '4%', '0%'] }}
-        transition={{ duration: 18, repeat: Infinity, ease: 'easeInOut' }}
-      />
+      {/* Subtle grid texture */}
+      <div className="absolute inset-0 opacity-[0.04] pointer-events-none"
+        style={{ backgroundImage: 'linear-gradient(rgba(37,99,235,0.3) 1px, transparent 1px), linear-gradient(90deg, rgba(37,99,235,0.3) 1px, transparent 1px)', backgroundSize: '60px 60px' }} />
 
-      {/* ── LAYER 1 — Primary Organic Ribbon ── */}
-      <motion.div
-        className="absolute top-[5%] -left-[10%] w-[75%] h-[55%] pointer-events-none"
-        style={{ filter: 'blur(85px)' }}
-        animate={{
-          x: ['0%', '5%', '-3%', '2%', '0%'],
-          y: ['0%', '3%', '5%', '-2%', '0%'],
-          scale: [1, 1.06, 0.94, 1.02, 1],
-          rotate: [0, 3, -2, 1, 0],
-        }}
-        transition={{ duration: 25, repeat: Infinity, ease: 'easeInOut' }}
-      >
-        <div
-          className="w-full h-full"
-          style={{
-            borderRadius: '42% 58% 35% 65% / 48% 35% 65% 52%',
-            background:
-              'linear-gradient(135deg, rgba(99,102,241,0.2) 0%, rgba(59,130,246,0.15) 40%, rgba(6,182,212,0.08) 70%, transparent 100%)',
-          }}
-        />
-      </motion.div>
+      <div className="relative z-10 max-w-[1280px] mx-auto px-5 sm:px-8 lg:px-10">
+        <div className="flex flex-col lg:flex-row items-center gap-12 lg:gap-0 pt-32 lg:pt-36 pb-0">
 
-      {/* ── LAYER 2 — Secondary Ribbon ── */}
-      <motion.div
-        className="absolute bottom-[5%] -right-[5%] w-[65%] h-[42%] pointer-events-none"
-        style={{ filter: 'blur(75px)' }}
-        animate={{
-          x: ['0%', '-4%', '6%', '-2%', '0%'],
-          y: ['0%', '-3%', '2%', '4%', '0%'],
-          scale: [1, 0.95, 1.05, 0.98, 1],
-          rotate: [0, -2, 4, -1, 0],
-        }}
-        transition={{ duration: 28, repeat: Infinity, ease: 'easeInOut' }}
-      >
-        <div
-          className="w-full h-full"
-          style={{
-            borderRadius: '55% 45% 65% 35% / 40% 60% 40% 60%',
-            background:
-              'linear-gradient(225deg, rgba(6,182,212,0.12) 0%, rgba(59,130,246,0.1) 30%, rgba(99,102,241,0.05) 70%, transparent 100%)',
-          }}
-        />
-      </motion.div>
-
-      {/* Accent ribbon */}
-      <motion.div
-        className="absolute top-[50%] left-[35%] w-[40%] h-[30%] pointer-events-none"
-        style={{ filter: 'blur(60px)' }}
-        animate={{
-          x: ['0%', '5%', '-2%', '3%', '0%'],
-          y: ['0%', '-2%', '4%', '-1%', '0%'],
-          scale: [1, 1.03, 0.97, 1.01, 1],
-          rotate: [0, 1, -3, 2, 0],
-        }}
-        transition={{ duration: 22, repeat: Infinity, ease: 'easeInOut' }}
-      >
-        <div
-          className="w-full h-full"
-          style={{
-            borderRadius: '48% 52% 40% 60% / 55% 40% 60% 45%',
-            background:
-              'linear-gradient(180deg, rgba(99,102,241,0.08) 0%, rgba(6,182,212,0.06) 50%, transparent 100%)',
-          }}
-        />
-      </motion.div>
-
-      {/* ── LAYER 4 — Floating Particles ── */}
-      {[
-        { top: '18%', left: '8%', size: 'w-2 h-2', color: 'bg-indigo-300/20', dur: 7, delay: 0 },
-        { top: '35%', right: '12%', size: 'w-[11px] h-[11px]', color: 'bg-blue-300/12', dur: 8.5, delay: 0.5 },
-        { top: '55%', left: '5%', size: 'w-1.5 h-1.5', color: 'bg-sky-300/15', dur: 6, delay: 1 },
-        { top: '70%', right: '15%', size: 'w-[9px] h-[9px]', color: 'bg-indigo-300/10', dur: 7.5, delay: 0.8 },
-        { top: '25%', right: '30%', size: 'w-[6px] h-[6px]', color: 'bg-blue-300/12', dur: 6.5, delay: 1.2 },
-        { top: '80%', left: '20%', size: 'w-2 h-2', color: 'bg-cyan-300/15', dur: 8, delay: 0.3 },
-        { top: '45%', left: '45%', size: 'w-1 h-1', color: 'bg-indigo-300/15', dur: 5, delay: 2 },
-        { top: '62%', left: '78%', size: 'w-[7px] h-[7px]', color: 'bg-blue-300/10', dur: 9, delay: 1.5 },
-        { top: '12%', left: '50%', size: 'w-[5px] h-[5px]', color: 'bg-indigo-300/12', dur: 7.5, delay: 0.7 },
-        { top: '48%', left: '15%', size: 'w-1 h-1', color: 'bg-cyan-300/12', dur: 6.5, delay: 1.8 },
-      ].map((p, i) => (
-        <motion.div
-          key={i}
-          className={`absolute ${p.size} rounded-full ${p.color} pointer-events-none`}
-          style={{
-            top: p.top,
-            left: p.left,
-            right: (p as any).right,
-          }}
-          animate={{ y: [0, -(12 + i * 2), 0], opacity: [0.12, 0.35, 0.12] }}
-          transition={{ duration: p.dur, repeat: Infinity, ease: 'easeInOut', delay: p.delay }}
-        />
-      ))}
-
-      {/* ── CONTENT ── */}
-      <div
-        className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-28 lg:pt-32 pb-0"
-      >
-        <motion.div
-          className="max-w-3xl mx-auto text-center"
-          variants={containerV}
-          initial="hidden"
-          animate="visible"
-        >
-          {/* Badge */}
-          <motion.div variants={childV}>
-            <span className="inline-flex items-center gap-1.5 bg-white/90 backdrop-blur-sm border border-indigo-200/50 rounded-full px-4 py-1.5 text-sm font-medium text-indigo-600 shadow-sm">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-              {h.trustBadge}
-            </span>
-          </motion.div>
-
-          {/* Headline */}
-          <motion.h1
-            variants={childV}
-            className="text-[40px] sm:text-5xl lg:text-[64px] font-bold leading-[1.08] mt-6 mb-5 text-slate-900 tracking-tight"
-            style={{ fontFamily: 'Sora, Inter, sans-serif' }}
-          >
-            {val('hero_headline') || h.headline1}
-          </motion.h1>
-
-          {/* Description */}
-          <motion.p
-            variants={childV}
-            className="text-base sm:text-lg text-slate-500 leading-relaxed max-w-[560px] mx-auto"
-          >
-            {val('hero_subheadline') || h.subheadline}
-          </motion.p>
-
-          {/* CTA Row */}
-          <motion.div variants={childV} className="flex flex-col sm:flex-row items-center justify-center gap-3 mt-10">
-            <a
-              href="/order"
-              className="group relative w-full sm:w-auto bg-gradient-to-r from-indigo-600 via-blue-600 to-indigo-600 text-white font-semibold text-sm px-8 py-4 rounded-xl overflow-hidden transition-all duration-300 hover:-translate-y-0.5"
-              style={{ boxShadow: '0 4px 20px rgba(99,102,241,0.25)' }}
-            >
-              <span className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(255,255,255,0.2),transparent_60%)] opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-              <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent opacity-0 group-hover:opacity-100 -translate-x-full group-hover:translate-x-full transition-all duration-700" />
-              <span className="relative z-10 flex items-center gap-2">
-                {val('hero_cta') || (isAr ? 'تأسيس شركتي' : 'Form My LLC')}
-                <ArrowRight size={16} className={`group-hover:${isAr ? '-' : ''}translate-x-1 group-hover:-translate-y-0.5 transition-transform duration-300`} />
-              </span>
-            </a>
-            <a
-              href="#contact"
-              className="group w-full sm:w-auto border border-slate-200 bg-white/70 backdrop-blur-sm text-slate-600 font-semibold text-sm px-7 py-4 rounded-xl hover:bg-white hover:border-slate-300 transition-all duration-300 text-center shadow-sm hover:shadow-md hover:-translate-y-0.5"
-            >
-              Book a Free Call
-            </a>
-          </motion.div>
-
-          {/* Trust badges */}
-          <motion.div variants={childV} className="flex flex-wrap justify-center gap-x-6 gap-y-1.5 mt-6">
-            {trustItems.map((item, i) => (
-              <span key={i} className="flex items-center gap-1.5 text-xs text-slate-400">
-                <CheckCircle size={12} className="text-emerald-500/60" />
-                {item}
-              </span>
-            ))}
-          </motion.div>
-
-          {/* Trust stats cards */}
-          <motion.div variants={childV} className="flex items-center justify-center gap-3 sm:gap-5 mt-8">
-            {[
-              { icon: null, value: '4.9', suffix: '', decimals: 1, label: 'Rating', stars: true },
-              { icon: Building2, value: '500', suffix: '+', decimals: 0, label: 'Businesses Formed' },
-              { icon: Globe, value: '30', suffix: '+', decimals: 0, label: 'Countries Served' },
-            ].map((item, i) => (
-              <div
-                key={i}
-                className="group flex-1 max-w-[170px] rounded-2xl bg-white/70 backdrop-blur-md border border-white/60 p-4 text-center shadow-sm hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300"
-                style={{ boxShadow: '0 2px 12px rgba(0,0,0,0.04)' }}
-              >
-                {item.stars ? (
-                  <div className="flex justify-center gap-0.5 mb-1.5">
-                    {[...Array(5)].map((_, j) => (
-                      <Star key={j} size={12} className="fill-amber-400 text-amber-400" />
-                    ))}
-                  </div>
-                ) : item.icon ? (
-                  <item.icon size={14} className="mx-auto text-slate-400 mb-1.5" />
-                ) : null}
-                <span className="block text-slate-900 text-base font-bold tabular-nums">
-                  <CountUp end={parseFloat(item.value)} suffix={item.suffix} decimals={item.decimals} duration={2 + i * 0.3} />
-                </span>
-                <span className="block text-slate-400 text-[11px] mt-0.5 font-medium">{item.label}</span>
-              </div>
-            ))}
-          </motion.div>
-        </motion.div>
-
-        {/* ── PRODUCT PREVIEW — Large Browser Mockup ── */}
-        <motion.div
-          variants={mockupV}
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, margin: '-40px' }}
-          className="relative max-w-[1100px] mx-auto mt-16 mb-[-120px] z-20"
-        >
+          {/* ── LEFT COLUMN (55%) ─────────────────────────────────────────── */}
           <motion.div
-            ref={mockupRef}
-            animate={{ y: [-8, 8, -8] }}
-            transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut' }}
-            className="relative"
+            className="w-full lg:w-[55%] flex flex-col items-start text-left lg:pr-8 xl:pr-14"
+            variants={containerV}
+            initial="hidden"
+            animate="visible"
           >
-            {/* Multi-layer glow */}
-            <div className="absolute -inset-12 bg-gradient-to-b from-indigo-400/15 via-blue-400/8 to-transparent rounded-[32px] blur-[90px] pointer-events-none" />
-            <div className="absolute -inset-8 bg-gradient-to-tr from-blue-400/8 to-indigo-400/5 rounded-[28px] blur-[70px] pointer-events-none" />
-            <div className="absolute -inset-4 bg-gradient-to-br from-cyan-400/5 via-transparent to-transparent rounded-[24px] blur-[50px] pointer-events-none" />
+            {/* Top badge */}
+            <motion.div variants={childV}>
+              <span className="inline-flex items-center gap-2 bg-blue-50 border border-blue-100 text-blue-600 text-xs font-semibold px-4 py-2 rounded-full mb-6">
+                <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />
+                {isAr ? 'تأسيس LLC في 1-2 يوم عمل' : '#1 Online LLC Formation Service for Global Entrepreneurs'}
+              </span>
+            </motion.div>
 
-            {/* Light reflection */}
-            <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-transparent pointer-events-none rounded-2xl z-10" />
+            {/* H1 */}
+            <motion.h1
+              variants={childV}
+              className="text-[44px] sm:text-[58px] lg:text-[66px] xl:text-[72px] font-bold text-[#0F172A] leading-[1.05] tracking-tight mb-6"
+              style={{ fontFamily: 'Sora, Inter, sans-serif' }}
+            >
+              {val('hero_headline') || (
+                <>
+                  {isAr ? 'أطلق عملك' : 'Launch Your Business'}
+                  <br />
+                  {isAr ? 'من أي مكان في العالم' : 'From '}
+                  {!isAr && (
+                    <span className="text-[#2563EB]">Anywhere in the World</span>
+                  )}
+                </>
+              )}
+            </motion.h1>
 
-            {/* Browser frame */}
-            <div className="relative rounded-2xl overflow-hidden shadow-[0_50px_100px_-20px_rgba(0,0,0,0.3),0_0_0_1px_rgba(226,232,240,0.8)] bg-white">
-              {/* Chrome */}
-              <div className="bg-white border-b border-slate-100 px-4 sm:px-5 py-3.5 flex items-center gap-3">
-                <div className="flex gap-1.5">
-                  <div className="w-3 h-3 rounded-full bg-red-400/80" />
-                  <div className="w-3 h-3 rounded-full bg-amber-400/80" />
-                  <div className="w-3 h-3 rounded-full bg-emerald-400/80" />
+            {/* Subheadline */}
+            <motion.p
+              variants={childV}
+              className="text-base sm:text-lg lg:text-xl text-slate-500 leading-relaxed max-w-[580px] mb-8"
+            >
+              {val('hero_subheadline') || h.subheadline}
+            </motion.p>
+
+            {/* CTA Buttons */}
+            <motion.div variants={childV} className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 w-full sm:w-auto mb-8">
+              <a
+                href="/order"
+                className="shimmer-btn group relative inline-flex items-center justify-center gap-2 bg-[#2563EB] hover:bg-[#1d4ed8] text-white font-semibold text-base px-9 py-4.5 rounded-2xl transition-all duration-200 shadow-[0_4px_24px_rgba(37,99,235,0.35)] hover:shadow-[0_8px_32px_rgba(37,99,235,0.45)] hover:-translate-y-0.5 w-full sm:w-auto text-center"
+              >
+                {val('hero_cta') || (isAr ? 'تأسيس شركتي' : 'Form My LLC')}
+                <ArrowRight size={17} className="group-hover:translate-x-1 transition-transform duration-200 shrink-0" />
+              </a>
+              <a
+                href="https://cal.com/instant-grow-llc/15min"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center justify-center gap-2 bg-white border border-gray-200 text-slate-700 font-semibold text-base px-8 py-4.5 rounded-2xl hover:border-blue-200 hover:bg-blue-50/50 transition-all duration-200 shadow-sm hover:shadow-md hover:-translate-y-0.5 w-full sm:w-auto text-center"
+              >
+                <Phone size={16} className="text-slate-400 shrink-0" />
+                {isAr ? 'احجز مكالمة مجانية' : 'Book a Free Call'}
+              </a>
+            </motion.div>
+
+            {/* Trust badges */}
+            <motion.div variants={childV} className="flex flex-wrap gap-x-6 gap-y-2 mb-8">
+              {trustBadges.map((b, i) => (
+                <span key={i} className="flex items-center gap-1.5 text-sm text-slate-500 font-medium">
+                  <CheckCircle size={14} className="text-emerald-500 shrink-0" />
+                  {b.text}
+                </span>
+              ))}
+            </motion.div>
+
+            {/* Rating + Google review */}
+            <motion.div variants={childV} className="flex flex-wrap items-center gap-4 mb-10">
+              <div className="flex items-center gap-2">
+                <div className="flex gap-0.5">
+                  {[...Array(5)].map((_, i) => (
+                    <Star key={i} size={16} className="fill-amber-400 text-amber-400" />
+                  ))}
                 </div>
-                <div className="flex-1 bg-slate-50 rounded-lg h-7 flex items-center justify-center border border-slate-100 max-w-[360px] mx-auto">
-                  <span className="text-[11px] text-slate-400 font-medium tracking-tight">instantgrow.app/dashboard</span>
+                <span className="text-base font-bold text-slate-800">4.9</span>
+                <span className="text-xs text-slate-400">/ 5 from 500+ reviews</span>
+              </div>
+              <div className="flex items-center gap-1.5 text-xs text-slate-400">
+                <span className="text-slate-600 font-medium">⭐ Trustpilot</span>
+                <span>·</span>
+                <span className="text-emerald-600 font-semibold">Excellent</span>
+              </div>
+            </motion.div>
+
+            {/* Partner logos */}
+            <motion.div variants={childV} className="w-full">
+              <p className="text-xs text-slate-400 font-medium mb-4 uppercase tracking-wider">
+                {isAr ? 'موثوق من قِبل رواد الأعمال حول العالم' : 'Trusted by entrepreneurs worldwide'}
+              </p>
+              <div className="flex flex-wrap items-center gap-6">
+                {partnerLogos.map((logo) => (
+                  <span
+                    key={logo.name}
+                    className="text-slate-300 font-bold text-lg tracking-tight hover:text-slate-400 transition-colors"
+                    style={{ fontFamily: logo.name === 'stripe' ? '"Helvetica Neue", sans-serif' : 'inherit' }}
+                  >
+                    {logo.text}
+                  </span>
+                ))}
+              </div>
+            </motion.div>
+          </motion.div>
+
+          {/* ── RIGHT COLUMN (45%) — World Map + Mascot + Country Pins ─────── */}
+          <motion.div
+            className="w-full lg:w-[45%] relative flex items-center justify-center"
+            style={{ height: 520 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.3, duration: 0.8 }}
+          >
+            {/* World map dots background */}
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="relative w-full h-full">
+                <WorldMapDots />
+              </div>
+            </div>
+
+            {/* Mascot — floating animation */}
+            <motion.div
+              className="relative z-10 w-[300px] sm:w-[360px] lg:w-[400px] xl:w-[440px] drop-shadow-[0_35px_50px_rgba(0,0,0,0.14)]"
+              animate={{ y: [-12, 8, -12] }}
+              transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
+            >
+              <img
+                src="/mascot.png"
+                alt="Instant Grow Mascot"
+                className="w-full h-auto select-none"
+                onError={(e) => {
+                  // fallback to a styled G if mascot image not found
+                  e.currentTarget.style.display = 'none'
+                  const fallback = document.createElement('div')
+                  fallback.className = 'w-full aspect-square flex items-center justify-center'
+                  fallback.innerHTML = '<div style="font-size:200px;font-weight:900;color:#2563EB;font-family:Sora,sans-serif;line-height:1;text-shadow:0 20px 60px rgba(37,99,235,0.3)">G</div>'
+                  e.currentTarget.parentElement?.appendChild(fallback)
+                }}
+              />
+            </motion.div>
+
+            {/* Country pin cards */}
+            <PinCard flag="🇺🇸" country="USA" label="LLC Formation" style={{ top: '8%', left: '0%' }} delay={0} />
+            <PinCard flag="🇬🇧" country="UK" label="LTD Company" style={{ top: '8%', right: '-4%' }} delay={0.15} />
+            <PinCard flag="🇦🇪" country="UAE" label="Business Setup" style={{ bottom: '22%', left: '-2%' }} delay={0.3} />
+            <PinCard flag="🇦🇺" country="Australia" label="Company Setup" style={{ bottom: '22%', right: '-4%' }} delay={0.45} />
+          </motion.div>
+        </div>
+
+        {/* ── DASHBOARD MOCKUP — overlaps next section ────────────────────── */}
+        <motion.div
+          className="relative max-w-[1200px] mx-auto mt-20 z-20"
+          style={{ marginBottom: -140 }}
+          initial={{ opacity: 0, y: 60 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.7, duration: 0.9, ease }}
+        >
+          {/* Glow behind dashboard */}
+          <div className="absolute -inset-10 rounded-[40px] pointer-events-none"
+            style={{ background: 'radial-gradient(ellipse at 50% 0%, rgba(37,99,235,0.15) 0%, transparent 70%)', filter: 'blur(35px)' }} />
+
+          {/* Browser frame */}
+          <div
+            className="relative bg-white overflow-hidden"
+            style={{ borderRadius: 32, boxShadow: '0 60px 150px rgba(15,23,42,0.18), 0 0 0 1px rgba(229,231,235,0.8)' }}
+          >
+            {/* Chrome bar */}
+            <div className="bg-white border-b border-gray-100 px-6 py-4.5 flex items-center gap-3">
+              <div className="flex gap-1.5">
+                <div className="w-3.5 h-3.5 rounded-full bg-red-400/80" />
+                <div className="w-3.5 h-3.5 rounded-full bg-amber-400/80" />
+                <div className="w-3.5 h-3.5 rounded-full bg-emerald-400/80" />
+              </div>
+              <div className="flex-1 bg-slate-50 rounded-lg h-8.5 flex items-center justify-center border border-slate-100 max-w-[360px] mx-auto">
+                <span className="text-xs text-slate-400 font-medium">app.instantgrow.net/dashboard</span>
+              </div>
+              <div className="w-14" />
+            </div>
+
+            {/* Dashboard body */}
+            <div className="flex" style={{ minHeight: 340 }}>
+              {/* Sidebar */}
+              <div className="hidden sm:flex flex-col w-56 bg-[#0a0f1e] p-4 gap-1">
+                <div className="flex items-center gap-2 px-3 py-3 mb-4">
+                  <img src="/logo.png" alt="Instant Grow" className="h-7 w-auto brightness-0 invert" onError={() => {}} />
                 </div>
-                <div className="w-[52px] hidden sm:block" />
+                {['Dashboard', 'My Company', 'Documents', 'Compliance', 'Payments', 'Support'].map((item, i) => (
+                  <div
+                    key={item}
+                    className={`flex items-center gap-3 px-3 py-3 rounded-xl text-xs font-semibold transition-colors ${
+                      i === 0 ? 'bg-blue-600 text-white' : 'text-white/40 hover:text-white/70'
+                    }`}
+                  >
+                    <span>{item}</span>
+                  </div>
+                ))}
               </div>
 
-              {/* Dashboard */}
-              <div className="bg-white">
-                <div className="flex">
-                  {/* Sidebar */}
-                  <div className="hidden sm:flex flex-col w-52 lg:w-60 bg-slate-50/50 border-r border-slate-100 p-3 gap-0.5">
-                    {['Dashboard', 'Company', 'Documents', 'Services', 'Messages', 'Settings'].map((item, i) => (
-                      <div
-                        key={item}
-                        className={`flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-xs font-medium transition-colors ${
-                          i === 0
-                            ? 'bg-white text-slate-800 shadow-sm border border-slate-100'
-                            : 'text-slate-400 hover:text-slate-600'
-                        }`}
-                      >
-                        {i === 0 && <span className="w-1 h-1 rounded-full bg-indigo-500 shrink-0" />}
-                        <span>{item}</span>
-                        {i === 4 && <span className="ml-auto w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse shrink-0" />}
+              {/* Main content */}
+              <div className="flex-1 bg-slate-50/30 p-6 sm:p-8">
+                {/* Header */}
+                <div className="flex items-center justify-between mb-6">
+                  <div>
+                    <p className="text-xs text-slate-400">Welcome back, John 👋</p>
+                    <h3 className="text-base font-bold text-slate-800 mt-0.5">What's happening with your business</h3>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-9 h-9 rounded-full bg-blue-500 flex items-center justify-center text-white text-xs font-bold">J</div>
+                  </div>
+                </div>
+
+                {/* Metric cards */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
+                  {[
+                    { label: 'Formation Status', value: 'In Progress', color: 'bg-amber-400', w: '65%', chip: 'amber' },
+                    { label: 'EIN Status', value: 'Completed', color: 'bg-emerald-400', w: '100%', chip: 'green' },
+                    { label: 'Documents', value: '3 of 5', color: 'bg-blue-400', w: '60%', chip: 'blue' },
+                    { label: 'Compliance', value: 'Up to date', color: 'bg-emerald-400', w: '100%', chip: 'green' },
+                  ].map((m) => (
+                    <div key={m.label} className="bg-white rounded-xl p-4 border border-gray-100 shadow-sm">
+                      <p className="text-[10px] text-slate-400 font-medium uppercase tracking-wide mb-1">{m.label}</p>
+                      <p className="text-sm font-semibold text-slate-800">{m.value}</p>
+                      <div className="mt-2.5 h-1 bg-slate-100 rounded-full overflow-hidden">
+                        <div className={`h-full rounded-full ${m.color}`} style={{ width: m.w }} />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Activity table */}
+                <div className="bg-white rounded-xl border border-gray-100 p-5 shadow-sm">
+                  <div className="flex items-center justify-between mb-4">
+                    <span className="text-xs font-bold text-slate-700">Recent Activity</span>
+                    <span className="text-[11px] text-blue-500 font-medium cursor-pointer hover:underline">View all →</span>
+                  </div>
+                  <div className="space-y-3">
+                    {[
+                      { icon: '✅', text: 'LLC Formation Submitted', time: 'Completed', color: 'text-emerald-600' },
+                      { icon: '🔄', text: 'EIN Application', time: 'In Review', color: 'text-amber-600' },
+                      { icon: '📄', text: 'Operating Agreement', time: 'Pending', color: 'text-blue-600' },
+                    ].map((row, i) => (
+                      <div key={i} className="flex items-center gap-3">
+                        <span className="text-base">{row.icon}</span>
+                        <span className="flex-1 text-xs text-slate-600 font-medium">{row.text}</span>
+                        <span className={`text-[11px] font-semibold ${row.color}`}>{row.time}</span>
                       </div>
                     ))}
-                    <div className="mt-auto pt-3 border-t border-slate-100">
-                      <div className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-xs font-medium text-slate-400">
-                        <img src="/favicon.svg" alt="Instant Grow Icon" className="w-4 h-4" />
-                        Instant Grow
-                      </div>
-                    </div>
-
-                  </div>
-
-                  {/* Main area */}
-                  <div className="flex-1 p-5 sm:p-6 lg:p-7">
-                    {/* Header */}
-                    <div className="flex items-center justify-between mb-5">
-                      <div>
-                        <h3 className="text-sm font-semibold text-slate-800">Dashboard</h3>
-                        <p className="text-[11px] text-slate-400 mt-0.5">Welcome back, John</p>
-                      </div>
-                      <div className="flex items-center gap-1.5 bg-indigo-50 rounded-lg px-3 py-1.5 border border-indigo-100">
-                        <span className="relative flex w-2 h-2">
-                          <span className="absolute inset-0 rounded-full bg-emerald-400 animate-ping opacity-40" />
-                          <span className="relative w-2 h-2 rounded-full bg-emerald-400" />
-                        </span>
-                        <span className="text-[11px] font-medium text-indigo-600">Active</span>
-                      </div>
-                    </div>
-
-                    {/* Metric cards */}
-                    <div className="grid grid-cols-3 gap-3 mb-5">
-                      {[
-                        { label: 'Formation', value: 'In Progress', color: 'bg-amber-400', width: '65%' },
-                        { label: 'EIN Status', value: 'Completed', color: 'bg-emerald-400', width: '100%' },
-                        { label: 'Documents', value: '3 of 5', color: 'bg-blue-400', width: '60%' },
-                      ].map((m, i) => (
-                        <div key={m.label} className="bg-slate-50 rounded-xl p-3.5 border border-slate-100">
-                          <span className="text-[10px] font-medium text-slate-400 uppercase tracking-wider">{m.label}</span>
-                          <p className="text-xs font-semibold text-slate-800 mt-1">{m.value}</p>
-                          <div className="mt-2.5 h-1.5 bg-slate-200 rounded-full overflow-hidden">
-                            <motion.div
-                              initial={{ width: 0 }}
-                              whileInView={{ width: m.width }}
-                              viewport={{ once: true }}
-                              transition={{ duration: 1.2, delay: 0.8 + i * 0.15, ease: 'easeOut' }}
-                              className={`h-full rounded-full ${m.color}`}
-                            />
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-
-                    {/* Activity */}
-                    <div className="bg-slate-50 rounded-xl border border-slate-100 p-4 sm:p-5">
-                      <div className="flex items-center justify-between mb-3.5">
-                        <span className="text-xs font-semibold text-slate-700">Recent Activity</span>
-                        <span className="text-[10px] text-indigo-500 font-medium flex items-center gap-1 hover:gap-1.5 transition-all cursor-default">
-                          View all <ChevronRight size={10} />
-                        </span>
-                      </div>
-                      <div className="space-y-3">
-                        {activities.map((row, i) => {
-                          const Icon = row.icon
-                          return (
-                            <motion.div
-                              key={i}
-                              initial={{ opacity: 0, x: -8 }}
-                              whileInView={{ opacity: 1, x: 0 }}
-                              viewport={{ once: true }}
-                              transition={{ delay: 1 + i * 0.15, duration: 0.4 }}
-                              className="flex items-center gap-3 group/item"
-                            >
-                              <div className={`w-7 h-7 rounded-lg flex items-center justify-center ${row.bg} shrink-0`}>
-                                <Icon size={13} className={row.color} />
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <span className="text-[11px] font-medium text-slate-700 block truncate">{row.text}</span>
-                              </div>
-                              <span className={`text-[10px] shrink-0 ${row.pulse ? 'text-amber-500 font-medium' : 'text-slate-400'}`}>
-                                {row.pulse ? (
-                                  <span className="flex items-center gap-1">
-                                    <span className="w-1 h-1 rounded-full bg-amber-400 animate-pulse" />
-                                    {row.time}
-                                  </span>
-                                ) : row.time}
-                              </span>
-                            </motion.div>
-                          )
-                        })}
-                      </div>
-                    </div>
                   </div>
                 </div>
               </div>
             </div>
-          </motion.div>
+          </div>
+
+          {/* Floating notification cards */}
+          <NotifCard
+            icon="✅" title="EIN Approved"
+            subtitle="Your tax ID has been successfully issued"
+            bgColor="#ECFDF5"
+            style={{ top: '15%', left: '-6%' }}
+            delay={0.1}
+          />
+          <NotifCard
+            icon="⚡" title="Stripe Connected"
+            subtitle="Ready to accept payments"
+            bgColor="#F5F3FF"
+            style={{ bottom: '20%', left: '-4%' }}
+            delay={0.3}
+          />
+          <NotifCard
+            icon="🏦" title="Bank Account Ready"
+            subtitle="Open US bank account remotely"
+            bgColor="#EFF6FF"
+            style={{ top: '15%', right: '-6%' }}
+            delay={0.2}
+          />
+          <NotifCard
+            icon="🛡️" title="Business Verified"
+            subtitle="Your business is all set to go"
+            bgColor="#ECFDF5"
+            style={{ bottom: '20%', right: '-4%' }}
+            delay={0.4}
+          />
         </motion.div>
       </div>
     </section>
