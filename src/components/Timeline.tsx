@@ -60,12 +60,14 @@ const timelineSteps = [
 export default function Timeline() {
   const { lang } = useLang()
   const isAr = lang === 'ar'
-  const lineRef = useRef<HTMLDivElement>(null)
-  const inView = useInView(lineRef, { once: true, margin: '-100px' })
+  const lineRefMobile = useRef<HTMLDivElement>(null)
+  const lineRefDesktop = useRef<HTMLDivElement>(null)
+  const inViewMobile = useInView(lineRefMobile, { once: true, margin: '-100px' })
+  const inViewDesktop = useInView(lineRefDesktop, { once: true, margin: '-100px' })
 
   return (
     <section id="timeline" className="ig-section bg-white">
-      <div className="max-w-[1280px] mx-auto px-5 sm:px-8 lg:px-10">
+      <div className="max-w-[1280px] mx-auto">
 
         <div className="text-center mb-14">
           <h2
@@ -108,23 +110,23 @@ export default function Timeline() {
           {/* Timeline steps */}
           <div className="flex-1 relative">
             {/* Vertical connector line (mobile) */}
-            <div className="lg:hidden absolute left-[27px] top-0 bottom-0 w-1 bg-gray-200" ref={lineRef}>
+            <div className="lg:hidden absolute left-[27px] top-0 bottom-0 w-1 bg-gray-200" ref={lineRefMobile}>
               <motion.div
                 className="w-full rounded-full origin-top"
                 style={{ background: 'linear-gradient(180deg, #2563EB, #7C3AED, #059669, #D97706, #0284C7)', height: '100%' }}
                 initial={{ scaleY: 0 }}
-                animate={{ scaleY: inView ? 1 : 0 }}
+                animate={{ scaleY: inViewMobile ? 1 : 0 }}
                 transition={{ duration: 1.5, delay: 0.2, ease: 'easeOut' }}
               />
             </div>
 
             {/* Horizontal connector line (desktop) */}
-            <div className="hidden lg:block absolute top-[28px] left-[28px] right-[28px] h-1 bg-gray-200" ref={lineRef}>
+            <div className="hidden lg:block absolute top-[28px] left-[28px] right-[28px] h-1 bg-gray-200" ref={lineRefDesktop}>
               <motion.div
                 className="h-full rounded-full origin-left"
                 style={{ background: 'linear-gradient(90deg, #2563EB, #7C3AED, #059669, #D97706, #0284C7)' }}
                 initial={{ scaleX: 0 }}
-                animate={{ scaleX: inView ? 1 : 0 }}
+                animate={{ scaleX: inViewDesktop ? 1 : 0 }}
                 transition={{ duration: 1.5, delay: 0.2, ease: 'easeOut' }}
               />
             </div>

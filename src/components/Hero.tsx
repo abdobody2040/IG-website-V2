@@ -54,7 +54,7 @@ interface PinCardProps {
 function PinCard({ flag, country, label, style, delay = 0 }: PinCardProps) {
   return (
     <motion.div
-      className="absolute bg-white rounded-2xl shadow-xl border border-gray-100/80 px-4.5 py-3.5 flex items-center gap-3 z-20"
+      className="hidden sm:flex absolute bg-white rounded-2xl shadow-xl border border-gray-100/80 px-4 py-3 items-center gap-3 z-20"
       style={{ ...style, minWidth: 156 }}
       initial={{ opacity: 0, scale: 0.8, y: 10 }}
       animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -85,7 +85,7 @@ interface NotifCardProps {
 function NotifCard({ icon, title, subtitle, bgColor, style, delay = 0 }: NotifCardProps) {
   return (
     <motion.div
-      className="absolute bg-white/95 backdrop-blur-md rounded-2xl border border-gray-100/90 px-4.5 py-3.5 z-30 flex items-center gap-3"
+      className="hidden lg:flex absolute bg-white/95 backdrop-blur-md rounded-2xl border border-gray-100/90 px-4 py-3 z-30 items-center gap-3"
       style={{
         ...style,
         boxShadow: '0 12px 40px rgba(15,23,42,0.14)',
@@ -144,7 +144,7 @@ export default function Hero() {
   ]
 
   return (
-    <section className="relative bg-white overflow-hidden pb-12 lg:pb-16" style={{ minHeight: 900 }}>
+    <section className="relative bg-white overflow-hidden pt-24 pb-12 lg:pt-36 lg:pb-20 min-h-[auto] lg:min-h-[900px] flex flex-col justify-between">
       {/* Background gradient blobs */}
       <div className="absolute top-0 left-0 w-[700px] h-[600px] rounded-full pointer-events-none"
         style={{ background: 'radial-gradient(ellipse at 0% 0%, rgba(37,99,235,0.08) 0%, transparent 70%)', filter: 'blur(50px)' }} />
@@ -155,8 +155,8 @@ export default function Hero() {
       <div className="absolute inset-0 opacity-[0.04] pointer-events-none"
         style={{ backgroundImage: 'linear-gradient(rgba(37,99,235,0.3) 1px, transparent 1px), linear-gradient(90deg, rgba(37,99,235,0.3) 1px, transparent 1px)', backgroundSize: '60px 60px' }} />
 
-      <div className="relative z-10 max-w-[1280px] mx-auto px-5 sm:px-8 lg:px-10">
-        <div className="flex flex-col lg:flex-row items-center gap-12 lg:gap-0 pt-32 lg:pt-36 pb-0">
+      <div className="relative z-10 max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex flex-col lg:flex-row items-center gap-12 lg:gap-8 pb-0">
 
           {/* ── LEFT COLUMN (55%) ─────────────────────────────────────────── */}
           <motion.div
@@ -176,7 +176,7 @@ export default function Hero() {
             {/* H1 */}
             <motion.h1
               variants={childV}
-              className="text-[44px] sm:text-[58px] lg:text-[66px] xl:text-[72px] font-bold text-[#0F172A] leading-[1.05] tracking-tight mb-6"
+              className="text-3xl xs:text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold text-[#0F172A] leading-[1.1] tracking-tight mb-6"
               style={{ fontFamily: 'Sora, Inter, sans-serif' }}
             >
               {val('hero_headline') || (
@@ -203,7 +203,7 @@ export default function Hero() {
             <motion.div variants={childV} className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 w-full sm:w-auto mb-8">
               <a
                 href="/order"
-                className="shimmer-btn group relative inline-flex items-center justify-center gap-2 bg-[#2563EB] hover:bg-[#1d4ed8] text-white font-semibold text-base px-9 py-4.5 rounded-2xl transition-all duration-200 shadow-[0_4px_24px_rgba(37,99,235,0.35)] hover:shadow-[0_8px_32px_rgba(37,99,235,0.45)] hover:-translate-y-0.5 w-full sm:w-auto text-center"
+                className="shimmer-btn group relative inline-flex items-center justify-center gap-2 bg-[#2563EB] hover:bg-[#1d4ed8] text-white font-semibold text-base px-8 py-3.5 rounded-2xl transition-all duration-200 shadow-[0_4px_24px_rgba(37,99,235,0.35)] w-full sm:w-auto text-center"
               >
                 {val('hero_cta') || (isAr ? 'تأسيس شركتي' : 'Form My LLC')}
                 <ArrowRight size={17} className="group-hover:translate-x-1 transition-transform duration-200 shrink-0" />
@@ -212,7 +212,7 @@ export default function Hero() {
                 href="https://cal.com/instant-grow-llc/15min"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center justify-center gap-2 bg-white border border-gray-200 text-slate-700 font-semibold text-base px-8 py-4.5 rounded-2xl hover:border-blue-200 hover:bg-blue-50/50 transition-all duration-200 shadow-sm hover:shadow-md hover:-translate-y-0.5 w-full sm:w-auto text-center"
+                className="inline-flex items-center justify-center gap-2 bg-white border border-gray-200 text-slate-700 font-semibold text-base px-8 py-3.5 rounded-2xl hover:border-blue-200 hover:bg-blue-50/50 transition-all duration-200 shadow-sm w-full sm:w-auto text-center"
               >
                 <Phone size={16} className="text-slate-400 shrink-0" />
                 {isAr ? 'احجز مكالمة مجانية' : 'Book a Free Call'}
@@ -268,8 +268,7 @@ export default function Hero() {
 
           {/* ── RIGHT COLUMN (45%) — World Map + Mascot + Country Pins ─────── */}
           <motion.div
-            className="w-full lg:w-[45%] relative flex items-center justify-center"
-            style={{ height: 520 }}
+            className="w-full lg:w-[45%] relative flex items-center justify-center h-[350px] sm:h-[450px] lg:h-[520px]"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.3, duration: 0.8 }}
@@ -283,7 +282,7 @@ export default function Hero() {
 
             {/* Mascot — floating animation */}
             <motion.div
-              className="relative z-10 w-[300px] sm:w-[360px] lg:w-[400px] xl:w-[440px] drop-shadow-[0_35px_50px_rgba(0,0,0,0.14)]"
+              className="relative z-10 w-[240px] sm:w-[320px] lg:w-[380px] xl:w-[420px] drop-shadow-[0_35px_50px_rgba(0,0,0,0.14)]"
               animate={{ y: [-12, 8, -12] }}
               transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
             >
@@ -304,8 +303,7 @@ export default function Hero() {
 
         {/* ── DASHBOARD MOCKUP — overlaps next section ────────────────────── */}
         <motion.div
-          className="relative max-w-[1200px] mx-auto mt-20 z-20"
-          style={{ marginBottom: -140 }}
+          className="relative max-w-[1200px] mx-auto mt-12 md:mt-20 z-20 -mb-20 md:-mb-36 px-4 sm:px-6 lg:px-8"
           initial={{ opacity: 0, y: 60 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.7, duration: 0.9, ease }}

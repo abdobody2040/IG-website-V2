@@ -76,7 +76,7 @@ export default function Services() {
 
   return (
     <section id="services" className="ig-section bg-[#F8FAFC]">
-      <div className="max-w-[1280px] mx-auto px-5 sm:px-8 lg:px-10">
+      <div className="max-w-[1280px] mx-auto">
         {/* Header */}
         <div className="text-center mb-14">
           <h2

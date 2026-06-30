@@ -31,7 +31,7 @@ export default function HowItWorks() {
 
   return (
     <section id="how-it-works" className="ig-section bg-white">
-      <div className="max-w-[1280px] mx-auto px-5 sm:px-8 lg:px-10">
+      <div className="max-w-[1280px] mx-auto">
 
         <div className="text-center mb-16">
           <h2
@@ -143,7 +143,7 @@ export default function HowItWorks() {
         >
           <a
             href="/order"
-            className="shimmer-btn inline-flex items-center gap-2 bg-[#2563EB] text-white font-semibold text-base px-8 py-4 rounded-2xl hover:bg-[#1d4ed8] transition-all duration-200 shadow-[0_4px_24px_rgba(37,99,235,0.3)] hover:shadow-[0_8px_32px_rgba(37,99,235,0.4)] hover:-translate-y-0.5 group"
+            className="shimmer-btn inline-flex items-center justify-center gap-2 bg-[#2563EB] text-white font-semibold text-base px-8 py-4 min-h-[48px] rounded-2xl hover:bg-[#1d4ed8] transition-all duration-200 shadow-[0_4px_24px_rgba(37,99,235,0.3)] hover:-translate-y-0.5 group w-full sm:w-auto text-center"
           >
             {isAr ? 'ابدأ الآن' : h.getStarted}
             <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />

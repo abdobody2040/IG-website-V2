@@ -48,21 +48,20 @@ export default function Footer() {
       <div className="absolute bottom-0 right-0 w-80 h-80 bg-blue-500/5 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute top-0 left-1/3 w-60 h-60 bg-cyan-500/4 rounded-full blur-3xl pointer-events-none" />
 
-      <div className="max-w-[1280px] mx-auto px-5 sm:px-8 lg:px-10 pt-24 pb-12">
-        {/* Main grid: 5 columns */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-12 lg:gap-14 mb-14">
+      <div className="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-12">
+        {/* Main grid: 5 columns on desktop, 3 on tablet, 1 on mobile */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-10 md:gap-12 lg:gap-14 mb-14 text-center sm:text-left justify-items-center sm:justify-items-start">
 
           {/* 1 — Brand */}
-          <div className="col-span-2 md:col-span-3 lg:col-span-1">
+          <div className="col-span-1 sm:col-span-2 md:col-span-3 lg:col-span-1 flex flex-col items-center sm:items-start text-center sm:text-left">
             <div className="flex items-center gap-2 mb-4">
               <img src="/logo.png" alt="Instant Grow" className="h-8 w-auto brightness-0 invert opacity-90" onError={() => {}} />
             </div>
             <p className="text-white/40 text-sm leading-relaxed mb-6 max-w-[260px]">
               {f.tagline}
             </p>
-
             {/* Social icons */}
-            <div className="flex items-center gap-2.5 mb-6">
+            <div className="flex items-center justify-center sm:justify-start gap-2.5 mb-6">
               <a href="mailto:info@instantgrow.net" title="Email"
                 className="w-9 h-9 bg-white/5 rounded-full flex items-center justify-center hover:bg-blue-500/20 border border-white/5 transition-colors">
                 <Mail size={15} className="text-white/50" />
@@ -143,18 +142,18 @@ export default function Footer() {
                 {isAr ? '✓ تم الاشتراك بنجاح!' : '✓ Subscribed! Thank you.'}
               </p>
             ) : (
-              <form onSubmit={handleSubscribe} className="flex flex-col gap-3">
+              <form onSubmit={handleSubscribe} className="flex flex-col gap-3 w-full">
                 <input
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder={isAr ? 'بريدك الإلكتروني' : 'your@email.com'}
                   required
-                  className="bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-white/25 focus:outline-none focus:ring-1 focus:ring-blue-500/50 focus:border-blue-500/50 transition-colors"
+                  className="bg-white/5 border border-white/10 rounded-xl px-4 py-3 h-12 text-sm text-white placeholder-white/25 focus:outline-none focus:ring-1 focus:ring-blue-500/50 focus:border-blue-500/50 transition-colors w-full"
                 />
                 <button
                   type="submit"
-                  className="flex items-center justify-center gap-1.5 bg-blue-600 text-white text-sm font-semibold px-4 py-3 rounded-xl hover:bg-blue-500 transition-colors"
+                  className="flex items-center justify-center gap-1.5 bg-blue-600 text-white text-sm font-semibold px-4 py-3.5 h-12 rounded-xl hover:bg-blue-50 transition-colors w-full"
                 >
                   {isAr ? 'اشترك' : 'Subscribe'}
                   <ArrowRight size={13} />
@@ -163,7 +162,7 @@ export default function Footer() {
             )}
 
             {/* Language switcher */}
-            <div className="mt-6">
+            <div className="mt-6 flex flex-col items-center sm:items-start">
               <p className="text-white/30 text-xs mb-2 uppercase tracking-wider">
                 {isAr ? 'اللغة' : 'Language'}
               </p>
@@ -174,7 +173,7 @@ export default function Footer() {
                     lang === 'en' ? 'bg-blue-500 text-white' : 'bg-white/5 text-white/40 hover:text-white hover:bg-white/10'
                   }`}
                 >
-                  🇺🇸 EN
+                  EN
                 </button>
                 <button
                   onClick={() => setLang('ar')}
@@ -182,7 +181,7 @@ export default function Footer() {
                     lang === 'ar' ? 'bg-blue-500 text-white' : 'bg-white/5 text-white/40 hover:text-white hover:bg-white/10'
                   }`}
                 >
-                  🇸🇦 AR
+                  AR
                 </button>
               </div>
             </div>
@@ -191,8 +190,8 @@ export default function Footer() {
 
         {/* Divider + Bottom bar */}
         <div className="border-t border-white/5 pt-7">
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-            <p className="text-white/30 text-sm">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
+            <p className="text-white/30 text-sm text-center sm:text-left">
               {f.copyright.replace('{year}', String(new Date().getFullYear()))}
             </p>
             <p className="text-white/20 text-xs max-w-xl text-center sm:text-right leading-relaxed">

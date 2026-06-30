@@ -24,7 +24,7 @@ export default function ComparisonTable() {
 
   return (
     <section id="comparison" className="ig-section bg-white">
-      <div className="max-w-[1280px] mx-auto px-5 sm:px-8 lg:px-10">
+      <div className="max-w-[1280px] mx-auto">
 
         {/* Header (Centered) */}
         <div className="text-center mb-16">
@@ -41,9 +41,9 @@ export default function ComparisonTable() {
           </p>
         </div>
 
-        {/* Full-width table container (90% width) */}
+        {/* Desktop View (Table layout, hidden below md) */}
         <motion.div
-          className="max-w-[1100px] mx-auto overflow-x-auto"
+          className="hidden md:block max-w-[1100px] mx-auto overflow-x-auto"
           initial={{ opacity: 0, y: 24 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
@@ -139,6 +139,47 @@ export default function ComparisonTable() {
             })}
           </div>
         </motion.div>
+
+        {/* Mobile View (Responsive Cards, hidden on desktop/tablet md+) */}
+        <div className="block md:hidden space-y-4">
+          {tableRows.map((row, i) => (
+            <div key={i} className="bg-white rounded-2xl border border-slate-100 p-5 shadow-sm space-y-3">
+              <h3 className="font-bold text-slate-800 text-sm">{isAr ? row.featureAr : row.feature}</h3>
+              <div className="grid grid-cols-3 gap-2 pt-2 border-t border-slate-50 text-center">
+                <div className="flex flex-col items-center p-2 rounded-xl bg-blue-50/20 border border-blue-50/50">
+                  <span className="text-[10px] font-bold text-blue-600 uppercase tracking-wider mb-1">
+                    {isAr ? 'إنستنت جرو' : 'IG'}
+                  </span>
+                  {row.ig ? (
+                    <Check size={16} className="text-blue-500" strokeWidth={3} />
+                  ) : (
+                    <X size={16} className="text-red-400" strokeWidth={3} />
+                  )}
+                </div>
+                <div className="flex flex-col items-center p-2 rounded-xl bg-slate-50 border border-slate-100">
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
+                    {isAr ? 'الآخرون' : 'Others'}
+                  </span>
+                  {row.others ? (
+                    <Check size={16} className="text-emerald-500" strokeWidth={3} />
+                  ) : (
+                    <X size={16} className="text-red-400" strokeWidth={3} />
+                  )}
+                </div>
+                <div className="flex flex-col items-center p-2 rounded-xl bg-slate-50 border border-slate-100">
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
+                    {isAr ? 'بنفسك' : 'DIY'}
+                  </span>
+                  {row.diy ? (
+                    <Check size={16} className="text-emerald-500" strokeWidth={3} />
+                  ) : (
+                    <X size={16} className="text-red-400" strokeWidth={3} />
+                  )}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     </section>
   )

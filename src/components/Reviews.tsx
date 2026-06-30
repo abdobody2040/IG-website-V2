@@ -84,7 +84,7 @@ export default function Reviews() {
 
   return (
     <section id="reviews" className="ig-section bg-[#F8FAFC] overflow-hidden">
-      <div className="max-w-[1280px] mx-auto px-5 sm:px-8 lg:px-10 mb-14">
+      <div className="max-w-[1280px] mx-auto mb-14">
         {/* Header */}
         <div className="text-center">
           <h2

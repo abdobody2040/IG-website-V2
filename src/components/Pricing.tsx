@@ -271,7 +271,7 @@ export default function Pricing() {
 
   return (
     <section id="pricing" className="ig-section bg-gradient-to-b from-white to-[#F8FAFC]">
-      <div className="max-w-[1280px] mx-auto px-5 sm:px-8 lg:px-10">
+      <div className="max-w-[1280px] mx-auto">
 
         {/* Header */}
         <div className="text-center mb-12">
@@ -333,7 +333,7 @@ export default function Pricing() {
         </div>
 
         {/* ── 3 Cards Grid ───────────────────────────────────────────────────── */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto items-stretch pt-6 pb-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto items-stretch pt-6 pb-6">
 
           {/* Card 1: Basic */}
           <motion.div
@@ -377,18 +377,15 @@ export default function Pricing() {
             </ul>
           </motion.div>
 
-          {/* Card 2: Premium — FEATURED */}
           <motion.div
             key={`premium-${region}`}
             initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.1 }}
-            className="relative rounded-[24px] overflow-hidden flex flex-col"
+            className="relative rounded-[24px] overflow-hidden flex flex-col scale-100 lg:scale-[1.08] z-[1] lg:z-[2]"
             style={{
-              transform: 'scale(1.08)',
               background: '#0F172A',
               boxShadow: '0 0 0 2px #2563EB, 0 35px 90px rgba(37,99,235,0.35), 0 0 50px rgba(37,99,235,0.25)',
-              zIndex: 2,
             }}
           >
             {/* Glow blob */}

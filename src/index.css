@@ -304,3 +304,36 @@ html.lenis, html.lenis body {
   transform-origin: 0 50%;
   transform: scaleX(0);
 }
+
+/* Responsive spacing system between sections */
+.ig-section {
+  padding-top: 56px;
+  padding-bottom: 56px;
+  padding-left: 12px;  /* px-3 on small mobile */
+  padding-right: 12px;
+}
+
+@media (min-width: 640px) {
+  .ig-section {
+    padding-left: 16px; /* px-4 on mobile */
+    padding-right: 16px;
+  }
+}
+
+@media (min-width: 768px) {
+  .ig-section {
+    padding-top: 72px;
+    padding-bottom: 72px;
+    padding-left: 24px; /* px-6 on tablet */
+    padding-right: 24px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .ig-section {
+    padding-top: 96px;
+    padding-bottom: 96px;
+    padding-left: 32px; /* px-8 on desktop */
+    padding-right: 32px;
+  }
+}

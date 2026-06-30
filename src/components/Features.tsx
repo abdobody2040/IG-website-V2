@@ -91,7 +91,7 @@ export default function Features() {
 
   return (
     <section id="features" className="ig-section bg-gradient-to-b from-[#F8FAFC] to-white">
-      <div className="max-w-[1280px] mx-auto px-5 sm:px-8 lg:px-10">
+      <div className="max-w-[1280px] mx-auto">
 
         <div className="text-center mb-14">
           <h2

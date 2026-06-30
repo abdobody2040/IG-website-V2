@@ -20,7 +20,7 @@ export default function CTASection() {
   ]
 
   return (
-    <section id="order" className="py-32 bg-[#0a0f1e] relative overflow-hidden">
+    <section id="order" className="py-14 sm:py-20 lg:py-28 bg-[#0a0f1e] relative overflow-hidden">
       {/* Background effects */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
         <Particles count={30} />
@@ -37,7 +37,7 @@ export default function CTASection() {
         />
       </div>
 
-      <div className="max-w-[1280px] mx-auto px-5 sm:px-8 lg:px-10 relative z-10">
+      <div className="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="flex flex-col lg:flex-row items-center gap-12 lg:gap-16">
 
           {/* Left content */}
@@ -59,8 +59,7 @@ export default function CTASection() {
               {c.subheading}
             </p>
 
-            {/* CTAs */}
-            <div className="flex flex-col sm:flex-row items-center lg:items-start gap-4 mb-10">
+            <div className="flex flex-col sm:flex-row items-center lg:items-start gap-4 mb-10 w-full">
               <motion.a
                 ref={magneticCta.ref}
                 href="/order?plan=us-premium"
@@ -68,7 +67,7 @@ export default function CTASection() {
                 onMouseLeave={magneticCta.onMouseLeave}
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
-                className="shimmer-btn inline-flex items-center gap-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white font-bold text-base px-10 py-5 rounded-[18px] hover:shadow-xl hover:shadow-blue-500/30 transition-all group"
+                className="shimmer-btn inline-flex items-center justify-center gap-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white font-bold text-base px-10 py-5 rounded-[18px] hover:shadow-xl hover:shadow-blue-500/30 transition-all group w-full sm:w-auto text-center min-h-[48px]"
               >
                 {c.button}
                 <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
@@ -78,7 +77,7 @@ export default function CTASection() {
                 href={`${CAL_BASE}/15min`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 bg-white/8 text-white font-semibold text-base px-9 py-5 rounded-[18px] border border-white/12 hover:bg-white/14 hover:border-white/20 transition-all backdrop-blur-sm group"
+                className="inline-flex items-center justify-center gap-2 bg-white/8 text-white font-semibold text-base px-9 py-5 rounded-[18px] border border-white/12 hover:bg-white/14 hover:border-white/20 transition-all backdrop-blur-sm group w-full sm:w-auto text-center min-h-[48px]"
               >
                 <Phone size={16} className="text-cyan-400" />
                 {isAr ? 'احجز مكالمة مجانية' : 'Book a Free Call'}
@@ -107,12 +106,12 @@ export default function CTASection() {
             <h3 className="text-xl font-bold text-white mb-2">{c.meetingHeading}</h3>
             <p className="text-white/50 text-sm mb-6">{c.meetingDesc}</p>
 
-            <div className="flex flex-col sm:flex-row items-center lg:items-start gap-3">
+            <div className="flex flex-col sm:flex-row items-center lg:items-start gap-3 w-full">
               <a
                 href={`${CAL_BASE}/15min`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 bg-white/6 text-white font-semibold text-sm px-6 py-3 rounded-xl border border-white/10 hover:bg-white/10 hover:border-emerald-400/40 transition-all group"
+                className="inline-flex items-center justify-center gap-2 bg-white/6 text-white font-semibold text-sm px-6 py-3 rounded-xl border border-white/10 hover:bg-white/10 hover:border-emerald-400/40 transition-all group w-full sm:w-auto text-center min-h-[44px]"
               >
                 <Calendar size={14} className="text-emerald-400" />
                 {c.meeting15}
@@ -121,7 +120,7 @@ export default function CTASection() {
                 href={`${CAL_BASE}/30min`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 bg-emerald-500 text-white font-semibold text-sm px-6 py-3 rounded-xl hover:bg-emerald-600 transition-all hover:shadow-lg hover:shadow-emerald-500/25 group"
+                className="inline-flex items-center justify-center gap-2 bg-emerald-500 text-white font-semibold text-sm px-6 py-3 rounded-xl hover:bg-emerald-600 transition-all hover:shadow-lg hover:shadow-emerald-500/25 group w-full sm:w-auto text-center min-h-[44px]"
               >
                 <Calendar size={14} />
                 {c.meeting30}
