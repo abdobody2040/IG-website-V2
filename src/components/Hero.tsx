@@ -44,17 +44,16 @@ function WorldMapDots() {
 
 /* ── Country Pin Card ─────────────────────────────────────────────────────── */
 interface PinCardProps {
-  flag: string
   country: string
   label: string
   style: React.CSSProperties
   delay?: number
 }
-function PinCard({ flag, country, label, style, delay = 0 }: PinCardProps) {
+function PinCard({ country, label, style, delay = 0 }: PinCardProps) {
   return (
     <motion.div
-      className="hidden sm:flex absolute bg-white rounded-2xl shadow-xl border border-gray-100/80 px-4 py-3 items-center gap-3 z-20"
-      style={{ ...style, minWidth: 156 }}
+      className="hidden sm:flex absolute bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg border border-gray-100/50 px-3.5 py-2.5 items-center gap-2.5 z-20 hover:scale-105 transition-transform duration-200"
+      style={{ ...style, minWidth: 140 }}
       initial={{ opacity: 0, scale: 0.8, y: 10 }}
       animate={{ opacity: 1, scale: 1, y: 0 }}
       transition={{ delay: 0.8 + delay, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
@@ -65,8 +64,8 @@ function PinCard({ flag, country, label, style, delay = 0 }: PinCardProps) {
         <span className="w-2.5 h-2.5 rounded-full bg-blue-500 relative" />
       </span>
       <div className="min-w-0">
-        <p className="text-xs font-bold text-slate-800 leading-none">{flag} {country}</p>
-        <p className="text-[11px] text-slate-400 mt-1 truncate">{label}</p>
+        <p className="text-xs font-extrabold text-slate-800 leading-none">{country}</p>
+        <p className="text-[10px] text-slate-400 mt-1 truncate">{label}</p>
       </div>
     </motion.div>
   )
@@ -267,36 +266,43 @@ export default function Hero() {
 
           {/* ── RIGHT COLUMN (45%) — World Map + Mascot + Country Pins ─────── */}
           <motion.div
-            className="w-full lg:w-[45%] relative flex items-center justify-center h-[350px] sm:h-[450px] lg:h-[520px]"
+            className="w-full lg:w-[48%] relative flex items-center justify-center"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.3, duration: 0.8 }}
           >
-            {/* World map dots background */}
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="relative w-full h-full">
-                <WorldMapDots />
+            {/* Relative container with aspect ratio for map alignment */}
+            <div className="relative w-full aspect-[3/2] max-w-[650px] mx-auto flex items-center justify-center">
+              
+              {/* World map background image */}
+              <div className="absolute inset-0 flex items-center justify-center">
+                <img
+                  src="/world-map.png"
+                  alt="World Map"
+                  className="w-full h-full object-contain opacity-90 select-none pointer-events-none"
+                />
               </div>
+
+              {/* Mascot — floating animation */}
+              <motion.div
+                className="relative z-10 w-[35%] sm:w-[40%] drop-shadow-[0_25px_45px_rgba(0,0,0,0.12)]"
+                animate={{ y: [-8, 6, -8] }}
+                transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
+              >
+                <img
+                  src="/mascot-hero.png"
+                  alt="Instant Grow Mascot"
+                  className="w-full h-auto select-none"
+                />
+              </motion.div>
+
+              {/* Country pin cards placed at actual geographical coordinates */}
+              <PinCard country={isAr ? "أمريكا" : "USA"} label={isAr ? "تأسيس شركة LLC" : "LLC Formation"} style={{ top: '28%', left: '16%' }} delay={0} />
+              <PinCard country={isAr ? "بريطانيا" : "UK"} label={isAr ? "تأسيس شركة LTD" : "LTD Company"} style={{ top: '20%', left: '46%' }} delay={0.15} />
+              <PinCard country={isAr ? "الإمارات" : "UAE"} label={isAr ? "تأسيس أعمال" : "Business Setup"} style={{ top: '38%', left: '60%' }} delay={0.3} />
+              <PinCard country={isAr ? "أستراليا" : "Australia"} label={isAr ? "تأسيس شركة" : "Company Setup"} style={{ top: '72%', left: '80%' }} delay={0.45} />
+
             </div>
-
-            {/* Mascot — floating animation */}
-            <motion.div
-              className="relative z-10 w-[240px] sm:w-[320px] lg:w-[380px] xl:w-[420px] drop-shadow-[0_35px_50px_rgba(0,0,0,0.14)]"
-              animate={{ y: [-12, 8, -12] }}
-              transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
-            >
-              <img
-                src="/mascot-hero.png"
-                alt="Instant Grow Mascot"
-                className="w-full h-auto select-none"
-              />
-            </motion.div>
-
-            {/* Country pin cards */}
-            <PinCard flag="🇺🇸" country="USA" label="LLC Formation" style={{ top: '8%', left: '0%' }} delay={0} />
-            <PinCard flag="🇬🇧" country="UK" label="LTD Company" style={{ top: '8%', right: '-4%' }} delay={0.15} />
-            <PinCard flag="🇦🇪" country="UAE" label="Business Setup" style={{ bottom: '22%', left: '-2%' }} delay={0.3} />
-            <PinCard flag="🇦🇺" country="Australia" label="Company Setup" style={{ bottom: '22%', right: '-4%' }} delay={0.45} />
           </motion.div>
         </div>
 
