@@ -28,7 +28,6 @@ export default function ComparisonTable() {
 
         {/* Header (Centered) */}
         <div className="text-center mb-16">
-          <span className="ig-label">Comparison</span>
           <h2
             className="text-4xl sm:text-[54px] font-bold text-[#0F172A] leading-tight tracking-tight mb-4"
             style={{ fontFamily: 'Sora, Inter, sans-serif' }}
@@ -51,11 +50,11 @@ export default function ComparisonTable() {
           transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
         >
           <div
-            className="rounded-[24px] overflow-hidden border border-gray-100/80"
-            style={{ boxShadow: '0 12px 40px rgba(15,23,42,0.06)', minWidth: 540 }}
+            className="w-full rounded-[24px] overflow-hidden border border-gray-100/80"
+            style={{ boxShadow: '0 12px 40px rgba(15,23,42,0.06)', minWidth: 768 }}
           >
             {/* Header row */}
-            <div className="grid grid-cols-[2.2fr_1fr_1fr_1fr] bg-slate-50 border-b border-gray-100">
+            <div className="grid grid-cols-[3fr_1fr_1fr_1fr] bg-slate-50 border-b border-gray-100">
               <div className="px-8 py-5.5 text-xs sm:text-sm font-bold text-slate-400 uppercase tracking-wider">
                 {isAr ? 'الميزة' : 'Features'}
               </div>
@@ -86,7 +85,7 @@ export default function ComparisonTable() {
               return (
                 <motion.div
                   key={i}
-                  className="grid grid-cols-[2.2fr_1fr_1fr_1fr] border-b border-gray-50 group hover:bg-slate-50/40 transition-colors"
+                  className="grid grid-cols-[3fr_1fr_1fr_1fr] border-b border-gray-50 group hover:bg-slate-50/40 transition-colors"
                   initial={{ opacity: 0, y: 8 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}

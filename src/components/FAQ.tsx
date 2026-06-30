@@ -11,9 +11,6 @@ export default function FAQ() {
   return (
     <section id="faq" className="ig-section bg-white">
       <div className="max-w-[1000px] mx-auto px-5 sm:px-8 lg:px-10">
-        <div className="text-center mb-4">
-          <p className="text-blue-500 text-sm font-semibold uppercase tracking-wider">{f.label}</p>
-        </div>
         <h2
           className="text-4xl sm:text-[54px] font-bold text-[#0F172A] text-center mb-12"
           style={{ fontFamily: 'Sora, Inter, sans-serif' }}

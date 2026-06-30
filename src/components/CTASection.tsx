@@ -48,10 +48,6 @@ export default function CTASection() {
             viewport={{ once: true }}
             transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
           >
-            <span className="inline-block text-cyan-400 text-xs font-bold uppercase tracking-widest mb-4">
-              {c.label}
-            </span>
-
             <h2
               className="text-4xl sm:text-[52px] lg:text-[58px] xl:text-[64px] font-bold text-white leading-tight tracking-tight mb-5"
               style={{ fontFamily: 'Sora, Inter, sans-serif' }}

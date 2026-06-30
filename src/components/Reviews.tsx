@@ -87,7 +87,6 @@ export default function Reviews() {
       <div className="max-w-[1280px] mx-auto px-5 sm:px-8 lg:px-10 mb-14">
         {/* Header */}
         <div className="text-center">
-          <span className="ig-label">{r.label}</span>
           <h2
             className="text-4xl sm:text-[54px] font-bold text-[#0F172A] leading-tight tracking-tight mb-4"
             style={{ fontFamily: 'Sora, Inter, sans-serif' }}

@@ -275,7 +275,6 @@ export default function Pricing() {
 
         {/* Header */}
         <div className="text-center mb-12">
-          <span className="ig-label">{p.label}</span>
           <h2
             className="text-4xl sm:text-[54px] font-bold text-[#0F172A] leading-tight tracking-tight mb-4"
             style={{ fontFamily: 'Sora, Inter, sans-serif' }}
@@ -293,7 +292,7 @@ export default function Pricing() {
                 onClick={() => setRegion('us')}
                 className={`flex items-center gap-1.5 px-4.5 py-2.5 rounded-[15px] text-sm font-semibold transition-all duration-200 ${
                   region === 'us'
-                    ? 'bg-[#0F172A] text-white shadow-md'
+                    ? 'bg-[#2563EB] text-white shadow-md shadow-blue-500/20'
                     : 'text-slate-500 hover:text-slate-800 hover:bg-slate-50'
                 }`}
               >
@@ -304,7 +303,7 @@ export default function Pricing() {
                 onClick={() => setRegion('uk')}
                 className={`flex items-center gap-1.5 px-4.5 py-2.5 rounded-[15px] text-sm font-semibold transition-all duration-200 ${
                   region === 'uk'
-                    ? 'bg-[#0F172A] text-white shadow-md'
+                    ? 'bg-[#2563EB] text-white shadow-md shadow-blue-500/20'
                     : 'text-slate-500 hover:text-slate-800 hover:bg-slate-50'
                 }`}
               >
@@ -315,7 +314,7 @@ export default function Pricing() {
                 onClick={() => setRegion('uae')}
                 className={`flex items-center gap-1.5 px-4.5 py-2.5 rounded-[15px] text-sm font-semibold transition-all duration-200 ${
                   region === 'uae'
-                    ? 'bg-[#0F172A] text-white shadow-md'
+                    ? 'bg-[#2563EB] text-white shadow-md shadow-blue-500/20'
                     : 'text-slate-500 hover:text-slate-800 hover:bg-slate-50'
                 }`}
               >
@@ -326,7 +325,7 @@ export default function Pricing() {
                 onClick={() => setRegion('oman')}
                 className={`flex items-center gap-1.5 px-4.5 py-2.5 rounded-[15px] text-sm font-semibold transition-all duration-200 ${
                   region === 'oman'
-                    ? 'bg-[#0F172A] text-white shadow-md'
+                    ? 'bg-[#2563EB] text-white shadow-md shadow-blue-500/20'
                     : 'text-slate-500 hover:text-slate-800 hover:bg-slate-50'
                 }`}
               >

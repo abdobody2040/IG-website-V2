@@ -79,7 +79,6 @@ export default function Services() {
       <div className="max-w-[1280px] mx-auto px-5 sm:px-8 lg:px-10">
         {/* Header */}
         <div className="text-center mb-14">
-          <span className="ig-label">Our Services</span>
           <h2
             className="text-4xl sm:text-[54px] font-bold text-[#0F172A] leading-tight tracking-tight mb-4"
             style={{ fontFamily: 'Sora, Inter, sans-serif' }}
