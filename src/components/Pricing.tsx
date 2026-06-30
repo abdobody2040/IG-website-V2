@@ -211,12 +211,12 @@ export default function Pricing() {
 
   const regionSubLabel =
     region === 'us'
-      ? (isAr ? '🇺🇸 شركة أمريكية LLC' : '🇺🇸 US LLC')
+      ? (isAr ? 'شركة أمريكية LLC' : 'US LLC')
       : region === 'uk'
-      ? (isAr ? '🇬🇧 شركة بريطانية LTD' : '🇬🇧 UK LTD')
+      ? (isAr ? 'شركة بريطانية LTD' : 'UK LTD')
       : region === 'uae'
-      ? (isAr ? '🇦🇪 شركة إماراتية' : '🇦🇪 UAE Company')
-      : (isAr ? '🇴🇲 شركة عمانية' : '🇴🇲 Oman Company')
+      ? (isAr ? 'شركة إماراتية' : 'UAE Company')
+      : (isAr ? 'شركة عمانية' : 'Oman Company')
 
   const basicTitle =
     region === 'us'
@@ -296,7 +296,6 @@ export default function Pricing() {
                     : 'text-slate-500 hover:text-slate-800 hover:bg-slate-50'
                 }`}
               >
-                <span>🇺🇸</span>
                 {isAr ? 'أمريكا LLC' : 'US LLC'}
               </button>
               <button
@@ -307,7 +306,6 @@ export default function Pricing() {
                     : 'text-slate-500 hover:text-slate-800 hover:bg-slate-50'
                 }`}
               >
-                <span>🇬🇧</span>
                 {isAr ? 'بريطانيا LTD' : 'UK LTD'}
               </button>
               <button
@@ -318,7 +316,6 @@ export default function Pricing() {
                     : 'text-slate-500 hover:text-slate-800 hover:bg-slate-50'
                 }`}
               >
-                <span>🇦🇪</span>
                 {isAr ? 'الإمارات' : 'UAE'}
               </button>
               <button
@@ -329,7 +326,6 @@ export default function Pricing() {
                     : 'text-slate-500 hover:text-slate-800 hover:bg-slate-50'
                 }`}
               >
-                <span>🇴🇲</span>
                 {isAr ? 'سلطنة عمان' : 'Oman'}
               </button>
             </div>

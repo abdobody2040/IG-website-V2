@@ -188,7 +188,6 @@ export default function OrderPage() {
                   }`}
                 >
                   <div className="flex items-center gap-2 mb-1">
-                    <span className="text-base">{p.region === 'us' ? '🇺🇸' : '🇬🇧'}</span>
                     <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
                       {p.region === 'us' ? 'US LLC' : 'UK LTD'}
                     </span>
@@ -323,7 +322,6 @@ export default function OrderPage() {
             <h3 className="font-bold text-slate-900 mb-4">Order Summary</h3>
 
             <div className="flex items-center gap-3 mb-4 pb-4 border-b border-slate-100">
-              <span className="text-2xl">{plan.region === 'us' ? '🇺🇸' : '🇬🇧'}</span>
               <div>
                 <p className="font-semibold text-slate-900">{plan.name}</p>
                 <p className="text-xs text-slate-500">{plan.region === 'us' ? 'Wyoming LLC · United States' : 'Private Limited Company · UK'}</p>

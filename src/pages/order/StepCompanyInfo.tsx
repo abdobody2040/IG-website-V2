@@ -57,7 +57,7 @@ export function StepCompanyInfo({
                     active ? 'border-[#1a56ff] bg-[#1a56ff]/5 text-[#1a56ff]' : 'border-slate-200 text-slate-600 hover:border-[#1a56ff]/30'
                   }`}
                 >
-                  {r === 'us' ? '🇺🇸 LLC' : '🇬🇧 LTD'}
+                  {r === 'us' ? 'US LLC' : 'UK LTD'}
                 </button>
               )
             })}
