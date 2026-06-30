@@ -301,7 +301,7 @@ export default function SupportWidget() {
       </AnimatePresence>
 
       {/* Floating Bubbles Container */}
-      <div className={`flex items-center gap-3 ${isRTL ? 'flex-row' : 'flex-row-reverse'}`}>
+      <div className={`flex items-center gap-3.5 ${isRTL ? 'flex-row' : 'flex-row-reverse'}`}>
         {/* WhatsApp Bubble */}
         <motion.a
           href="https://wa.me/13072898149"
@@ -309,15 +309,15 @@ export default function SupportWidget() {
           rel="noopener noreferrer"
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.95 }}
-          className="w-14 h-14 bg-[#25D366] text-white rounded-full flex items-center justify-center shadow-[0_4px_20px_rgba(37,211,102,0.4)] hover:shadow-[0_4px_24px_rgba(37,211,102,0.6)] hover:bg-[#20ba59] transition-all duration-300 relative"
+          className="w-16 h-16 bg-[#25D366] text-white rounded-full flex items-center justify-center shadow-[0_4px_20px_rgba(37,211,102,0.4)] hover:shadow-[0_4px_24px_rgba(37,211,102,0.6)] hover:bg-[#20ba59] transition-all duration-300 relative"
           title={isAr ? 'راسلنا على واتساب' : 'Chat on WhatsApp'}
         >
           <svg
-            className="w-7 h-7 fill-current"
+            className="w-8 h-8 fill-current"
             viewBox="0 0 24 24"
             xmlns="http://www.w3.org/2000/svg"
           >
-            <path d="M17.472 14.382c-.022-.079-.117-.117-.234-.176-.117-.058-.69-.34-7.97-.23-.117-.058-.2-.117-.255-.176-.058-.058-.058-.117-.058-.176v-.022c.022-.079.117-.117.234-.176.117-.058.2-.117.255-.176s.058-.117.058-.176v-.022c-.022-.079-.117-.117-.234-.176-.117-.058-.69-.34-.797-.39-.118-.058-.2-.117-.255-.176s-.058-.117-.058-.176v-.022c.022-.079.117-.117.234-.176.117-.058.2-.117.255-.176.058-.058.058-.117.058-.176v-.022c-.022-.079-.117-.117-.234-.176-.117-.058-.69-.34-.797-.39-.118-.058-.2-.117-.255-.176s-.058-.117-.058-.176v-.022c.022-.079.117-.117.234-.176.117-.058.2-.117.255-.176.058-.058.058-.117.058-.176v-.022" />
+            <path d="M17.472 14.382c-.022-.079-.117-.117-.234-.176-.117-.058-.69-.34-7.97-.23-.117-.058-.2-.117-.255-.176-.058-.058-.058-.117-.058-.176v-.022c.022-.079.117-.117.234-.176.117-.058.2-.117.255-.176s.058-.117.058-.176v-.022c-.022-.079.117-.117.234-.176.117-.058-.69-.34-.797-.39-.118-.058-.2-.117-.255-.176s-.058-.117-.058-.176v-.022c.022-.079.117-.117.234-.176.117-.058.2-.117.255-.176.058-.058.058-.117.058-.176v-.022c-.022-.079.117-.117.234-.176.117-.058-.69-.34-.797-.39-.118-.058-.2-.117-.255-.176s-.058-.117-.058-.176v-.022c.022-.079.117-.117.234-.176.117-.058.2-.117.255-.176.058-.058.058-.117.058-.176v-.022" />
             <path d="M12.004 2c-5.51 0-9.99 4.49-9.99 10 0 1.77.47 3.43 1.3 4.89L2 22l5.3-1.39c1.41.77 3 1.2 4.7 1.2 5.51 0 9.99-4.49 9.99-10s-4.48-10-9.99-10zm6.59 14.12c-.27.76-1.36 1.48-1.88 1.54-.51.07-1.16.1-3.39-.83-2.85-1.19-4.69-4.11-4.83-4.3-.14-.19-1.14-1.52-1.14-2.9 0-1.38.72-2.06 1-2.35.28-.29.62-.36.83-.36.21 0 .41.01.59.02.19.01.44-.07.69.53.25.6 1.01 2.45 1.1 2.63.09.18.15.39.03.62-.12.24-.18.39-.36.6-.18.21-.38.47-.54.63-.18.18-.37.38-.16.74.21.36.93 1.53 2 2.48 1.38 1.23 2.54 1.62 2.9 1.8.36.18.57.15.79-.1.21-.24.93-1.08 1.18-1.45.25-.37.49-.31.83-.18.33.13 2.13 1 2.5 1.19.37.19.61.28.7.44.09.16.09.92-.18 1.68z" />
           </svg>
         </motion.a>
@@ -327,10 +327,10 @@ export default function SupportWidget() {
           onClick={() => setIsOpen(!isOpen)}
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.95 }}
-          className="w-14 h-14 bg-gradient-to-tr from-[#1a56ff] to-[#6366f1] text-white rounded-full flex items-center justify-center shadow-[0_4px_20px_rgba(26,86,255,0.4)] hover:shadow-[0_4px_24px_rgba(26,86,255,0.6)] relative"
+          className="w-16 h-16 bg-gradient-to-tr from-[#1a56ff] to-[#6366f1] text-white rounded-full flex items-center justify-center shadow-[0_4px_20px_rgba(26,86,255,0.4)] hover:shadow-[0_4px_24px_rgba(26,86,255,0.6)] relative"
           title={isAr ? 'المحادثة الذكية' : 'AI Chat Assistant'}
         >
-          {isOpen ? <X size={24} /> : <MessageSquare size={24} />}
+          {isOpen ? <X size={28} /> : <MessageSquare size={28} />}
           
           {hasNewBadge && !isOpen && (
             <span className="absolute -top-1 -right-1 flex h-4 w-4">
