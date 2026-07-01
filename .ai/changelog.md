@@ -1,5 +1,23 @@
 # Instant Grow — Changelog
 
+## 2026-07-01 — Admin Services & Page Editor Fixes
+
+### Added
+- **Public Services Page** — Created `/services` directory with localized pricing, dynamic DB loading, and direct standalone order modal (`ServicesPage.tsx`).
+- **Admin Services Module** — Full CRUD management for services (`AdminServicesPage.tsx`), assigning services as 'landing' or 'addon' types. Added dynamic rendering constraints and icon support.
+- **Navbar Integration** — Added "Services" tab between Pricing and FAQ in main navigation.
+
+### Changed
+- **Admin Page Editor Validation** — Rebuilt `AdminPageEditorPage.tsx` form submission by removing raw `onClick` overrides and enabling HTML5 `required` constraints (e.g., Arabic titles), which previously caused silent 400 API errors from PocketBase.
+- **Slug Uniqueness Checking** — Intercepted slug conflicts during page updates to prevent database UNIQUE constraint violations, offering user-friendly localized errors instead.
+- **Competitor Matrix Facts** — Updated competitor table with accurate facts (e.g., Northwest registered agent free first year, Doola $297 bundle constraint, Firstbase standard package limitations, Bizee basic plan constraints).
+
+## 2026-06-30 — Comparison Table Redesign
+
+### Changed
+- **Comparison Table Redesign** — Fully refactored `ComparisonTable.tsx` to match the new UI design. Added 5 metric cards (Formed, Rating, Countries, Satisfaction, Support), expanded comparison to 6 competitors (Instant Grow, Doola, Firstbase, Bizee, Northwest, DIY), dynamically styled the "Instant Grow" column with "BEST VALUE" badge, and implemented full bilingual (Arabic/English) RTL support.
+- **Metric Values Updated** — Adjusted "Average Setup Time" to "1 Day", "Businesses Formed" to "1,000+", and "Countries Served" to "100+". Adjusted font colors and UI styling per design specs.
+
 ## 2026-06-29 — Admin Routing Optimization & Arabic SEO
 
 ### Added

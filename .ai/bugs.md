@@ -92,3 +92,12 @@
 **Description:** When a logged-in user submits the contact form, `user_id` is not automatically populated (inserted via Edge Function without checking for authenticated session).
 **Impact:** Contact messages from logged-in users are not linked to their profile.
 **Possible Fix:** Edge Function should check auth token and set user_id if available.
+
+---
+
+### B-010: Admin Page Editor Validation Bypass (0)
+**Severity:** Medium
+**Status:** Fixed
+**Filed:** 2026-07-01 | **Closed:** 2026-07-01
+**Description:** The `<button>` for saving in `AdminPageEditorPage.tsx` used a raw `onClick={handleSave}` which called `e.preventDefault()`, entirely bypassing native HTML5 `required` field checks. When users omitted required fields like Arabic titles, PocketBase responded with a generic 400 validation error, producing unhelpful UI toast errors.
+**Resolution:** Changed the save button to `type="submit"` linked to `form="page-editor-form"` and removed the raw `onClick` handler. HTML5 validation now runs client-side. Added manual slug uniqueness check on update.

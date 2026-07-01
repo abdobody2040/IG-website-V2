@@ -162,6 +162,14 @@ See `bugs.md` for detailed bug tracking.
 
 ## Current Sprint
 
+### Sprint: Admin Services & Page Editor Enhancements
+- [x] Create public `/services` page with localized pricing and standalone orders.
+- [x] Create `AdminServicesPage.tsx` with full CRUD management for dynamic services.
+- [x] Add "Services" navigation tab in header.
+- [x] Fix `AdminPageEditorPage.tsx` submit validation by linking button to form and enabling HTML5 constraints.
+- [x] Add slug uniqueness checking to Admin Page Editor update logic.
+- [x] Correct competitor matrix factual data.
+
 ### Sprint: AI Memory System Setup
 - [x] Create .ai/ directory structure
 - [x] Create context.md
@@ -199,3 +207,10 @@ See `bugs.md` for detailed bug tracking.
 - [x] Create `expand_arabic_blogs.js` Node.js script for automated Gemini AI translation and expansion of English blogs into Arabic.
 - [x] Update `SupportWidget` to read live pricing via `usePricingConfig`.
 - [x] Add WhatsApp contact bubble to support widget.
+
+### Sprint: Comparison Table Redesign
+- [x] Implement 5 metric overview cards
+- [x] Expand comparison table to 6 columns
+- [x] Highlight Instant Grow column (Best Value)
+- [x] Ensure full Arabic/English bilingual RTL support
+- [x] Update metrics (1 Day setup, 1,000+ businesses, 100+ countries)

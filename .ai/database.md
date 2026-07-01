@@ -197,6 +197,19 @@
 - **FK:** `user_id` → profiles(id)
 - **RLS:** Users manage own
 
+### services
+- **Purpose:** Pricing and configuration for landing/addon services
+- **PK:** `id` (string 15)
+- **Status:** active (bool)
+- **RLS:** Admins can manage, public can view
+
+### pages
+- **Purpose:** Dynamic, localized generic pages
+- **PK:** `id` (string 15)
+- **Unique:** `slug`
+- **Status:** active (bool)
+- **RLS:** Admins can manage, public can view
+
 ## Relations Summary
 
 | Table A | Relation | Table B | FK Column | On Delete |
