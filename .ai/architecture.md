@@ -11,11 +11,12 @@ main.tsx
 │       └── RouterProvider
 │           └── LanguageProvider (root route wrapper)
 │               ├── Landing Page Components
-│               │   ├── Navbar
+│               │   ├── Navbar (Services flyout + Book a Call dropdown)
 │               │   ├── Hero (with 3D globe via React Three Fiber)
 │               │   ├── HowItWorks
 │               │   ├── Features
 │               │   ├── Pricing
+│               │   ├── ComparisonTable (6-column redesign with BEST VALUE highlight)
 │               │   ├── Reviews
 │               │   ├── FAQ (accordion)
 │               │   ├── CTASection
@@ -23,7 +24,13 @@ main.tsx
 │               ├── Auth Pages
 │               │   ├── LoginPage (email/password + Google OAuth)
 │               │   ├── SignupPage (registration + password strength, invite token)
+│               │   ├── ForgotPasswordPage (request password reset via PocketBase)
+│               │   ├── ResetPasswordPage (confirm password reset via PocketBase token)
 │               │   └── AuthCallbackPage (OAuth handler)
+│               ├── Services Routes
+│               │   ├── ServicesPage (8-category SaaS grid + search bar)
+│               │   ├── ServiceCategoryPage (category detail with sticky sidebar + service cards)
+│               │   └── ServiceDetailPage (full service page: JSON-LD, sticky checkout, FAQ, process, requirements)
 │               ├── OrderWizard (6-step multi-step form, lazy loaded)
 │               │   ├── Step 1: Jurisdiction (US LLC / UK LTD)
 │               │   ├── Step 2: State selection (US only)
@@ -33,7 +40,7 @@ main.tsx
 │               │   ├── Step 6: Add-ons
 │               │   └── Review & Pay (Stripe redirect)
 │               ├── Shell (responsive sidebar layout, lazy loaded)
-│               │   ├── Client Layout (sidebar + NotificationCenter)
+│               │   ├── Client Layout (sidebar + NotificationCenter + SupportWidget)
 │               │   │   ├── ClientDashboardPage (useComplianceReminders)
 │               │   │   ├── ClientOrdersPage (uses OrderCard)
 │               │   │   ├── ClientCompanyPage
@@ -50,10 +57,16 @@ main.tsx
 │               │       ├── AdminOrdersPage (DeleteConfirmModal, CSV export)
 │               │       ├── AdminClientsPage (DeleteConfirmModal, CSV export, InviteClientModal)
 │               │       ├── AdminClientDetailPage (split, ~410 lines)
-│               │       ├── AdminCompaniesPage (DeleteConfirmModal)
+│               │       ├── AdminCompaniesPage (compliance filter: Overdue/Due Soon/Compliant/No Dates)
 │               │       ├── AdminDocumentsPage (DeleteConfirmModal)
 │               │       ├── AdminPaymentsPage (DeleteConfirmModal, CSV export)
 │               │       ├── AdminAnalyticsPage (CSV export, charts)
+│               │       ├── AdminBlogsPage + AdminBlogEditorPage
+│               │       ├── AdminSeoPagesPage + AdminSeoEditorPage
+│               │       ├── AdminServicesPage (CRUD for services collection)
+│               │       ├── AdminPagesPage + AdminPageEditorPage (CMS for dynamic pages)
+│               │       ├── AdminHomeEditorPage
+│               │       ├── AdminPriceEditorPage
 │               │       └── AdminSettingsPage
 │               ├── Blog Routes
 │               │   ├── BlogListPage (featured articles, tag filter, search)
@@ -64,44 +77,64 @@ main.tsx
 │               ├── Admin SEO Routes
 │               │   ├── AdminSeoPagesPage (list, search, filter, delete)
 │               │   └── AdminSeoEditorPage (create/edit with JSON field editors)
-│               └── ContactPage
-│
-│               ## Sitemap
-│               - Route: /sitemap.xml (TanStack Router, document.write fallback in dev)
-│               - Build script: scripts/generate-sitemap.cjs (queries Supabase, writes dist/sitemap.xml)
+│               ├── Static Pages
+│               │   ├── PrivacyPolicyPage, TermsPage, DisclaimerPage
+│               │   ├── RefundPage, AccessibilityPage, KycAmlPage
+│               │   └── CustomDynamicPage (/p/$slug — CMS-managed)
+│               ├── ContactPage
+│               └── SitemapPage (/sitemap.xml)
 ```
 
 ### Data Flow
 ```
 User Action → React Component → Custom Hook (useQuery/useMutation)
-  → Supabase Client → Supabase API → PostgreSQL
+  → PocketBase SDK (pb) → PocketBase REST API → SQLite (local)
   → Response → Hook returns data → Component re-renders
 ```
 
 ### State Management
-- **Server State:** TanStack Query (React Query) — all Supabase queries
-- **Auth State:** useAuth hook (Supabase session + profile role)
-- **UI State:** React useState/useReducer within components
+- **Server State:** TanStack Query (React Query) — all PocketBase queries
+- **Auth State:** `useAuth` hook — reads `pb.authStore`, writes `last_sign_in` via `syncLastSignIn()`
+- **UI State:** React `useState`/`useReducer` within components
 - **Form State:** React Hook Form
-- **i18n State:** LanguageContext (React Context + localStorage)
+- **i18n State:** `LanguageContext` (React Context + localStorage)
 - **Query Keys:** `['orders', userId]`, `['companies', userId]`, `['documents', userId]`, `['admin', 'orders']`, etc.
 
 ## Backend Architecture
 
-### Supabase (Managed Backend)
+### PocketBase (Self-Hosted Backend)
 ```
-┌─────────────────────────────────────────┐
-│              Supabase Project            │
-│  ┌──────────┬───────────┬────────────┐  │
-│  │   Auth   │PostgreSQL │   Storage  │  │
-│  │(users)   │(8 tables) │(documents) │  │
-│  └──────────┴───────────┴────────────┘  │
-│  ┌────────────────────────────────────┐  │
-│  │  Row-Level Security (all tables)   │  │
-│  │  + is_admin() SECURITY DEFINER     │  │
-│  └────────────────────────────────────┘  │
-└─────────────────────────────────────────┘
+┌───────────────────────────────────────────┐
+│         PocketBase v0.22.22 (localhost:8090)         │
+│  ┌────────────┬────────────┬────────────┐  │
+│  │   Auth     │  SQLite DB  │  File Store │  │
+│  │ (users col)│ (12+ tables)│ (pb_data/)  │  │
+│  └────────────┴────────────┴────────────┘  │
+│  ┌──────────────────────────────────┐  │
+│  │  Collection Rules (per-collection ACL)  │  │
+│  │  role = 'admin' for admin-only writes    │  │
+│  └──────────────────────────────────┘  │
+└───────────────────────────────────────────┘
 ```
+
+### PocketBase Collections
+| Collection | Description |
+|---|---|
+| `users` | Auth users (email, role, last_sign_in, phone, avatar) |
+| `orders` | Formation orders with status workflow |
+| `order_updates` | Status history per order |
+| `companies` | Formed companies with compliance dates |
+| `documents` | Files linked to companies/orders |
+| `payments` | Payment records (Stripe session, amount, status) |
+| `notifications` | In-app notifications per user |
+| `invitations` | Client invite tokens |
+| `contact_messages` | Contact form submissions |
+| `services` | Purchasable services (slug, category, price, icon) |
+| `blogs` | Blog posts (slug, content, AR/EN, featured) |
+| `countries_seo_pages` | Programmatic SEO country guides |
+| `pricing_config` | Dynamic pricing for formation packages |
+| `pages` | CMS-managed dynamic public pages |
+| `audit_logs` | Admin action audit trail |
 
 ### New Hooks
 - `useBlogs` — full CRUD for blog posts (list, getBySlug, create, update, delete)
@@ -125,10 +158,10 @@ User Action → React Component → Custom Hook (useQuery/useMutation)
 - EN/AR translations in `translations.ts`
 
 ### Order Dev Mode
-- When `VITE_CHECKOUT_ENDPOINT` is not set, `OrderWizard.onSubmit` creates orders directly via Supabase `orders.insert`
+- When `VITE_CHECKOUT_ENDPOINT` is not set, `OrderWizard.onSubmit` creates orders directly via PocketBase `orders` collection
 - Navigates to `/order/success` with `orderNumber`, `plan`, `company` search params
 
-### Edge Functions (Deno)
+### Edge Functions (Cloudflare Workers)
 ```
 functions/create-checkout/index.ts
   POST /functions/v1/create-checkout
@@ -148,35 +181,35 @@ functions/submit-contact/index.ts
   POST /functions/v1/submit-contact
   Validates: name, email, message
   CAPTCHA: optional Turnstile verification
-  Inserts: contact_messages (via service role)
+  Inserts: contact_messages (via PocketBase API)
 
 functions/delete-user/index.ts
   POST /functions/v1/delete-user
   Auth: Bearer token + admin role check
-  Flow: nullify FKs → delete profile → delete auth.user
+  Flow: nullify FKs → delete profile → delete auth user
   Prevents: self-deletion
 ```
 
 ### API Flow
 ```
-Frontend → Supabase Client (RLS enforced)
-  → Tables: profiles, orders, companies, documents, payments, etc.
+Frontend → PocketBase Client (RLS / collection rules enforced)
+  → Collections: users, workspaces, orders, companies, documents, payments, etc.
 
-Frontend → Edge Functions (via fetch)
+Frontend → Cloudflare Workers (via fetch)
   → create-checkout → Stripe API
-  → submit-contact → Supabase (service role)
-  → delete-user → Supabase Admin API
+  → submit-contact → PocketBase (using API / admin client)
+  → delete-user → PocketBase Admin API
 
-Stripe → Edge Function (webhook)
-  → stripe-webhook → Supabase (service role)
+Stripe → Cloudflare Worker (webhook)
+  → stripe-webhook → PocketBase (using API / admin client)
 ```
 
 ### Auth Flow
 ```
 Email/Password:
-  1. User submits credentials to Supabase Auth
-  2. Supabase validates → returns session
-  3. onAuthStateChange triggers → fetch profile role
+  1. User submits credentials to PocketBase Auth
+  2. PocketBase validates → returns session/token
+  3. useAuth hooks read authState → fetch/store user details
   4. useRequireAuth/useRequireAdmin guards redirect
 - **Admin Layout Route:** Admin pages are now nested under `adminLayoutRoute` which persists the sidebar layout component via `<Outlet />`, ensuring navigation between admin pages does not trigger full-page reloads.
 
@@ -185,7 +218,7 @@ Email/Password:
 
 Google OAuth:
   1. User clicks "Continue with Google"
-  2. Supabase redirects to Google
+  2. PocketBase redirects to Google provider
   3. Google callback → /auth/callback
   4. AuthCallbackPage resolves role → redirects
      - admin → /admin
@@ -210,52 +243,51 @@ Application level:
 
 ### Entity Relationship
 ```
-auth.users (managed by Supabase)
-  └── profiles (1:1, extends with role, display_name, etc.)
-       ├── orders (1:N)
-       │    ├── order_updates (1:N, status history)
-       │    └── payments (1:N)
-       ├── companies (1:N)
-       │    └── documents (1:N)
-       ├── documents (1:N)
-       ├── payments (1:N)
-       ├── contact_messages (1:N)
-       └── notification_preferences (1:1)
+users (managed by PocketBase)
+  ├── workspaces (1:N)
+  │    ├── workspace_members (1:N)
+  │    ├── orders (1:N)
+  │    │    ├── order_updates (1:N, status history)
+  │    │    └── payments (1:N)
+  │    ├── companies (1:N)
+  │    │    └── documents (1:N)
+  │    ├── documents (1:N)
+  │    └── payments (1:N)
+  └── contact_messages (1:N)
 ```
 
 ## Deployment Architecture
 
 ```
 ┌──────────────┐     ┌──────────────────┐     ┌──────────────┐
-│  Cloudflare  │     │    Supabase      │     │    Stripe    │
-│  Pages /     │────>│  ┌────────────┐ │────>│  (Payments)  │
-│  Netlify     │     │  │PostgreSQL  │ │     └──────────────┘
-│  (Static     │     │  │+ RLS       │ │
-│   SPA)       │     │  └────────────┘ │     ┌──────────────┐
-│              │     │  ┌────────────┐ │────>│  Resend      │
-└──────────────┘     │  │Edge Funcs  │ │     │  (Email)     │
-                     │  │(Deno)      │ │     └──────────────┘
-                     │  └────────────┘ │
-                     │  ┌────────────┐ │     ┌──────────────┐
-                     │  │ Storage    │ │────>│  Cloudflare  │
-                     │  │(fallback)  │ │     │  R2 (files)  │
-                     │  └────────────┘ │     └──────────────┘
-                     └──────────────────┘
+│  Cloudflare  │     │    PocketBase    │     │    Stripe    │
+│  Pages /     │────>│  (SQLite DB      │────>│  (Payments)  │
+│  Netlify     │     │   + Auth + RLS)  │     └──────────────┘
+│  (Static     │     └────────┬─────────┘
+│   SPA)       │              │               ┌──────────────┐
+│              │     ┌────────▼─────────┐     │  Resend      │
+└──────────────┘     │  Cloudflare      │────>│  (Email)     │
+                     │  Workers         │     └──────────────┘
+                     │  (Edge Funcs)    │
+                     └────────┬─────────┘     ┌──────────────┐
+                              │               │  Cloudflare  │
+                              └──────────────>│  R2          │
+                                              │  (Primary)   │
+                                              └──────────────┘
 ```
 
 ## Scaling Strategy
 
-- **Horizontal:** Static SPA scales infinitely on CDN
-- **Database:** Supabase PostgreSQL handles growth (connection pooling, read replicas available)
-- **Edge Functions:** Deno scales automatically on Supabase
-- **File Storage:** R2 is S3-compatible, infinite scaling
-- **API Rate Limiting:** Configure in Supabase Auth → Rate Limits
-- **Caching:** Add Redis/Memcached layer for frequently accessed data
+- **Horizontal:** Static SPA scales infinitely on CDN.
+- **Database:** PocketBase runs on a dedicated VPS or Cloud VM, which is extremely performant and cost-effective. Backup scripts handle daily SQLite snapshots.
+- **Edge Functions:** Cloudflare Workers scale automatically with zero cold starts.
+- **File Storage:** Cloudflare R2 is S3-compatible with infinite scaling and no egress fees.
+- **API Rate Limiting:** Configured directly in PocketBase settings and Cloudflare Workers.
 
 ## Observability Architecture
 
-- **Logging:** Edge Functions use `console.log/error` (available in Supabase logs)
-- **Frontend Errors:** Consider Sentry or LogRocket
-- **Analytics:** Supabase has built-in analytics, or deploy PostHog/Plausible
-- **Uptime:** Better Uptime, Checkly, or Pingdom
-- **Alerting:** Configure in monitoring provider
+- **Logging:** Cloudflare Workers use `console.log`/`console.error` (visible via wrangler tail or Cloudflare Dashboard). PocketBase records log history directly in the Admin Panel.
+- **Frontend Errors:** Sentry or LogRocket.
+- **Analytics:** Dashboard metrics generated from PocketBase database, or external tools like PostHog/Plausible.
+- **Uptime:** Better Uptime, Checkly, or Uptime Robot.
+- **Alerting:** Configured via monitoring providers or Discord/Telegram webhooks.

@@ -2,12 +2,21 @@ import { useQuery } from '@tanstack/react-query'
 import { pb } from '../lib/pocketbase'
 import type { Company } from '../types/db'
 
+import { useWorkspace } from './useWorkspace'
+
 export function useCompanies(userId: string | undefined | null) {
+  const { activeWorkspace } = useWorkspace()
+  const workspaceId = activeWorkspace?.id
+
   const { data, isLoading, error } = useQuery({
-    queryKey: ['companies', userId],
+    queryKey: ['companies', workspaceId, userId],
     queryFn: async () => {
+      const filterStr = workspaceId
+        ? `workspace = "${workspaceId}" || (workspace = "" && user = "${userId}")`
+        : `user = "${userId}"`
+
       const result = await pb.collection('companies').getList(1, 200, {
-        filter: `user = "${userId}"`,
+        filter: filterStr,
         sort: '-created',
       })
       return result.items.map(mapCompany)

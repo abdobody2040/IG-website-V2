@@ -87,15 +87,15 @@ describe('useInvitationByToken', () => {
   it('fetches invitation by token', async () => {
     ;(mockInvitationsCollection.getList as Mock).mockResolvedValue({
       items: [
-        { id: 'valid-token', email: 'invited@test.com', company_name: 'Biz Inc', role: 'client', status: 'pending', created: '2024', updated: '2024' }
+        { id: 'validtoken', email: 'invited@test.com', company_name: 'Biz Inc', role: 'client', status: 'pending', created: '2024', updated: '2024' }
       ]
     })
 
-    const { result } = renderHook(() => useInvitationByToken('valid-token'), { wrapper: createWrapper() })
+    const { result } = renderHook(() => useInvitationByToken('validtoken'), { wrapper: createWrapper() })
     
     await waitFor(() => expect(result.current.data).not.toBeUndefined())
     expect(mockInvitationsCollection.getList).toHaveBeenCalledWith(1, 1, {
-      filter: 'id = "valid-token" && status = "pending"'
+      filter: 'id = "validtoken" && status = "pending"'
     })
     expect(result.current.data!.email).toBe('invited@test.com')
     expect(result.current.data!.companyName).toBe('Biz Inc')

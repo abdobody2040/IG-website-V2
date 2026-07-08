@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { Search, Eye, Filter, CreditCard } from 'lucide-react'
+import { Search, Eye, Filter, CreditCard, FileText, Receipt } from 'lucide-react'
 import ClientLayout from './ClientLayout'
 import { useRequireAuth } from '../../hooks/useRequireAuth'
 import { pb } from '../../lib/pocketbase'
@@ -24,23 +24,31 @@ interface Payment {
   status: string
   createdAt: string
   orderId: string
+  invoiceUrl: string
+  receiptUrl: string
 }
 
 function usePayments(userId: string | null | undefined) {
   return useQuery({
     queryKey: ['payments', userId],
     queryFn: async () => {
-      const { data, error } = await pb.collection('payments').getList(1, 100, { filter: `user = "${userId!}"`, sort: '-created' }).then(res => ({ data: res.items, error: null }))
+      const { data, error } = await pb.collection('payments')
+        .getList(1, 100, { filter: `user = "${userId!}"`, sort: '-created' })
+        .then(res => ({ data: res.items, error: null }))
+      
       if (error) throw error
+      
       return (data ?? []).map((p: Record<string, unknown>) => ({
         id: p.id as string,
-        invoiceId: p.invoice_id as string ?? '',
-        service: p.service as string ?? '',
+        invoiceId: (p.invoice_id as string) ?? '',
+        service: (p.service as string) ?? '',
         amount: p.amount as number,
         currency: p.currency as string,
         status: p.status as string,
-        createdAt: p.created_at as string,
-        orderId: p.order_id as string ?? '',
+        createdAt: p.created as string, // pb uses 'created' instead of 'created_at'
+        orderId: (p.order as string) ?? '',
+        invoiceUrl: (p.invoice_url as string) ?? '',
+        receiptUrl: (p.receipt_url as string) ?? '',
       })) as Payment[]
     },
     enabled: !!userId,
@@ -51,13 +59,15 @@ function usePayments(userId: string | null | undefined) {
 function ordersToPayments(orders: Order[]): Payment[] {
   return orders.map(o => ({
     id: `pay_${o.id}`,
-    invoiceId: `INVa${o.orderNumber?.split('-').pop() ?? o.id.slice(-4)}`,
+    invoiceId: `INV-${o.orderNumber?.split('-').pop() ?? o.id.slice(-4)}`,
     service: o.packageName || 'LLC Formation',
     amount: o.amount,
     currency: o.currency,
     status: o.status === 'completed' ? 'paid' : 'pending',
     createdAt: o.createdAt,
     orderId: o.id,
+    invoiceUrl: '',
+    receiptUrl: '',
   }))
 }
 
@@ -140,7 +150,7 @@ export default function ClientPaymentsPage() {
                     <tr key={payment.id} className="hover:bg-slate-50/60 transition-colors">
                       <td className="px-5 py-3.5">
                         <span className="font-mono text-xs text-slate-700 bg-slate-100 px-2 py-0.5 rounded">
-                          {payment.invoiceId}
+                          {payment.invoiceId || `INV-${payment.id.slice(-6).toUpperCase()}`}
                         </span>
                       </td>
                       <td className="px-5 py-3.5 font-medium text-slate-900">{payment.service}</td>
@@ -156,9 +166,33 @@ export default function ClientPaymentsPage() {
                         </span>
                       </td>
                       <td className="px-5 py-3.5">
-                        <button className="w-7 h-7 rounded-lg flex items-center justify-center text-slate-400 hover:text-[#1a56ff] hover:bg-blue-50 transition-colors">
-                          <Eye size={14} />
-                        </button>
+                        <div className="flex items-center gap-1.5">
+                          <button className="w-7 h-7 rounded-lg flex items-center justify-center text-slate-400 hover:text-[#1a56ff] hover:bg-blue-50 transition-colors" title="View Details">
+                            <Eye size={14} />
+                          </button>
+                          {payment.invoiceUrl && (
+                            <a
+                              href={payment.invoiceUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="w-7 h-7 rounded-lg flex items-center justify-center text-slate-400 hover:text-[#1a56ff] hover:bg-blue-50 transition-colors"
+                              title="Download Invoice"
+                            >
+                              <FileText size={14} />
+                            </a>
+                          )}
+                          {payment.receiptUrl && (
+                            <a
+                              href={payment.receiptUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="w-7 h-7 rounded-lg flex items-center justify-center text-slate-400 hover:text-[#1a56ff] hover:bg-blue-50 transition-colors"
+                              title="View Receipt"
+                            >
+                              <Receipt size={14} />
+                            </a>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   ))}

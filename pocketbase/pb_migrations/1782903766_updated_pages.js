@@ -1,0 +1,232 @@
+/// <reference path="../pb_data/types.d.ts" />
+migrate((db) => {
+  const dao = new Dao(db)
+  const collection = dao.findCollectionByNameOrId("pages_col_id123")
+
+  // remove
+  collection.schema.removeField("a7z4qgw7")
+
+  // remove
+  collection.schema.removeField("xonzjll2")
+
+  // remove
+  collection.schema.removeField("d7opqz74")
+
+  // remove
+  collection.schema.removeField("mrpbj4vo")
+
+  // remove
+  collection.schema.removeField("eyep0n2d")
+
+  // remove
+  collection.schema.removeField("3gtanpxv")
+
+  // add
+  collection.schema.addField(new SchemaField({
+    "system": false,
+    "id": "hdo8pyca",
+    "name": "slug",
+    "type": "text",
+    "required": true,
+    "presentable": false,
+    "unique": false,
+    "options": {
+      "min": 1,
+      "max": 100,
+      "pattern": ""
+    }
+  }))
+
+  // add
+  collection.schema.addField(new SchemaField({
+    "system": false,
+    "id": "gj5o0aa9",
+    "name": "title_en",
+    "type": "text",
+    "required": true,
+    "presentable": false,
+    "unique": false,
+    "options": {
+      "min": 1,
+      "max": 200,
+      "pattern": ""
+    }
+  }))
+
+  // add
+  collection.schema.addField(new SchemaField({
+    "system": false,
+    "id": "hmlnl62y",
+    "name": "title_ar",
+    "type": "text",
+    "required": true,
+    "presentable": false,
+    "unique": false,
+    "options": {
+      "min": 1,
+      "max": 200,
+      "pattern": ""
+    }
+  }))
+
+  // add
+  collection.schema.addField(new SchemaField({
+    "system": false,
+    "id": "nwlwjbmc",
+    "name": "content_en",
+    "type": "text",
+    "required": false,
+    "presentable": false,
+    "unique": false,
+    "options": {
+      "min": null,
+      "max": null,
+      "pattern": ""
+    }
+  }))
+
+  // add
+  collection.schema.addField(new SchemaField({
+    "system": false,
+    "id": "ul2dnyrc",
+    "name": "content_ar",
+    "type": "text",
+    "required": false,
+    "presentable": false,
+    "unique": false,
+    "options": {
+      "min": null,
+      "max": null,
+      "pattern": ""
+    }
+  }))
+
+  // add
+  collection.schema.addField(new SchemaField({
+    "system": false,
+    "id": "li7stwng",
+    "name": "active",
+    "type": "bool",
+    "required": false,
+    "presentable": false,
+    "unique": false,
+    "options": {}
+  }))
+
+  return dao.saveCollection(collection)
+}, (db) => {
+  const dao = new Dao(db)
+  const collection = dao.findCollectionByNameOrId("pages_col_id123")
+
+  // add
+  collection.schema.addField(new SchemaField({
+    "system": false,
+    "id": "a7z4qgw7",
+    "name": "slug",
+    "type": "text",
+    "required": true,
+    "presentable": false,
+    "unique": false,
+    "options": {
+      "min": 1,
+      "max": 100,
+      "pattern": ""
+    }
+  }))
+
+  // add
+  collection.schema.addField(new SchemaField({
+    "system": false,
+    "id": "xonzjll2",
+    "name": "title_en",
+    "type": "text",
+    "required": true,
+    "presentable": false,
+    "unique": false,
+    "options": {
+      "min": 1,
+      "max": 200,
+      "pattern": ""
+    }
+  }))
+
+  // add
+  collection.schema.addField(new SchemaField({
+    "system": false,
+    "id": "d7opqz74",
+    "name": "title_ar",
+    "type": "text",
+    "required": true,
+    "presentable": false,
+    "unique": false,
+    "options": {
+      "min": 1,
+      "max": 200,
+      "pattern": ""
+    }
+  }))
+
+  // add
+  collection.schema.addField(new SchemaField({
+    "system": false,
+    "id": "mrpbj4vo",
+    "name": "content_en",
+    "type": "text",
+    "required": false,
+    "presentable": false,
+    "unique": false,
+    "options": {
+      "min": null,
+      "max": null,
+      "pattern": ""
+    }
+  }))
+
+  // add
+  collection.schema.addField(new SchemaField({
+    "system": false,
+    "id": "eyep0n2d",
+    "name": "content_ar",
+    "type": "text",
+    "required": false,
+    "presentable": false,
+    "unique": false,
+    "options": {
+      "min": null,
+      "max": null,
+      "pattern": ""
+    }
+  }))
+
+  // add
+  collection.schema.addField(new SchemaField({
+    "system": false,
+    "id": "3gtanpxv",
+    "name": "active",
+    "type": "bool",
+    "required": false,
+    "presentable": false,
+    "unique": false,
+    "options": {}
+  }))
+
+  // remove
+  collection.schema.removeField("hdo8pyca")
+
+  // remove
+  collection.schema.removeField("gj5o0aa9")
+
+  // remove
+  collection.schema.removeField("hmlnl62y")
+
+  // remove
+  collection.schema.removeField("nwlwjbmc")
+
+  // remove
+  collection.schema.removeField("ul2dnyrc")
+
+  // remove
+  collection.schema.removeField("li7stwng")
+
+  return dao.saveCollection(collection)
+})

@@ -1,0 +1,12 @@
+=== Test Users Created During Testing ===
+Generated: 2026-07-04T13:22:23.992Z
+Total count: 6
+
+| ID               | Email                                  | Role    | Created (UTC)        |
+|------------------|----------------------------------------|---------|----------------------|
+| 4kd7yb3umfjcg9p  | test_customer_1783170248382_328@example.com | client  | 2026-07-04 13:04:09.355Z |
+| pqz0lb0lakbdrm6  | test_customer_1783170158401_230@example.com | client  | 2026-07-04 13:02:39.171Z |
+| h58didxq7f4sxl2  | test_customer_1783170095526_35@example.com | client  | 2026-07-04 13:01:36.357Z |
+| v1vamgkph9kvlgc  | admin_test_123@instantgrow.com         |         | 2026-06-29 15:29:26.645Z |
+| n476x37i77y5lbm  | testuser123@gmail.com                  |         | 2026-06-29 14:23:08.001Z |
+| a2h7qcilxd6gv2j  | test@example.com                       |         | 2026-06-29 00:04:47.081Z |

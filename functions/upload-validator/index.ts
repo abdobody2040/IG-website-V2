@@ -1,3 +1,4 @@
+/// <reference types="@cloudflare/workers-types" />
 /**
  * upload-validator — Cloudflare Worker
  *
@@ -19,12 +20,13 @@
  * Environment variables (set in wrangler.toml or Cloudflare dashboard):
  *   ALLOWED_ORIGIN   — CORS origin (e.g. https://instantgrow.co)
  *   R2_BUCKET        — bound R2 bucket (binding name: UPLOADS)
- *   AUTH_SECRET      — shared secret or rely on Supabase JWT verification
+ *   AUTH_SECRET      — shared secret or rely on PocketBase JWT verification
  */
 
 export interface Env {
   UPLOADS: R2Bucket
   ALLOWED_ORIGIN: string
+  PB_URL: string
 }
 
 // Magic byte signatures (first N bytes) for each allowed MIME type
@@ -75,6 +77,29 @@ export default {
         headers: { 'Content-Type': 'application/json', ...corsHeaders(origin) },
       })
     }
+
+    // ── Auth check: reject unauthenticated uploads ─────────────────────────
+    const authHeader = request.headers.get('Authorization')
+    const token = authHeader?.startsWith('Bearer ') ? authHeader.slice(7).trim() : null
+    if (!token) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        status: 401,
+        headers: { 'Content-Type': 'application/json', ...corsHeaders(origin) },
+      })
+    }
+
+    const pbUrl = env.PB_URL || 'http://127.0.0.1:8090'
+    const authRes = await fetch(`${pbUrl}/api/collections/users/auth-refresh`, {
+      method: 'POST',
+      headers: { Authorization: token },
+    })
+    if (!authRes.ok) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        status: 401,
+        headers: { 'Content-Type': 'application/json', ...corsHeaders(origin) },
+      })
+    }
+    // ── End auth check ────────────────────────────────────────────────────
 
     try {
       const formData = await request.formData()

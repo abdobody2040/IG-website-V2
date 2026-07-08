@@ -10,7 +10,7 @@ import { setPageMeta, injectJsonLd, generateArticleSchema, injectBreadcrumb, get
 export default function BlogDetailPage() {
   const { slug } = useParams({ from: '/blog/$slug' })
   const { data: post, isLoading, error } = useBlogBySlug(slug)
-  const { t, isRTL } = useLang()
+  const { t, isRTL, lang } = useLang()
   const b = t.blog
 
   const content = post ? ((isRTL && post.contentAr) || post.content) : ''
@@ -23,6 +23,7 @@ export default function BlogDetailPage() {
       title: `${title} | Instant Grow`,
       description: excerpt || '',
       keywords: post.tags,
+      ogImage: post.coverImage || `/og/blog-${post.slug}-${lang}.png`,
       canonical: getCanonical(`/blog/${post.slug}`),
     })
     injectJsonLd(generateArticleSchema(post, isRTL))
@@ -31,7 +32,7 @@ export default function BlogDetailPage() {
       { name: isRTL ? 'المدونة' : 'Blog', url: getCanonical('/blog') },
       { name: title || '', url: getCanonical(`/blog/${post.slug}`) },
     ])
-  }, [post, title, isRTL])
+  }, [post, title, isRTL, lang])
 
 
   function renderInline(text: string) {

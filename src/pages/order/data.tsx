@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { Building2, User, Package, Plus, CreditCard, Globe, ShieldCheck, Zap } from 'lucide-react'
+import { Building2, User, Package, CreditCard, Globe, ShieldCheck, Zap, MapPin, Phone, Fingerprint, Receipt, Shield, FileText } from 'lucide-react'
 import { PRICING_DATA } from '../../config/pricing'
 
 export interface Plan {
@@ -83,12 +83,19 @@ export interface AddOn {
   description: string
   price: number
   icon: ReactNode
+  category: 'compliance' | 'tech'
 }
 
 export const ADD_ONS: AddOn[] = [
-  { id: 'website', name: 'Professional Website Design', description: 'Custom business website to establish your online presence', price: 99, icon: <Globe size={16} /> },
-  { id: 'logo', name: 'Custom Logo Design', description: 'Professional logo design for your brand', price: 49, icon: <ShieldCheck size={16} /> },
-  { id: 'express', name: 'Express Filing', description: 'Rush processing (2–3 business days)', price: 50, icon: <Zap size={16} /> },
+  { id: 'website', name: 'Professional Website Design', description: 'Custom business website to establish your online presence', price: 99, icon: <Globe size={16} />, category: 'tech' },
+  { id: 'logo', name: 'Custom Logo Design', description: 'Professional logo design for your brand', price: 49, icon: <ShieldCheck size={16} />, category: 'tech' },
+  { id: 'express', name: 'Express Filing', description: 'Rush processing (2–3 business days)', price: 50, icon: <Zap size={16} />, category: 'compliance' },
+  { id: 'address', name: 'Virtual US Address', description: 'Premium business address with mail scanning and forwarding', price: 99, icon: <MapPin size={16} />, category: 'compliance' },
+  { id: 'itin', name: 'ITIN Application Support', description: 'Obtain a US Tax ID (W-7 filing) for non-US residents without SSN', price: 199, icon: <Fingerprint size={16} />, category: 'compliance' },
+  { id: 'phone', name: 'US Phone Number', description: 'Dedicated business phone line for SMS verification & support', price: 49, icon: <Phone size={16} />, category: 'compliance' },
+  { id: 'reseller', name: 'Reseller Permit', description: 'Sales tax registration for tax-free wholesale purchases', price: 129, icon: <Receipt size={16} />, category: 'compliance' },
+  { id: 'compliance', name: 'Compliance Guard', description: 'Annual report filing and franchise tax renewal service', price: 149, icon: <Shield size={16} />, category: 'compliance' },
+  { id: 'ein_expedited', name: 'Expedited EIN Application', description: 'Priority IRS processing in 5-10 business days for non-US residents', price: 79, icon: <FileText size={16} />, category: 'compliance' },
 ]
 
 export type MemberRole = 'managing_member' | 'member' | 'manager'
@@ -113,7 +120,9 @@ export const STEPS = [
   { label: 'Company Info', icon: Building2 },
   { label: 'Owner Info', icon: User },
   { label: 'Service Package', icon: Package },
-  { label: 'Add-ons', icon: Plus },
+  { label: 'Compliance Add-ons', icon: Shield },
+  { label: 'Web & Branding', icon: Globe },
   { label: 'Account', icon: User },
   { label: 'Review & Pay', icon: CreditCard },
 ]
+

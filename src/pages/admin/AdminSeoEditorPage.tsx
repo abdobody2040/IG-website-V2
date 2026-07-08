@@ -9,7 +9,7 @@ import toast from 'react-hot-toast'
 
 export default function AdminSeoEditorPage() {
   useRequireAdmin()
-  const params = useParams({ from: '/admin/seo/$id/edit' })
+  const params = useParams({ strict: false }) as { id: string }
   const id = params.id
   const navigate = useNavigate()
   const isNew = id === 'new'

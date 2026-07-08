@@ -1,8 +1,5 @@
-import { ArrowRight, Calendar, CheckCircle, Phone } from 'lucide-react'
-import { motion } from 'framer-motion'
+import { ArrowRight, ArrowLeft, Check } from 'lucide-react'
 import { useLang } from '../i18n/LanguageContext'
-import Particles from './effects/Particles'
-import { useMagneticButton } from '../hooks/useMagneticButton'
 
 const CAL_BASE = 'https://cal.com/instant-grow-llc'
 
@@ -10,147 +7,74 @@ export default function CTASection() {
   const { t, lang } = useLang()
   const c = t.cta
   const isAr = lang === 'ar'
-  const magneticCta = useMagneticButton()
 
-  const trustBadges = [
-    { icon: CheckCircle, text: isAr ? 'ضمان استعادة المبلغ' : 'Money-Back Guarantee' },
-    { icon: CheckCircle, text: isAr ? 'لا رسوم مخفية' : 'No Hidden Fees' },
-    { icon: CheckCircle, text: isAr ? 'دعم على مدار الساعة' : '24/7 Support' },
+  const benefits = [
+    { text: isAr ? '100% عبر الإنترنت' : '100% Online' },
+    { text: isAr ? 'آمن وموثوق' : 'Secure & Reliable' },
+    { text: isAr ? 'ضمان استعادة الأموال' : 'Money-Back Guarantee' },
   ]
 
   return (
-    <section id="order" className="py-14 sm:py-20 lg:py-28 bg-[#0a0f1e] relative overflow-hidden">
-      {/* Background effects */}
-      <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        <Particles count={30} />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] bg-gradient-to-br from-blue-500/10 via-cyan-500/5 to-transparent rounded-full blur-3xl" />
-        <div className="absolute top-0 right-0 w-96 h-96 bg-blue-600/5 rounded-full blur-3xl" />
-        <div className="absolute bottom-0 left-0 w-80 h-80 bg-cyan-500/5 rounded-full blur-3xl" />
-        {/* Subtle grid */}
-        <div
-          className="absolute inset-0 opacity-[0.03]"
-          style={{
-            backgroundImage: 'linear-gradient(rgba(255,255,255,0.6) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.6) 1px, transparent 1px)',
-            backgroundSize: '56px 56px',
-          }}
-        />
-      </div>
-
-      <div className="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-        <div className="flex flex-col lg:flex-row items-center gap-12 lg:gap-16">
-
-          {/* Left content */}
-          <motion.div
-            className="flex-1 text-center lg:text-left"
-            initial={{ opacity: 0, x: -24 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-          >
-            <h2
-              className="text-4xl sm:text-[52px] lg:text-[58px] xl:text-[64px] font-bold text-white leading-tight tracking-tight mb-5"
-              style={{ fontFamily: 'Sora, Inter, sans-serif' }}
-            >
-              {c.heading}
-            </h2>
-
-            <p className="text-white/60 text-lg sm:text-xl mb-12 max-w-xl leading-relaxed">
-              {c.subheading}
-            </p>
-
-            <div className="flex flex-col sm:flex-row items-center lg:items-start gap-4 mb-10 w-full">
-              <motion.a
-                ref={magneticCta.ref}
-                href="/order?plan=us-premium"
-                onMouseMove={magneticCta.onMouseMove}
-                onMouseLeave={magneticCta.onMouseLeave}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                className="shimmer-btn inline-flex items-center justify-center gap-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white font-bold text-base px-10 py-5 rounded-[18px] hover:shadow-xl hover:shadow-blue-500/30 transition-all group w-full sm:w-auto text-center min-h-[48px]"
+    <section id="order" className="py-12 bg-gradient-to-r from-[#1A56FF] to-[#0A44E4] relative overflow-hidden">
+      {/* Background overlay for smooth color */}
+      <div className="absolute inset-0 bg-blue-600/10 pointer-events-none" />
+      
+      <div className="max-w-[1280px] mx-auto px-5 sm:px-8 lg:px-10 relative z-10">
+        <div className="flex flex-col lg:flex-row items-center justify-between gap-8">
+          
+          {/* Left: Mascot & Text */}
+          <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6 flex-1 text-center sm:text-left rtl:sm:text-right w-full">
+            <img 
+              src="/mascot-cta.png" 
+              alt="Instant Grow Mascot" 
+              className={`w-24 sm:w-32 lg:w-44 shrink-0 drop-shadow-[0_10px_25px_rgba(0,0,0,0.15)] ${isAr ? 'scale-x-[-1]' : ''}`} 
+            />
+            <div>
+              <h2 
+                className="text-[22px] sm:text-3xl lg:text-[34px] font-bold text-white leading-tight mb-2"
+                style={{ fontFamily: 'Sora, Inter, sans-serif' }}
               >
-                {c.button}
-                <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
-              </motion.a>
+                {c.heading}
+              </h2>
+              <p className="text-white/80 text-xs sm:text-base max-w-xl leading-relaxed">
+                {c.subheading}
+              </p>
+            </div>
+          </div>
 
-              <a
-                href={`${CAL_BASE}/15min`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center justify-center gap-2 bg-white/8 text-white font-semibold text-base px-9 py-5 rounded-[18px] border border-white/12 hover:bg-white/14 hover:border-white/20 transition-all backdrop-blur-sm group w-full sm:w-auto text-center min-h-[48px]"
+          {/* Right: Buttons & Benefits */}
+          <div className="flex flex-col items-center lg:items-end gap-4 shrink-0 w-full lg:w-auto">
+            <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+              <a 
+                href="/order?plan=us-premium" 
+                className="bg-white text-[#1A56FF] hover:bg-slate-50 font-bold px-7 py-3 rounded-2xl transition-all duration-200 flex items-center justify-center gap-2 text-sm shadow-[0_8px_25px_rgba(0,0,0,0.08)] hover:-translate-y-0.5 w-full sm:w-auto min-h-[48px]"
               >
-                <Phone size={16} className="text-cyan-400" />
+                {isAr ? 'أسس شركتك الآن' : 'Form My US LLC'}
+                {isAr ? <ArrowLeft size={16} /> : <ArrowRight size={16} />}
+              </a>
+              <a 
+                href={`${CAL_BASE}/15min`} 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="border border-white/25 hover:border-white/40 hover:bg-white/5 text-white font-bold px-7 py-3 rounded-2xl transition-all duration-200 text-sm flex items-center justify-center hover:-translate-y-0.5 w-full sm:w-auto min-h-[48px]"
+              >
                 {isAr ? 'احجز مكالمة مجانية' : 'Book a Free Call'}
               </a>
             </div>
-
-            {/* Trust badges */}
-            <div className="flex flex-wrap items-center justify-center lg:justify-start gap-5">
-              {trustBadges.map((b, i) => (
-                <span key={i} className="flex items-center gap-1.5 text-sm text-white/50">
-                  <b.icon size={13} className="text-emerald-400 shrink-0" />
+            
+            {/* Benefits Row */}
+            <div className="flex flex-wrap items-center justify-center lg:justify-end gap-x-5 gap-y-2 mt-1">
+              {benefits.map((b, i) => (
+                <span key={i} className="flex items-center gap-1.5 text-xs font-semibold text-white/95">
+                  <div className="w-4 h-4 rounded-full bg-white/15 flex items-center justify-center shrink-0">
+                    <Check size={10} className="text-white" strokeWidth={3.5} />
+                  </div>
                   {b.text}
                 </span>
               ))}
             </div>
+          </div>
 
-            {/* Meeting divider */}
-            <div className="flex items-center gap-4 mt-10 mb-6">
-              <div className="flex-1 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
-              <span className="text-white/30 text-xs font-semibold uppercase tracking-widest whitespace-nowrap">
-                {c.meetingLabel}
-              </span>
-              <div className="flex-1 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
-            </div>
-
-            <h3 className="text-xl font-bold text-white mb-2">{c.meetingHeading}</h3>
-            <p className="text-white/50 text-sm mb-6">{c.meetingDesc}</p>
-
-            <div className="flex flex-col sm:flex-row items-center lg:items-start gap-3 w-full">
-              <a
-                href={`${CAL_BASE}/15min`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center justify-center gap-2 bg-white/6 text-white font-semibold text-sm px-6 py-3 rounded-xl border border-white/10 hover:bg-white/10 hover:border-emerald-400/40 transition-all group w-full sm:w-auto text-center min-h-[44px]"
-              >
-                <Calendar size={14} className="text-emerald-400" />
-                {c.meeting15}
-              </a>
-              <a
-                href={`${CAL_BASE}/30min`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center justify-center gap-2 bg-emerald-500 text-white font-semibold text-sm px-6 py-3 rounded-xl hover:bg-emerald-600 transition-all hover:shadow-lg hover:shadow-emerald-500/25 group w-full sm:w-auto text-center min-h-[44px]"
-              >
-                <Calendar size={14} />
-                {c.meeting30}
-              </a>
-            </div>
-
-            <p className="text-white/30 text-xs mt-5">{c.note}</p>
-          </motion.div>
-
-          {/* Right — Mascot (increased by 20%) */}
-          <motion.div
-            className="hidden lg:flex items-end justify-center lg:w-[380px] xl:w-[450px] shrink-0 relative"
-            initial={{ opacity: 0, x: 24 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.7, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
-          >
-            {/* Glow behind mascot */}
-            <div className="absolute bottom-0 inset-x-0 h-48 bg-blue-500/10 rounded-full blur-3xl" />
-            <motion.div
-              animate={{ y: [-8, 6, -8] }}
-              transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}
-              className="relative z-10 w-full"
-            >
-              <img
-                src="/mascot-cta.png"
-                alt="Instant Grow Mascot"
-                className="w-full h-auto drop-shadow-[0_20px_40px_rgba(37,99,235,0.25)] brightness-110"
-              />
-            </motion.div>
-          </motion.div>
         </div>
       </div>
     </section>

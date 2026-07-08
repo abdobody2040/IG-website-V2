@@ -92,9 +92,14 @@ export default function ContactPage() {
     setSubmitting(true)
     try {
       if (CONTACT_ENDPOINT) {
+        const headers: Record<string, string> = { 'Content-Type': 'application/json' }
+        // Pass auth token so the Worker can link the message to the user's account (B-009)
+        if (pb.authStore.token) {
+          headers['Authorization'] = `Bearer ${pb.authStore.token}`
+        }
         const res = await fetch(CONTACT_ENDPOINT, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers,
           body: JSON.stringify({
             name: data.name,
             email: data.email,

@@ -56,7 +56,7 @@ Before coding:
 
 Implementation requirements:
 - Follow existing patterns in src/
-- Use same tech stack (React, TypeScript, Tailwind, Supabase)
+- Use same tech stack (React, TypeScript, Tailwind, PocketBase)
 - Add proper TypeScript types
 - Handle loading, error, and empty states
 - Follow accessibility guidelines
@@ -87,7 +87,7 @@ Write tests for [component/hook/function] in Instant Grow.
 - Read .ai/testing.md for testing strategy
 - Follow existing test patterns
 - Cover: happy path, error states, edge cases
-- Mock Supabase client where needed
+- Mock PocketBase client where needed
 ```
 
 ## Database Changes
@@ -95,12 +95,12 @@ Write tests for [component/hook/function] in Instant Grow.
 ```
 Plan and implement database changes for Instant Grow.
 1. Read .ai/database.md for DB architecture
-2. Create migration in supabase/migrations/
-3. Update schema.sql if needed
+2. Update pocketbase/pb_schema.json and collections in the PocketBase Admin panel
+3. Generate schema migrations under pocketbase/pb_migrations/
 4. Update .ai/database.md documentation
 5. Update types/db.ts
-6. Update hooks that use affected tables
-7. Create RLS policy if needed
+6. Update hooks that use affected collections
+7. Update API access rules if needed
 8. Update .ai/changelog.md
 ```
 
@@ -112,7 +112,7 @@ Deploy Instant Grow to production.
 2. Verify all environment variables are set
 3. Run npm run build
 4. Deploy dist/ to hosting provider
-5. Deploy Edge Functions to Supabase
+5. Deploy Edge Functions (Cloudflare Workers) using Wrangler
 6. Run smoke tests
 7. Update .ai/changelog.md
 ```

@@ -1,23 +1,28 @@
 import { useEffect } from 'react'
+import DOMPurify from 'dompurify'
 import { useLang } from '../i18n/LanguageContext'
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
 import { setPageMeta, getCanonical } from '../lib/seo'
 import { Eye } from 'lucide-react'
+import { usePageContent } from '../hooks/usePageContent'
 
 export default function AccessibilityPage() {
   const { lang, isRTL } = useLang()
   const isAr = lang === 'ar'
+  const { page } = usePageContent('accessibility')
+
+  const title = (page && page.active) ? (isAr ? page.title_ar : page.title_en) : (isAr ? 'إمكانية الوصول' : 'Accessibility Statement')
 
   useEffect(() => {
     setPageMeta({
-      title: isAr ? 'إمكانية الوصول | Instant Grow' : 'Accessibility Statement | Instant Grow',
+      title: `${title} | Instant Grow`,
       description: isAr
         ? 'بيان إمكانية الوصول الخاص بـ Instant Grow. نحن نسعى لتوفير تجربة مستخدم شاملة وسهلة للجميع.'
         : 'Accessibility Statement for Instant Grow. Learn about our commitment to web accessibility and inclusivity.',
       canonical: getCanonical('/accessibility'),
     })
-  }, [isAr])
+  }, [isAr, title])
 
   return (
     <div className="min-h-screen bg-slate-50 font-sans flex flex-col">
@@ -38,7 +43,7 @@ export default function AccessibilityPage() {
                 {isAr ? 'بيان' : 'Statement'}
               </span>
               <h1 className="text-3xl sm:text-5xl font-bold tracking-tight mb-4" style={{ fontFamily: 'Sora, Inter, sans-serif' }}>
-                {isAr ? 'إمكانية الوصول' : 'Accessibility Statement'}
+                {title}
               </h1>
               <p className="text-slate-400 text-base sm:text-lg max-w-xl">
                 {isAr
@@ -57,7 +62,13 @@ export default function AccessibilityPage() {
       <main className="flex-1 max-w-4xl w-full mx-auto px-5 sm:px-8 lg:px-10 py-16">
         <div className="bg-white rounded-[24px] border border-slate-200/80 p-8 sm:p-12 shadow-[0_4px_24px_rgba(15,23,42,0.02)]">
           <article className={`prose max-w-none text-slate-600 leading-relaxed ${isRTL ? 'text-right' : 'text-left'}`}>
-            {isAr ? (
+            {page && page.active && ((isAr ? page.content_ar : page.content_en)) ? (
+              <div
+                className="space-y-6"
+                style={{ direction: isRTL ? 'rtl' : 'ltr' }}
+                dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize((isAr ? page.content_ar : page.content_en) || '') }}
+              />
+            ) : isAr ? (
               <div className="space-y-8" style={{ direction: 'rtl' }}>
                 <section className="space-y-3">
                   <h2 className="text-xl font-bold text-slate-800">1. التزامنا الشامل</h2>

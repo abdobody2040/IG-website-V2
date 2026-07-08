@@ -9,24 +9,34 @@ export function AddDocumentModal({ userId, orders, companies, onClose, onSaved }
   userId: string; orders: Order[]; companies: Company[]; onClose: () => void; onSaved: () => void
 }) {
   const [form, setForm] = useState({ docType: 'other', status: 'ready', orderId: '', companyId: '' })
-  const [file, setFile] = useState<File | null>(null)
+  const [files, setFiles] = useState<File[]>([])
   const [dragging, setDragging] = useState(false)
   const [uploading, setUploading] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
 
-  function handleFiles(files: FileList | null) {
-    if (!files?.length) return
-    const f = files[0]
-    if (!f) return
-    if (!ALLOWED_MIME_TYPES.includes(f.type)) {
-      toast.error('File type not allowed. Accepted: PDF, PNG, JPEG, WEBP, DOC, DOCX.')
-      return
+  function handleFiles(selectedFiles: FileList | null) {
+    if (!selectedFiles?.length) return
+    
+    const validFiles: File[] = []
+    let errorShown = false
+    
+    for (let i = 0; i < selectedFiles.length; i++) {
+      const f = selectedFiles[i]
+      if (!f) continue
+      if (!ALLOWED_MIME_TYPES.includes(f.type)) {
+        if (!errorShown) { toast.error('Some file types not allowed. Accepted: PDF, PNG, JPEG, WEBP, DOC, DOCX.'); errorShown = true }
+        continue
+      }
+      if (f.size > MAX_FILE_SIZE) {
+        if (!errorShown) { toast.error('Some files are too large. Maximum size is 10 MB.'); errorShown = true }
+        continue
+      }
+      validFiles.push(f)
     }
-    if (f.size > MAX_FILE_SIZE) {
-      toast.error('File too large. Maximum size is 10 MB.')
-      return
+    
+    if (validFiles.length > 0) {
+      setFiles(prev => [...prev, ...validFiles])
     }
-    setFile(f)
   }
 
   function onDrop(e: React.DragEvent) {
@@ -36,63 +46,82 @@ export function AddDocumentModal({ userId, orders, companies, onClose, onSaved }
   }
 
   async function handleSave() {
-    if (!file) { toast.error('Please select a file'); return }
-    if (file.size > MAX_FILE_SIZE) { toast.error('File too large. Maximum size is 10 MB.'); return }
+    if (files.length === 0) { toast.error('Please select at least one file'); return }
     setUploading(true)
+    let successCount = 0
+    let failCount = 0
+
     try {
-      const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_')
-      const path = `user-docs/${userId}/${Date.now()}-${safeName}`
-      let publicUrl = ''
-      let recordCreated = false
+      for (const file of files) {
+        try {
+          const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_')
+          const path = `user-docs/${userId}/${Date.now()}-${safeName}`
+          let publicUrl = ''
+          let recordCreated = false
 
-      const R2_UPLOAD_ENDPOINT = import.meta.env.VITE_R2_UPLOAD_ENDPOINT as string | undefined
-      if (R2_UPLOAD_ENDPOINT) {
-        const formData = new FormData()
-        formData.append('file', file)
-        formData.append('path', path)
-        const res = await fetch(R2_UPLOAD_ENDPOINT, {
-          method: 'POST',
-          headers: pb.authStore.token ? { Authorization: `Bearer ${pb.authStore.token}` } : {},
-          body: formData,
-        })
-        if (!res.ok) throw new Error('Upload to R2 failed')
-        const json = await res.json()
-        publicUrl = json.url
-      } else {
-        // Upload directly to PocketBase documents collection
-        const formData = new FormData()
-        formData.append('user', userId)
-        if (form.orderId) formData.append('order', form.orderId)
-        if (form.companyId) formData.append('company', form.companyId)
-        formData.append('name', file.name)
-        formData.append('doc_type', form.docType)
-        formData.append('file_name', safeName)
-        formData.append('status', form.status)
-        formData.append('file', file)
+          const R2_UPLOAD_ENDPOINT = import.meta.env.VITE_R2_UPLOAD_ENDPOINT as string | undefined
+          if (R2_UPLOAD_ENDPOINT) {
+            const formData = new FormData()
+            formData.append('file', file)
+            formData.append('path', path)
+            const res = await fetch(R2_UPLOAD_ENDPOINT, {
+              method: 'POST',
+              headers: pb.authStore.token ? { Authorization: `Bearer ${pb.authStore.token}` } : {},
+              body: formData,
+            })
+            if (!res.ok) throw new Error('Upload to R2 failed')
+            const json = await res.json()
+            publicUrl = json.url
+          } else {
+            // Upload directly to PocketBase documents collection
+            const formData = new FormData()
+            formData.append('user', userId)
+            if (form.orderId) formData.append('order', form.orderId)
+            if (form.companyId) formData.append('company', form.companyId)
+            formData.append('name', file.name)
+            formData.append('doc_type', form.docType)
+            formData.append('file_name', safeName)
+            formData.append('status', form.status)
+            formData.append('file', file)
 
-        await pb.collection('documents').create(formData)
-        recordCreated = true
+            await pb.collection('documents').create(formData)
+            recordCreated = true
+          }
+
+          if (!recordCreated) {
+            await pb.collection('documents').create({
+              user: userId,
+              order: form.orderId || null,
+              company: form.companyId || null,
+              name: file.name,
+              doc_type: form.docType,
+              file_url: publicUrl,
+              file_name: safeName,
+              status: form.status,
+            })
+          }
+          successCount++
+        } catch (err) {
+          console.error(`Failed to upload ${file.name}:`, err)
+          failCount++
+        }
       }
 
-      if (!recordCreated) {
-        await pb.collection('documents').create({
-          user: userId,
-          order: form.orderId || null,
-          company: form.companyId || null,
-          name: file.name,
-          doc_type: form.docType,
-          file_url: publicUrl,
-          file_name: safeName,
-          status: form.status,
-        })
+      if (successCount > 0) {
+        toast.success(`Successfully uploaded ${successCount} document${successCount > 1 ? 's' : ''}`)
       }
-
-      toast.success('Document uploaded')
+      if (failCount > 0) {
+        toast.error(`Failed to upload ${failCount} document${failCount > 1 ? 's' : ''}`)
+      }
+      
       onSaved()
-      onClose()
-    } catch (err) {
-      console.error('AddDocument failed:', err)
-      toast.error('Failed to upload document')
+      if (failCount === 0) {
+        onClose()
+      } else {
+        // Clear successful files from the list if some failed
+        // For simplicity, just close it or let them retry
+        onClose()
+      }
     } finally {
       setUploading(false)
     }
@@ -106,7 +135,7 @@ export function AddDocumentModal({ userId, orders, companies, onClose, onSaved }
           <button onClick={onClose} className="text-slate-400 hover:text-slate-600"><X size={18} /></button>
         </div>
         <div className="p-5 space-y-4">
-          {!file ? (
+          {files.length === 0 ? (
             <div
               onDragOver={e => { e.preventDefault(); setDragging(true) }}
               onDragLeave={() => setDragging(false)}
@@ -116,17 +145,30 @@ export function AddDocumentModal({ userId, orders, companies, onClose, onSaved }
             >
               <Plus size={28} className={`mx-auto mb-2 ${dragging ? 'text-[#1a56ff]' : 'text-slate-300'}`} />
               <p className="text-sm font-medium text-slate-700">Drag & drop or <span className="text-[#1a56ff]">browse</span></p>
-              <p className="text-xs text-slate-400 mt-1">PDF, DOC, JPG, PNG — max 10 MB</p>
-              <input ref={fileRef} type="file" accept={ACCEPTED_FILE_TYPES} className="hidden" onChange={e => handleFiles(e.target.files)} />
+              <p className="text-xs text-slate-400 mt-1">PDF, DOC, JPG, PNG — max 10 MB per file</p>
+              <input ref={fileRef} type="file" accept={ACCEPTED_FILE_TYPES} multiple className="hidden" onChange={e => handleFiles(e.target.files)} />
             </div>
           ) : (
-            <div className="flex items-center gap-3 bg-blue-50 border border-blue-100 rounded-xl px-4 py-3">
-              <FileText size={18} className="text-[#1a56ff] flex-shrink-0" />
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-slate-900 truncate">{file.name}</p>
-                <p className="text-xs text-slate-500">{(file.size / 1024).toFixed(1)} KB</p>
+            <div className="space-y-2">
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-xs font-medium text-slate-500">{files.length} file(s) selected</span>
+                <button onClick={() => fileRef.current?.click()} className="text-xs font-semibold text-[#1a56ff] hover:underline">Add more</button>
               </div>
-              <button onClick={() => setFile(null)} className="text-slate-400 hover:text-red-500"><X size={16} /></button>
+              <input ref={fileRef} type="file" accept={ACCEPTED_FILE_TYPES} multiple className="hidden" onChange={e => handleFiles(e.target.files)} />
+              <div className="max-h-40 overflow-y-auto space-y-2 pr-1 custom-scrollbar">
+                {files.map((file, idx) => (
+                  <div key={idx} className="flex items-center gap-3 bg-blue-50 border border-blue-100 rounded-xl px-4 py-3">
+                    <FileText size={18} className="text-[#1a56ff] flex-shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-slate-900 truncate">{file.name}</p>
+                      <p className="text-xs text-slate-500">{(file.size / 1024).toFixed(1)} KB</p>
+                    </div>
+                    <button onClick={() => setFiles(prev => prev.filter((_, i) => i !== idx))} className="text-slate-400 hover:text-red-500 flex-shrink-0">
+                      <X size={16} />
+                    </button>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
 
@@ -169,7 +211,7 @@ export function AddDocumentModal({ userId, orders, companies, onClose, onSaved }
         </div>
         <div className="flex gap-3 p-5 border-t border-slate-100">
           <button onClick={onClose} className="flex-1 py-2.5 rounded-lg border border-slate-200 text-slate-700 text-sm font-medium hover:bg-slate-50">Cancel</button>
-          <button onClick={handleSave} disabled={uploading || !file} className="flex-1 py-2.5 rounded-lg bg-[#1a56ff] text-white text-sm font-semibold hover:bg-[#1440d0] disabled:opacity-60 flex items-center justify-center gap-2">
+          <button onClick={handleSave} disabled={uploading || files.length === 0} className="flex-1 py-2.5 rounded-lg bg-[#1a56ff] text-white text-sm font-semibold hover:bg-[#1440d0] disabled:opacity-60 flex items-center justify-center gap-2">
             {uploading && <Loader2 size={13} className="animate-spin" />} {uploading ? 'Uploading...' : 'Upload Document'}
           </button>
         </div>

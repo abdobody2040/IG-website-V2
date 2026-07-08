@@ -18,12 +18,18 @@ export function setPageMeta({
   setMeta('keywords', keywords?.join(', ') ?? '')
   setMeta('og:title', title)
   setMeta('og:description', description)
-  if (ogImage) setMeta('og:image', ogImage)
+
+  const origin = window.location.origin
+  const absoluteOgImage = ogImage
+    ? (ogImage.startsWith('http') ? ogImage : `${origin}${ogImage}`)
+    : `${origin}/logo.png`
+
+  setMeta('og:image', absoluteOgImage)
   setMeta('og:type', 'website')
   setMeta('twitter:card', 'summary_large_image')
   setMeta('twitter:title', title)
   setMeta('twitter:description', description)
-  if (ogImage) setMeta('twitter:image', ogImage)
+  setMeta('twitter:image', absoluteOgImage)
 
   setCanonical(canonical)
 }
@@ -96,6 +102,27 @@ export function generateWebSiteSchema() {
       'target': `${origin}/blog?search={search_term_string}`,
       'query-input': 'required name=search_term_string',
     },
+  }
+}
+
+export function generateProfessionalServiceSchema() {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'LegalService',
+    name: 'Instant Grow',
+    description: 'Fast, reliable LLC and LTD formation services for entrepreneurs worldwide.',
+    url: window.location.origin,
+    logo: `${window.location.origin}/logo.png`,
+    image: `${window.location.origin}/og-image.jpg`,
+    priceRange: '$$',
+    address: {
+      '@type': 'PostalAddress',
+      addressCountry: 'US',
+    },
+    sameAs: [
+      'https://twitter.com/instantgrow',
+      'https://linkedin.com/company/instantgrow',
+    ],
   }
 }
 

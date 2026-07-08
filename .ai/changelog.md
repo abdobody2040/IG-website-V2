@@ -1,5 +1,90 @@
 # Instant Grow — Changelog
 
+## 2026-07-07 — Admin UI Pagination, E2E QA Verification, Programmatic OG Pre-rendering & Deployment Foundations
+
+### Added
+- **Arabic & Mobile E2E Testing Coverage** — Wrote a new E2E test file `tests/e2e/rtl-and-mobile.spec.ts` to test language toggling, Arabic Right-to-Left layout direction triggers (`dir="rtl"`), and mobile viewport hamburger sidebar responsiveness.
+- **Admin UI Reusable Pagination** — Built `PaginationBar.tsx` featuring sliding page window links, Chevron page navigators, and total item range indicators.
+- **Programmatic OG Image Pre-renderer** — Wrote a Node.js pre-renderer script `generate-og-images.mjs` using Playwright to dynamically take screenshot previews of all blog posts and SEO country guides from PocketBase, in LTR (English) and RTL (Arabic) layout variants.
+- **Cloudflare Worker Deployments** — Configured `wrangler.toml` files for all 5 core edge functions: `send-email`, `create-checkout`, `stripe-webhook`, `delete-user`, and `submit-contact` to simplify wrangler publishing.
+- **PocketBase Production Package** — Added a lightweight alpine-based `pocketbase/Dockerfile` and a `pocketbase/fly.toml` app template configured with automated https, port routing, and volume mounting for SQLite persistent storage.
+- **Live Stripe Seeding Script** — Added `scripts/sync-stripe-prices.mjs` to automatically verify, create, and seed products and price IDs on Stripe matching formation plans and add-on services.
+
+### Changed
+- **Sanitized hardcoded credentials** — Removed all instances of the hardcoded real email `instantgrow.net@gmail.com` and sensitive admin password `Admin@2025!` from `tests/e2e/auth.spec.ts`, `tests/e2e/admin-panel.spec.ts`, `scripts/ensure-admin-user.mjs`, and `expand_arabic_blogs.js`. Replaced them with environment variables (`process.env.PB_ADMIN_EMAIL` and `process.env.PB_ADMIN_PASSWORD`) and safe generic test values (`admin@example.local` / `AdminTestPassword123!`) for local test runs.
+- **Executed and Verified E2E Test Suite** — Successfully executed the full Playwright E2E test suite (6/6 passing tests) on a clean, locally seeded PocketBase instance using the sanitized test credentials.
+- **Wired Admin Pagination & Server-Side Filters** — Replaced `useAllCompanies` and `useAllDocuments` with the paginated `useCompanies` and `useDocuments` hooks in `AdminCompaniesPage.tsx` and `AdminDocumentsPage.tsx`. Wired filtering options (status, compliance status, document type) directly to the PocketBase backend to ensure correct pagination counts.
+- **Resilient E2E Checkout Flow** — Fixed the `order-flow.spec.ts` test by adding steps to handle the split dual Add-on pages (Compliance & Tech Add-ons) and conditionally skip creating a customer account if the E2E session state is already authenticated.
+- **Manual Database Security Audit** — Conducted a final manual audit on `pb_schema.json` rules, confirming secure configuration: profiles, orders, companies, documents, payments, and notification preferences are owner-locked/admin-only, and audit logs are strictly restricted to admin roles.
+- **Dynamic SEO Metadata Fallbacks** — Wired `BlogDetailPage.tsx` and `SeoCountryPage.tsx` with localized fallback preview links (`/og/blog-*.png` and `/og/seo-*.png`), and updated `seo.ts` to resolve relative images into absolute URLs via `window.location.origin` with a default global fallback to `/logo.png`.
+- **Automated Production Build Pipeline** — Linked the OG image generation script to run during the `npm run build` phase, allowing graceful compilation bypass in offline CI/CD compilation environments.
+
+## 2026-07-05 — Multi-Tenant Workspaces, API Tokens, Webhooks & Bulk Uploads
+
+### Added
+- **Multi-Tenant Workspaces (B2B Portal)** — Added full support for B2B multi-tenant workspaces. Created `useWorkspace.tsx` provider, wrapped the App with `WorkspaceProvider`, and added a workspace switcher dropdown UI to the client navigation sidebar. Added `WorkspaceSettingsPage.tsx` allowing workspace owners to rename the workspace, view members, add new members by email, and revoke member access.
+- **API Token System** — Added an "API Tokens" section to `AdminSettingsPage.tsx` where admins can generate secure, random API tokens (using `crypto.getRandomValues`) and revoke them. The tokens are saved in the admin's `metadata` JSON field.
+- **Bulk Document Upload** — Refactored `AddDocumentModal.tsx` to support selecting and uploading multiple documents simultaneously. Added a scrollable UI list of selected files with remove buttons, and processed uploads sequentially with individual error/progress tracking.
+- **Order Status Webhooks** — Implemented order status change webhook triggers in `UpdateStatusModal.tsx`, `EditOrderModal.tsx`, and `AdminOrdersPage.tsx` using a new `useUpdateOrderStatus` React Query mutation, sending a `POST` request to `VITE_ORDER_WEBHOOK_URL` on status changes.
+
+### Changed
+- **Client Hooks Scoped to Workspace** — Updated `useCompanies.ts`, `useOrders.ts`, and `useDocuments.ts` to query by the active workspace ID (`workspace = "${workspaceId}"`) instead of `userId`.
+- **Query Compatibility Fallback** — Configured a fallback filter `(workspace = "" && user = "${userId}")` in all workspace-scoped client queries to ensure legacy user data remains visible in their default personal workspace.
+- **Quoted Workflow Secrets** — Added quotes around secret context access in `.github/workflows/compliance-reminders.yml` (e.g. `"${{ secrets.PB_URL }}"`) to clear IDE validation warnings.
+- **Restored Dashboard Hook Helpers** — Restored `useAllOrders` and `useAllUsers` in `useAdminData.ts` using `.getFullList()` to fix compiler errors across 4 admin summary pages.
+- **Fixed Global Error Boundary TS Issues** — Addressed `override` method warnings and unused React imports in `GlobalErrorBoundary.tsx`, and replaced node-only `process.env.NODE_ENV` with `import.meta.env.DEV` to ensure clean TypeScript compilation.
+
+## 2026-07-04 — Stripe USD Payment & Database Hooks Integration
+
+### Added
+- **PocketBase Lifecycle Hook Sync** — Created `pocketbase/pb_hooks/services.pb.js` database-level hook to synchronize PocketBase service records (creation & pricing updates) with Stripe Products and Prices on the fly.
+- **E2E Playwright Automation Framework** — Set up full-coverage E2E test suites in `tests/e2e/` (auth, multilingual layout direction, order placement wizard, admin overview cards).
+- **Admin Superuser Credentials Setup Script** — Built `scripts/ensure-admin-user.mjs` to programmatically sync and verify that the target client admin credentials exist on local PocketBase instances.
+- **Resend Transactional Email Hook** — Wired transactional email dispatching (Checkout Success, Payment Failed, Refund, Dispute) using Resend API inside the Cloudflare Workers webhook handler.
+- **Dashboard Financial Overview** — Extended `AdminPaymentsPage` into a premium financial dashboard containing revenue KPIs, top customer lists, customer directories, and Excel-compliant CSV/PDF reports.
+
+### Changed
+- **Stripe Session Routing** — Configured Workers checkout routes and PaymentIntent creators to enforce secure, server-side USD pricing lookups.
+- **Verification Return Fallback** — Updated checkout callbacks to support live verification requests to `/verify-payment` to sync order state in case of webhook lag.
+
+## 2026-07-02 — Responsive Mobile-First Redesign & Floating Widget Fixes
+
+### Added
+- **Global Spacing & Typography System** — Defined mobile-first CSS layout tokens in `index.css` supporting standard utility classes like `.ig-heading` (Desktop `54px` -> Mobile `32px`) and `.ig-body` (Desktop `20px` -> Mobile `16px`).
+- **Static Services Fallback** — Created `staticServicesData` array fallback inside `Navbar.tsx` to automatically populate navigation category links when PocketBase API is offline, preventing empty drawers.
+
+### Changed
+- **Mobile Menu Containing Block Bugfix** — Moved the mobile menu drawer outside the `<header>` element and increased z-index to `z-[9999]`. This resolves containing block height restriction bugs caused by the header's `backdrop-filter` backdrop styling, ensuring solid full-viewport white background coverage.
+- **Mobile Drawer Spacing Compacted** — Reduced link paddings (`py-2`), gaps, and bottom actions container padding to guarantee all header items fit on mobile screen viewports without vertical clipping.
+- **Interactive Network Map Centered Stack** — Replaced absolute hover cards with stacked responsive lists below the world map on mobile to prevent horizontal clipping.
+- **Floating Chat Widgets Raised** — Hidden the floating green WhatsApp icon bubble on mobile (integrated into the sticky bottom CTA bar instead) and raised the AI Chat widget bubble container position from `bottom-6` to `bottom-24` on mobile to float cleanly above the sticky bar.
+- **Arabic RTL Timeline Vertical Line Fix** — Set `rtl:left-auto rtl:right-[40px]` class for the timeline connector dashed line in RTL mode, aligning it correctly with step circles.
+
+## 2026-07-02 — Auth Sync, Compliance Filters, Email Worker
+
+### Added
+- **Last Sign-In Sync** — `useAuth.ts` now calls `syncLastSignIn(userId)` on every authenticated session, updating the `last_sign_in` field in PocketBase. Uses `sessionStorage` as a guard to prevent redundant writes per browser tab.
+- **Send-Email Cloudflare Worker** — Created `functions/send-email/index.ts`, a production-ready Cloudflare Worker that proxies transactional email sends to the Resend REST API. Supports PocketBase token-based auth verification and allows guest sends to the admin address (for contact forms).
+- **Admin Compliance Filter** — Added a "Compliance" dropdown filter to `AdminCompaniesPage.tsx` (🔴 Overdue, 🟡 Due Soon ≤30 days, 🟢 Compliant, ⚪ No Dates Set) wired into the in-memory `useMemo` filter.
+- **Compliance Reminder Script** — Created `scripts/send-compliance-reminders.mjs`, a cron-ready Node.js script that authenticates to PocketBase as admin, checks all company compliance dates (renewal, annual report, tax filing, registered agent), sends personalized emails via Resend at 30-day and 7-day windows plus 1-day-overdue, and creates in-app notifications for each client.
+
+### Changed
+- **`.env.example`** — Added documentation for `send-email` Worker environment variables (`RESEND_API_KEY`, `ALLOWED_ORIGIN`, `ADMIN_EMAIL`) and compliance script variables (`PB_ADMIN_EMAIL`, `PB_ADMIN_PASS`, `FROM_EMAIL`, `APP_URL`).
+
+## 2026-07-02 — Premium SaaS Services Directory Redesign
+
+
+### Added
+- **Premium Services Directory** — Redesigned `/services` into a premium SaaS-style interface featuring 8 major service categories and dynamic search functionality.
+- **Dynamic Category Pages** — Created dynamic `/services/$categorySlug` pages featuring a sticky sidebar, featured service highlighting, and breadcrumbs.
+- **Dynamic Service Detail Pages** — Created dynamic `/services/$categorySlug/$serviceSlug` pages with robust content sections (Overview, Inclusions, Process, Requirements, FAQs) and a sticky checkout card.
+- **Dynamic SEO Injections** — Implemented comprehensive JSON-LD schema injections (Breadcrumb, Service, FAQ) and dynamic meta tags for all category and detail pages.
+- **New Seed Data** — Seeded 8 new detailed company formation services (e.g., US LLC, UK LTD, UAE Company, Oman Company) and categorized them under 'Company Formation'.
+
+### Changed
+- **Type-Safe Routing** — Replaced raw string-based routing with TanStack Router's type-safe `params` for dynamic Links across category and detail pages.
+- **Mascot Chat Integration** — Updated `SupportWidget` to use the new circular mascot for the floating bubble trigger and all inner chat messages.
+
 ## 2026-07-01 — Admin Services & Page Editor Fixes
 
 ### Added

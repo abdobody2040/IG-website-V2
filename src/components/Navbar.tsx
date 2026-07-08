@@ -1,9 +1,140 @@
 import { useState, useRef, useEffect } from 'react'
-import { Menu, X, Globe, Calendar, ChevronDown, LogIn } from 'lucide-react'
+import { Menu, X, Globe, Calendar, ChevronDown, LogIn, ChevronRight, ChevronLeft } from 'lucide-react'
+import * as Icons from 'lucide-react'
 import { useLang } from '../i18n/LanguageContext'
 import { motion, AnimatePresence } from 'framer-motion'
+import { useServices } from '../hooks/useServices'
+import { getCategorySlug } from '../pages/ServicesPage'
 
 const CAL_BASE = 'https://cal.com/instant-grow-llc'
+
+const CATEGORIES = [
+  { id: 'Compliance & Legal', label_en: 'Compliance & Legal', label_ar: 'الامتثال والشؤون القانونية' },
+  { id: 'International Documents', label_en: 'International Documents', label_ar: 'الوثائق الدولية' },
+  { id: 'Digital Services', label_en: 'Digital Services', label_ar: 'الخدمات الرقمية' },
+  { id: 'Marketing & Growth', label_en: 'Marketing & Growth', label_ar: 'التسويق والنمو' },
+  { id: 'Creative Services', label_en: 'Creative Services', label_ar: 'الخدمات الإبداعية' },
+  { id: 'Business Consulting', label_en: 'Business Consulting', label_ar: 'الاستشارات التجارية' },
+  { id: 'Digital Products', label_en: 'Digital Products', label_ar: 'المنتجات الرقمية' },
+]
+
+const staticServicesData = [
+  // Compliance & Legal
+  {
+    id: 's1',
+    title_en: 'US LLC Formation',
+    title_ar: 'تأسيس شركة LLC أمريكية',
+    category: 'Compliance & Legal',
+    price: 229,
+    period_en: 'one-time',
+    period_ar: 'مرة واحدة',
+    active: true,
+    icon: 'Building2'
+  },
+  {
+    id: 's2',
+    title_en: 'UK LTD Formation',
+    title_ar: 'تأسيس شركة LTD بريطانية',
+    category: 'Compliance & Legal',
+    price: 99,
+    period_en: 'one-time',
+    period_ar: 'مرة واحدة',
+    active: true,
+    icon: 'Building'
+  },
+  {
+    id: 's3',
+    title_en: 'EIN Application',
+    title_ar: 'الرقم الضريبي الفيدرالي EIN',
+    category: 'Compliance & Legal',
+    price: 99,
+    period_en: 'one-time',
+    period_ar: 'مرة واحدة',
+    active: true,
+    icon: 'FileText'
+  },
+  {
+    id: 's4',
+    title_en: 'Registered Agent',
+    title_ar: 'الوكيل المسجل',
+    category: 'Compliance & Legal',
+    price: 99,
+    period_en: 'year',
+    period_ar: 'سنوياً',
+    active: true,
+    icon: 'Shield'
+  },
+  // International Documents
+  {
+    id: 's5',
+    title_en: 'US ITIN Application',
+    title_ar: 'رقم تعريف دافع الضرائب ITIN',
+    category: 'International Documents',
+    price: 199,
+    period_en: 'one-time',
+    period_ar: 'مرة واحدة',
+    active: true,
+    icon: 'FileCheck'
+  },
+  {
+    id: 's6',
+    title_en: 'Certificate of Good Standing',
+    title_ar: 'شهادة الوضع القائم الجيد',
+    category: 'International Documents',
+    price: 149,
+    period_en: 'one-time',
+    period_ar: 'مرة واحدة',
+    active: true,
+    icon: 'Award'
+  },
+  // Digital Services
+  {
+    id: 's7',
+    title_en: 'US Phone Number',
+    title_ar: 'رقم هاتف أمريكي افتراضي',
+    category: 'Digital Services',
+    price: 49,
+    period_en: 'year',
+    period_ar: 'سنوياً',
+    active: true,
+    icon: 'Phone'
+  },
+  {
+    id: 's8',
+    title_en: 'US Mailing Address',
+    title_ar: 'عنوان بريدي أمريكي حقيقي',
+    category: 'Digital Services',
+    price: 99,
+    period_en: 'year',
+    period_ar: 'سنوياً',
+    active: true,
+    icon: 'Mail'
+  },
+  // Digital Products
+  {
+    id: 's9',
+    title_en: 'Operating Agreement Template',
+    title_ar: 'نموذج اتفاقية التشغيل',
+    category: 'Digital Products',
+    price: 0,
+    period_en: 'free',
+    period_ar: 'مجاناً',
+    active: true,
+    icon: 'FileCode'
+  },
+  // Business Consulting
+  {
+    id: 's10',
+    title_en: 'Tax Consultation (30 min)',
+    title_ar: 'استشارة ضريبية (30 دقيقة)',
+    category: 'Business Consulting',
+    price: 99,
+    period_en: 'session',
+    period_ar: 'جلسة',
+    active: true,
+    icon: 'HelpCircle'
+  }
+]
 
 export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false)
@@ -11,11 +142,19 @@ export default function Navbar() {
   const [mobileBookOpen, setMobileBookOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
   const [activeHash, setActiveHash] = useState('')
+  const [isServicesHovered, setIsServicesHovered] = useState(false)
+  const [hoveredCategory, setHoveredCategory] = useState('Compliance & Legal')
+  const [mobileServicesOpen, setMobileServicesOpen] = useState(false)
+  const [mobileExpandedCategory, setMobileExpandedCategory] = useState<string | null>(null)
+  
   const bookRef = useRef<HTMLDivElement>(null)
   const mobileMenuRef = useRef<HTMLDivElement>(null)
   const { t, lang, toggleLang } = useLang()
   const n = t.nav
   const isAr = lang === 'ar'
+
+  const { services } = useServices()
+  const activeServices = services.length > 0 ? services.filter(s => s.active) : staticServicesData
 
   // Click outside to close dropdowns
   useEffect(() => {
@@ -108,19 +247,21 @@ export default function Navbar() {
   const menuItems = [
     { label: n.features, href: '/#features' },
     { label: n.pricing, href: '/#pricing' },
+    { label: n.services, href: '/services' },
     { label: n.faq, href: '/#faq' },
     { label: n.blog, href: '/blog' }
   ]
 
   return (
-    <header
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        scrolled
-          ? 'bg-white/80 backdrop-blur-md border-b border-slate-200/50 shadow-[0_2px_12px_rgba(0,0,0,0.03)]'
-          : 'bg-transparent border-b border-transparent'
-      }`}
-    >
-      <div className="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8">
+    <>
+      <header
+        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+          scrolled
+            ? 'bg-white/80 backdrop-blur-md border-b border-slate-200/50 shadow-[0_2px_12px_rgba(0,0,0,0.03)]'
+            : 'bg-transparent border-b border-transparent'
+        }`}
+      >
+      <div className="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8 relative">
         <div className="flex items-center justify-between h-[80px]">
           {/* Logo */}
           <a href="/" className="flex items-center">
@@ -130,7 +271,30 @@ export default function Navbar() {
           {/* Desktop Nav */}
           <nav className="hidden md:flex items-center gap-8">
             {menuItems.map(item => {
+              const isServices = item.href === '/services'
               const active = activeHash === item.href
+              
+              if (isServices) {
+                return (
+                  <div
+                    key={item.href}
+                    className="relative py-7"
+                    onMouseEnter={() => setIsServicesHovered(true)}
+                    onMouseLeave={() => setIsServicesHovered(false)}
+                  >
+                    <a
+                      href={item.href}
+                      className={`text-[15px] font-semibold transition-all duration-200 flex items-center gap-1 ${
+                        active || isServicesHovered ? 'text-[#2563EB]' : 'text-slate-500 hover:text-[#0F172A]'
+                      }`}
+                    >
+                      {item.label}
+                      <ChevronDown size={14} className={`transition-transform duration-200 ${isServicesHovered ? 'rotate-180 text-[#2563EB]' : 'text-slate-400'}`} />
+                    </a>
+                  </div>
+                )
+              }
+              
               return (
                 <a
                   key={item.href}
@@ -144,6 +308,82 @@ export default function Navbar() {
               )
             })}
           </nav>
+
+          {/* Desktop Services Mega Dropdown */}
+          <AnimatePresence>
+            {isServicesHovered && (
+              <motion.div
+                initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                transition={{ duration: 0.2, ease: 'easeOut' }}
+                className={`absolute top-[70px] ${isAr ? 'left-6' : 'right-6'} w-[680px] bg-white border border-slate-200/60 rounded-[24px] shadow-[0_20px_50px_rgba(0,0,0,0.12)] p-5 flex ${isAr ? 'flex-row-reverse' : ''} text-slate-800 z-50`}
+                onMouseEnter={() => setIsServicesHovered(true)}
+                onMouseLeave={() => setIsServicesHovered(false)}
+              >
+                {/* Categories Column */}
+                <div className={`w-[260px] ${isAr ? 'border-l pl-3' : 'border-r pr-3'} border-slate-100 flex flex-col gap-1 flex-shrink-0`}>
+                  {CATEGORIES.map(cat => {
+                    const isActive = hoveredCategory === cat.id
+                    const label = isAr ? cat.label_ar : cat.label_en
+                    return (
+                      <div
+                        key={cat.id}
+                        onMouseEnter={() => setHoveredCategory(cat.id)}
+                        className={`flex items-center justify-between px-4 py-3 rounded-xl cursor-pointer transition-all duration-200 ${
+                          isActive
+                            ? 'bg-blue-50 text-blue-600 font-bold shadow-[0_2px_8px_rgba(37,99,235,0.04)]'
+                            : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900 font-semibold'
+                        }`}
+                      >
+                        <span className="text-[13px]">{label}</span>
+                        {isActive && (
+                          isAr ? <ChevronLeft size={14} className="text-blue-600" /> : <ChevronRight size={14} className="text-blue-600" />
+                        )}
+                      </div>
+                    )
+                  })}
+                </div>
+
+                {/* Services Column */}
+                <div className={`flex-1 ${isAr ? 'pr-3' : 'pl-3'} flex flex-col gap-1 max-h-[380px] overflow-y-auto custom-scrollbar`}>
+                  {activeServices.filter(s => s.category === hoveredCategory).map(svc => {
+                    const IconComponent = (Icons as any)[svc.icon] || Icons.HelpCircle
+                    const title = isAr ? svc.title_ar : svc.title_en
+                    const period = isAr ? svc.period_ar : svc.period_en
+                    const priceStr = svc.price > 0 ? `$${svc.price}` : (isAr ? 'مشمول' : 'Included')
+                    
+                    const categorySlug = getCategorySlug(svc.category)
+                    return (
+                      <a
+                        key={svc.id}
+                        href={`/services/${categorySlug}/${svc.id}`}
+                        onClick={() => setIsServicesHovered(false)}
+                        className="flex items-center gap-3.5 p-3 rounded-2xl hover:bg-slate-50 group transition-all duration-200"
+                      >
+                        <div className="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform duration-200">
+                          <IconComponent size={18} />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h4 className="text-slate-800 text-[13.5px] font-bold group-hover:text-blue-600 transition-colors truncate">
+                            {title}
+                          </h4>
+                          <span className="text-slate-400 text-[11px] font-medium block">
+                            {priceStr} {svc.price > 0 && `/ ${period}`}
+                          </span>
+                        </div>
+                      </a>
+                    )
+                  })}
+                  {activeServices.filter(s => s.category === hoveredCategory).length === 0 && (
+                    <div className="flex flex-col items-center justify-center py-20 text-slate-400 text-xs">
+                      <span>{isAr ? 'لا توجد خدمات في هذا القسم حالياً' : 'No services in this category yet'}</span>
+                    </div>
+                  )}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           {/* Desktop Actions */}
           <div className="hidden md:flex items-center gap-5">
@@ -205,17 +445,28 @@ export default function Navbar() {
             </a>
           </div>
 
-          {/* Hamburger toggle button */}
-          <button
-            className="md:hidden p-2 text-slate-500 hover:text-slate-900 focus:outline-none z-50"
-            onClick={() => setMobileOpen(!mobileOpen)}
-            aria-expanded={mobileOpen}
-            aria-label="Toggle menu"
-          >
-            {mobileOpen ? <X size={24} /> : <Menu size={24} />}
-          </button>
+          {/* Mobile Actions (CTA on right, Hamburger next to it) */}
+          <div className="flex md:hidden items-center gap-3 z-50">
+            <a
+              href="/order"
+              className="bg-[#2563EB] text-white text-xs font-bold px-4 py-2 rounded-xl hover:bg-[#1d4ed8] transition-all shadow-sm flex items-center justify-center"
+              style={{ minHeight: '40px' }}
+            >
+              {n.cta}
+            </a>
+            <button
+              className="text-slate-500 hover:text-slate-900 focus:outline-none flex items-center justify-center"
+              style={{ width: '48px', height: '48px' }}
+              onClick={() => setMobileOpen(!mobileOpen)}
+              aria-expanded={mobileOpen}
+              aria-label="Toggle menu"
+            >
+              {mobileOpen ? <X size={24} /> : <Menu size={24} />}
+            </button>
+          </div>
         </div>
       </div>
+    </header>
 
       {/* Drawer Overlay for Mobile Menu */}
       <AnimatePresence>
@@ -231,7 +482,7 @@ export default function Navbar() {
               onClick={() => setMobileOpen(false)}
             />
 
-            {/* Slide menu */}
+            {/* Slide menu (Full-screen overlay on mobile) */}
             <motion.div
               ref={mobileMenuRef}
               initial={{ x: isAr ? '-100%' : '100%' }}
@@ -240,7 +491,7 @@ export default function Navbar() {
               transition={{ type: 'spring', damping: 25, stiffness: 220 }}
               className={`fixed top-0 bottom-0 ${
                 isAr ? 'left-0' : 'right-0'
-              } w-full max-w-[350px] bg-white shadow-2xl border-l border-slate-100 z-50 md:hidden flex flex-col`}
+              } w-full bg-white shadow-2xl z-[9999] md:hidden flex flex-col`}
             >
               {/* Header inside drawer */}
               <div className="flex items-center justify-between px-6 h-[80px] border-b border-slate-100">
@@ -249,7 +500,8 @@ export default function Navbar() {
                 </a>
                 <button
                   onClick={() => setMobileOpen(false)}
-                  className="p-2 text-slate-500 hover:text-slate-900 focus:outline-none"
+                  className="text-slate-500 hover:text-slate-900 focus:outline-none flex items-center justify-center"
+                  style={{ width: '48px', height: '48px' }}
                   aria-label="Close menu"
                 >
                   <X size={24} />
@@ -257,16 +509,93 @@ export default function Navbar() {
               </div>
 
               {/* Drawer Links */}
-              <div className="flex-1 overflow-y-auto px-6 py-6 space-y-6">
-                <nav className="flex flex-col gap-4">
+              <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
+                <nav className="flex flex-col gap-2">
                   {menuItems.map(item => {
+                    const isServices = item.href === '/services'
                     const active = activeHash === item.href
+                    
+                    if (isServices) {
+                      return (
+                        <div key={item.href} className="border-b border-slate-50">
+                          <button
+                            onClick={() => setMobileServicesOpen(!mobileServicesOpen)}
+                            className="w-full flex items-center justify-between text-base font-semibold py-2 text-slate-600 hover:text-[#0F172A] focus:outline-none"
+                          >
+                            <span>{item.label}</span>
+                            <ChevronDown
+                              size={16}
+                              className={`transition-transform duration-200 ${mobileServicesOpen ? 'rotate-180 text-[#2563EB]' : 'text-slate-400'}`}
+                            />
+                          </button>
+                          <AnimatePresence>
+                            {mobileServicesOpen && (
+                              <motion.div
+                                initial={{ height: 0, opacity: 0 }}
+                                animate={{ height: 'auto', opacity: 1 }}
+                                exit={{ height: 0, opacity: 0 }}
+                                transition={{ duration: 0.2 }}
+                                className="overflow-hidden bg-slate-50 rounded-xl mt-1 mb-3 p-2 space-y-1.5"
+                              >
+                                {CATEGORIES.map(cat => {
+                                  const catLabel = isAr ? cat.label_ar : cat.label_en
+                                  const catServices = activeServices.filter(s => s.category === cat.id)
+                                  const isExpanded = mobileExpandedCategory === cat.id
+                                  
+                                  if (catServices.length === 0) return null
+                                  
+                                  return (
+                                    <div key={cat.id} className="border-b border-slate-200/50 last:border-0 pb-1.5 last:pb-0">
+                                      <button
+                                        onClick={() => setMobileExpandedCategory(isExpanded ? null : cat.id)}
+                                        className="w-full flex items-center justify-between text-[13px] font-bold py-1.5 text-slate-700 hover:text-slate-900 focus:outline-none"
+                                      >
+                                        <span>{catLabel}</span>
+                                        <ChevronDown
+                                          size={14}
+                                          className={`transition-transform duration-200 ${isExpanded ? 'rotate-180 text-blue-500' : 'text-slate-400'}`}
+                                        />
+                                      </button>
+                                      {isExpanded && (
+                                        <div className="mt-1 space-y-1 pl-3 pr-3 border-l-2 border-slate-200">
+                                          {catServices.map(svc => {
+                                            const svcTitle = isAr ? svc.title_ar : svc.title_en
+                                            const svcPeriod = isAr ? svc.period_ar : svc.period_en
+                                            const svcPriceStr = svc.price > 0 ? `$${svc.price}` : (isAr ? 'مشمول' : 'Included')
+                                            const categorySlug = getCategorySlug(svc.category)
+                                            
+                                            return (
+                                              <a
+                                                key={svc.id}
+                                                href={`/services/${categorySlug}/${svc.id}`}
+                                                onClick={() => {
+                                                  setMobileOpen(false)
+                                                  setMobileServicesOpen(false)
+                                                }}
+                                                className="block py-1 text-xs text-slate-500 hover:text-[#2563EB] transition-colors"
+                                              >
+                                                {svcTitle} <span className="text-slate-400 font-medium ml-1">({svcPriceStr} {svc.price > 0 && `/ ${svcPeriod}`})</span>
+                                              </a>
+                                            )
+                                          })}
+                                        </div>
+                                      )}
+                                    </div>
+                                  )
+                                })}
+                              </motion.div>
+                            )}
+                          </AnimatePresence>
+                        </div>
+                      )
+                    }
+                    
                     return (
                       <a
                         key={item.href}
                         href={item.href}
                         onClick={() => setMobileOpen(false)}
-                        className={`text-lg font-semibold py-2.5 transition-colors border-b border-slate-50 flex items-center ${
+                        className={`text-base font-semibold py-2 transition-colors border-b border-slate-50 flex items-center ${
                           active ? 'text-[#2563EB]' : 'text-slate-600 hover:text-[#0F172A]'
                         }`}
                       >
@@ -279,7 +608,7 @@ export default function Navbar() {
                   <div className="border-b border-slate-50">
                     <button
                       onClick={() => setMobileBookOpen(!mobileBookOpen)}
-                      className="w-full flex items-center justify-between text-lg font-semibold py-2.5 text-slate-600 hover:text-[#0F172A] focus:outline-none"
+                      className="w-full flex items-center justify-between text-base font-semibold py-2 text-slate-600 hover:text-[#0F172A] focus:outline-none"
                     >
                       <span className="flex items-center gap-2">
                         <Calendar size={18} className="text-slate-400" />
@@ -333,10 +662,10 @@ export default function Navbar() {
               </div>
 
               {/* Bottom Actions inside drawer */}
-              <div className="p-6 border-t border-slate-100 bg-slate-50 space-y-4">
+              <div className="p-5 border-t border-slate-100 bg-slate-50 space-y-3">
                 <button
                   onClick={toggleLang}
-                  className="w-full flex items-center justify-center gap-2 text-base font-semibold text-slate-600 bg-white border border-slate-200 py-3 rounded-xl hover:bg-slate-50 transition-colors"
+                  className="w-full flex items-center justify-center gap-2 text-sm font-semibold text-slate-600 bg-white border border-slate-200 py-2.5 rounded-xl hover:bg-slate-50 transition-colors"
                 >
                   <Globe size={18} />
                   <span>{lang === 'en' ? 'العربية' : 'English'}</span>
@@ -344,7 +673,7 @@ export default function Navbar() {
                 <a
                   href="/auth/login"
                   onClick={() => setMobileOpen(false)}
-                  className="w-full flex items-center justify-center gap-2 text-base font-semibold text-slate-600 bg-white border border-slate-200 py-3 rounded-xl hover:bg-slate-50 transition-colors"
+                  className="w-full flex items-center justify-center gap-2 text-sm font-semibold text-slate-600 bg-white border border-slate-200 py-2.5 rounded-xl hover:bg-slate-50 transition-colors"
                 >
                   <LogIn size={18} className="text-slate-400" />
                   <span>{n.login}</span>
@@ -352,7 +681,7 @@ export default function Navbar() {
                 <a
                   href="/order"
                   onClick={() => setMobileOpen(false)}
-                  className="w-full inline-flex items-center justify-center bg-[#2563EB] text-white text-base font-bold py-3.5 rounded-[16px] hover:bg-[#1d4ed8] transition-all shadow-[0_4px_16px_rgba(37,99,235,0.2)] text-center"
+                  className="w-full inline-flex items-center justify-center bg-[#2563EB] text-white text-sm font-bold py-3 rounded-[16px] hover:bg-[#1d4ed8] transition-all shadow-[0_4px_16px_rgba(37,99,235,0.2)] text-center"
                 >
                   {n.cta}
                 </a>
@@ -361,6 +690,6 @@ export default function Navbar() {
           </>
         )}
       </AnimatePresence>
-    </header>
+    </>
   )
 }

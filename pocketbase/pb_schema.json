@@ -572,6 +572,84 @@
         "type": "text",
         "required": false,
         "options": {}
+      },
+      {
+        "name": "stripe_session_id",
+        "type": "text",
+        "required": false,
+        "options": {}
+      },
+      {
+        "name": "stripe_payment_intent_id",
+        "type": "text",
+        "required": false,
+        "options": {}
+      },
+      {
+        "name": "stripe_charge_id",
+        "type": "text",
+        "required": false,
+        "options": {}
+      },
+      {
+        "name": "stripe_customer_id",
+        "type": "text",
+        "required": false,
+        "options": {}
+      },
+      {
+        "name": "stripe_invoice_id",
+        "type": "text",
+        "required": false,
+        "options": {}
+      },
+      {
+        "name": "stripe_price_id",
+        "type": "text",
+        "required": false,
+        "options": {}
+      },
+      {
+        "name": "stripe_product_id",
+        "type": "text",
+        "required": false,
+        "options": {}
+      },
+      {
+        "name": "customer_name",
+        "type": "text",
+        "required": false,
+        "options": {}
+      },
+      {
+        "name": "customer_email",
+        "type": "text",
+        "required": false,
+        "options": {}
+      },
+      {
+        "name": "company_name",
+        "type": "text",
+        "required": false,
+        "options": {}
+      },
+      {
+        "name": "customer_country",
+        "type": "text",
+        "required": false,
+        "options": {}
+      },
+      {
+        "name": "invoice_url",
+        "type": "text",
+        "required": false,
+        "options": {}
+      },
+      {
+        "name": "receipt_url",
+        "type": "text",
+        "required": false,
+        "options": {}
       }
     ],
     "listRule": "user = @request.auth.id || @request.auth.role = 'admin'",
@@ -932,10 +1010,10 @@
         "options": {}
       }
     ],
-    "listRule": "",
+    "listRule": null,
     "viewRule": "",
     "createRule": "@request.auth.role = 'admin'",
-    "updateRule": "",
+    "updateRule": "email = @request.auth.email || @request.auth.role = 'admin'",
     "deleteRule": "@request.auth.role = 'admin'",
     "id": "invitation_col_"
   },
@@ -986,19 +1064,31 @@
         "name": "key",
         "type": "text",
         "required": true,
-        "options": { "min": 1, "max": 200, "pattern": "" }
+        "options": {
+          "min": 1,
+          "max": 200,
+          "pattern": ""
+        }
       },
       {
         "name": "value_en",
         "type": "text",
         "required": false,
-        "options": { "min": null, "max": null, "pattern": "" }
+        "options": {
+          "min": null,
+          "max": null,
+          "pattern": ""
+        }
       },
       {
         "name": "value_ar",
         "type": "text",
         "required": false,
-        "options": { "min": null, "max": null, "pattern": "" }
+        "options": {
+          "min": null,
+          "max": null,
+          "pattern": ""
+        }
       }
     ],
     "listRule": "",
@@ -1006,7 +1096,9 @@
     "createRule": "@request.auth.role = 'admin'",
     "updateRule": "@request.auth.role = 'admin'",
     "deleteRule": "@request.auth.role = 'admin'",
-    "indexes": ["CREATE UNIQUE INDEX idx_site_content_key ON site_content (key)"]
+    "indexes": [
+      "CREATE UNIQUE INDEX idx_site_content_key ON site_content (key)"
+    ]
   },
   {
     "id": "pricing_config_col",
@@ -1018,29 +1110,61 @@
         "name": "region",
         "type": "select",
         "required": true,
-        "options": { "maxSelect": 1, "values": ["us", "uk"] }
+        "options": {
+          "maxSelect": 1,
+          "values": [
+            "us",
+            "uk"
+          ]
+        }
       },
       {
         "name": "plan",
         "type": "select",
         "required": true,
-        "options": { "maxSelect": 1, "values": ["basic", "premium"] }
+        "options": {
+          "maxSelect": 1,
+          "values": [
+            "basic",
+            "premium"
+          ]
+        }
       },
       {
         "name": "price",
         "type": "number",
         "required": true,
-        "options": { "min": 0, "max": null, "noDecimal": false }
+        "options": {
+          "min": 0,
+          "max": null,
+          "noDecimal": false
+        }
       },
       {
         "name": "features_en",
         "type": "json",
         "required": false,
-        "options": {}
+        "options": {
+          "maxSize": 2000000
+        }
       },
       {
         "name": "features_ar",
         "type": "json",
+        "required": false,
+        "options": {
+          "maxSize": 2000000
+        }
+      },
+      {
+        "name": "stripe_product_id",
+        "type": "text",
+        "required": false,
+        "options": {}
+      },
+      {
+        "name": "stripe_price_id",
+        "type": "text",
         "required": false,
         "options": {}
       }
@@ -1050,6 +1174,299 @@
     "createRule": "@request.auth.role = 'admin'",
     "updateRule": "@request.auth.role = 'admin'",
     "deleteRule": "@request.auth.role = 'admin'",
-    "indexes": ["CREATE UNIQUE INDEX idx_pricing_config ON pricing_config (region, plan)"]
+    "indexes": [
+      "CREATE UNIQUE INDEX idx_pricing_config ON pricing_config (region, plan)"
+    ]
+  },
+  {
+    "id": "services_col_id",
+    "name": "services",
+    "type": "base",
+    "system": false,
+    "schema": [
+      {
+        "name": "title_en",
+        "type": "text",
+        "required": true,
+        "options": {
+          "min": 1,
+          "max": null,
+          "pattern": ""
+        }
+      },
+      {
+        "name": "title_ar",
+        "type": "text",
+        "required": true,
+        "options": {
+          "min": 1,
+          "max": null,
+          "pattern": ""
+        }
+      },
+      {
+        "name": "description_en",
+        "type": "text",
+        "required": true,
+        "options": {
+          "min": 1,
+          "max": null,
+          "pattern": ""
+        }
+      },
+      {
+        "name": "description_ar",
+        "type": "text",
+        "required": true,
+        "options": {
+          "min": 1,
+          "max": null,
+          "pattern": ""
+        }
+      },
+      {
+        "name": "price",
+        "type": "number",
+        "required": false,
+        "options": {
+          "min": 0,
+          "max": null,
+          "noDecimal": false
+        }
+      },
+      {
+        "name": "period_en",
+        "type": "text",
+        "required": true,
+        "options": {
+          "min": null,
+          "max": null,
+          "pattern": ""
+        }
+      },
+      {
+        "name": "period_ar",
+        "type": "text",
+        "required": true,
+        "options": {
+          "min": null,
+          "max": null,
+          "pattern": ""
+        }
+      },
+      {
+        "name": "detail_en",
+        "type": "text",
+        "required": false,
+        "options": {
+          "min": null,
+          "max": null,
+          "pattern": ""
+        }
+      },
+      {
+        "name": "detail_ar",
+        "type": "text",
+        "required": false,
+        "options": {
+          "min": null,
+          "max": null,
+          "pattern": ""
+        }
+      },
+      {
+        "name": "badge_en",
+        "type": "text",
+        "required": false,
+        "options": {
+          "min": null,
+          "max": null,
+          "pattern": ""
+        }
+      },
+      {
+        "name": "badge_ar",
+        "type": "text",
+        "required": false,
+        "options": {
+          "min": null,
+          "max": null,
+          "pattern": ""
+        }
+      },
+      {
+        "name": "requires_company",
+        "type": "bool",
+        "required": false,
+        "options": {}
+      },
+      {
+        "name": "icon",
+        "type": "text",
+        "required": true,
+        "options": {
+          "min": 1,
+          "max": 100,
+          "pattern": ""
+        }
+      },
+      {
+        "name": "active",
+        "type": "bool",
+        "required": false,
+        "options": {}
+      },
+      {
+        "name": "sort_order",
+        "type": "number",
+        "required": false,
+        "options": {
+          "min": 0,
+          "max": null,
+          "noDecimal": true
+        }
+      },
+      {
+        "name": "type",
+        "type": "select",
+        "required": true,
+        "options": {
+          "maxSelect": 1,
+          "values": [
+            "addon",
+            "landing"
+          ]
+        }
+      },
+      {
+        "name": "color",
+        "type": "text",
+        "required": false,
+        "options": {
+          "min": null,
+          "max": 20,
+          "pattern": ""
+        }
+      },
+      {
+        "name": "bg_color",
+        "type": "text",
+        "required": false,
+        "options": {
+          "min": null,
+          "max": 20,
+          "pattern": ""
+        }
+      },
+      {
+        "name": "href",
+        "type": "text",
+        "required": false,
+        "options": {
+          "min": null,
+          "max": null,
+          "pattern": ""
+        }
+      },
+      {
+        "name": "category",
+        "type": "text",
+        "required": false,
+        "options": {
+          "min": null,
+          "max": null,
+          "pattern": ""
+        }
+      },
+      {
+        "name": "stripe_product_id",
+        "type": "text",
+        "required": false,
+        "options": {}
+      },
+      {
+        "name": "stripe_price_id",
+        "type": "text",
+        "required": false,
+        "options": {}
+      }
+    ],
+    "listRule": "",
+    "viewRule": "",
+    "createRule": "@request.auth.role = 'admin'",
+    "updateRule": "@request.auth.role = 'admin'",
+    "deleteRule": "@request.auth.role = 'admin'"
+  },
+  {
+    "id": "pages_col_id123",
+    "name": "pages",
+    "type": "base",
+    "system": false,
+    "schema": [
+      {
+        "name": "slug",
+        "type": "text",
+        "required": true,
+        "options": {
+          "min": 1,
+          "max": 100,
+          "pattern": ""
+        }
+      },
+      {
+        "name": "title_en",
+        "type": "text",
+        "required": true,
+        "options": {
+          "min": 1,
+          "max": 200,
+          "pattern": ""
+        }
+      },
+      {
+        "name": "title_ar",
+        "type": "text",
+        "required": true,
+        "options": {
+          "min": 1,
+          "max": 200,
+          "pattern": ""
+        }
+      },
+      {
+        "name": "content_en",
+        "type": "text",
+        "required": false,
+        "options": {
+          "min": null,
+          "max": null,
+          "pattern": ""
+        }
+      },
+      {
+        "name": "content_ar",
+        "type": "text",
+        "required": false,
+        "options": {
+          "min": null,
+          "max": null,
+          "pattern": ""
+        }
+      },
+      {
+        "name": "active",
+        "type": "bool",
+        "required": false,
+        "options": {}
+      }
+    ],
+    "listRule": "",
+    "viewRule": "",
+    "createRule": "@request.auth.role = 'admin'",
+    "updateRule": "@request.auth.role = 'admin'",
+    "deleteRule": "@request.auth.role = 'admin'",
+    "indexes": [
+      "CREATE UNIQUE INDEX idx_pages_slug ON pages (slug)"
+    ]
   }
 ]

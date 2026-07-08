@@ -16,18 +16,19 @@
 └──────────────────────────────────────────────┘
 
 ┌──────────────────────────────────────────────┐
-│              Supabase Project                  │
-│  ├── PostgreSQL (8 tables + RLS)              │
+│              PocketBase Backend              │
+│  ├── SQLite database (8 collections + rules)  │
 │  ├── Auth (email/password + Google OAuth)      │
-│  ├── Storage (documents bucket - fallback)     │
-│  └── Edge Functions (Deno)                     │
+│  ├── Storage (local file storage - fallback)  │
+│  └── Hooks (pb_hooks/ JavaScript)             │
 └──────────────────────────────────────────────┘
 
 ┌──────────────────────────────────────────────┐
 │              External Services                 │
 │  ├── Stripe (Payments + Webhooks)              │
 │  ├── Resend (Transactional Email)              │
-│  └── Cloudflare R2 (File Storage - primary)    │
+│  ├── Cloudflare R2 (File Storage - primary)    │
+│  └── Cloudflare Workers (create-checkout, etc) │
 └──────────────────────────────────────────────┘
 ```
 
@@ -66,51 +67,49 @@ Must be set in hosting provider dashboard:
 
 | Variable | Required | Description |
 |----------|----------|-------------|
-| VITE_SUPABASE_URL | Yes | Supabase project URL |
-| VITE_SUPABASE_ANON_KEY | Yes | Supabase anon/public key |
-| VITE_CHECKOUT_ENDPOINT | No | Stripe checkout Edge Function URL |
+| VITE_PB_URL | Yes | PocketBase project URL |
+| VITE_CHECKOUT_ENDPOINT | No | Stripe checkout Cloudflare Worker URL |
 | VITE_R2_UPLOAD_ENDPOINT | No | Cloudflare R2 upload proxy URL |
-| VITE_EMAIL_ENDPOINT | No | Email sending endpoint URL |
+| VITE_EMAIL_ENDPOINT | No | Email sending Worker URL |
 | VITE_TURNSTILE_SITE_KEY | No | Cloudflare Turnstile site key |
-| VITE_CONTACT_ENDPOINT | No | Contact form Edge Function URL |
-| VITE_DELETE_USER_ENDPOINT | No | Delete user Edge Function URL |
 
-### Edge Functions (Server-Side)
-Set via `supabase secrets set`:
+### Cloudflare Workers (Server-Side)
+Set via `npx wrangler secret put`:
 
-| Variable | Required | Functions |
-|----------|----------|-----------|
-| SUPABASE_URL | Yes | All |
-| SUPABASE_SERVICE_ROLE_KEY | Yes | stripe-webhook, submit-contact, delete-user |
-| STRIPE_SECRET_KEY | Yes | create-checkout, stripe-webhook |
-| STRIPE_WEBHOOK_SECRET | Yes | stripe-webhook |
-| ALLOWED_ORIGIN | Yes | All (CORS) |
-| RESEND_API_KEY | No | submit-contact (if email forwarding added) |
-| TURNSTILE_SECRET_KEY | No | submit-contact |
+| Variable | Required | Description |
+|----------|----------|-------------|
+| PB_URL | Yes | PocketBase API URL |
+| PB_ADMIN_EMAIL | Yes | PocketBase superuser/admin email |
+| PB_ADMIN_PASSWORD | Yes | PocketBase superuser/admin password |
+| STRIPE_SECRET_KEY | Yes | Stripe Secret Key |
+| STRIPE_WEBHOOK_SECRET | Yes | Stripe Webhook Signing Secret |
+| ALLOWED_ORIGIN | Yes | Allowed CORS origin (production frontend URL) |
+| RESEND_API_KEY | Yes (for email) | Resend API Key |
 
 ## Edge Function Deployment
+## Serverless Functions Deployment
+
+Serverless functions are deployed as Cloudflare Workers using Wrangler.
 
 ```bash
-# Install Supabase CLI
-npm install -g supabase
+# 1. Login to Cloudflare
+npx wrangler login
 
-# Link project
-supabase link --project-ref your-project-ref
+# 2. Deploy each worker
+cd functions/create-checkout && npx wrangler deploy
+cd ../stripe-webhook && npx wrangler deploy
+cd ../submit-contact && npx wrangler deploy
+cd ../delete-user && npx wrangler deploy
+cd ../upload-validator && npx wrangler deploy
 
-# Deploy functions
-supabase functions deploy create-checkout
-supabase functions deploy stripe-webhook
-supabase functions deploy submit-contact
-supabase functions deploy delete-user
-
-# Set secrets
-supabase secrets set STRIPE_SECRET_KEY=sk_live_...
-supabase secrets set STRIPE_WEBHOOK_SECRET=whsec_...
-supabase secrets set SUPABASE_URL=https://your-project.supabase.co
-supabase secrets set SUPABASE_SERVICE_ROLE_KEY=eyJ...
-supabase secrets set ALLOWED_ORIGIN=https://your-domain.com
-supabase secrets set TURNSTILE_SECRET_KEY=0x4AAAA...
-supabase secrets set RESEND_API_KEY=re_...
+# 3. Configure secrets on Cloudflare Dashboard or via Wrangler
+npx wrangler secret put STRIPE_SECRET_KEY
+npx wrangler secret put STRIPE_WEBHOOK_SECRET
+npx wrangler secret put PB_URL
+npx wrangler secret put PB_ADMIN_EMAIL
+npx wrangler secret put PB_ADMIN_PASSWORD
+npx wrangler secret put RESEND_API_KEY
+npx wrangler secret put ALLOWED_ORIGIN
 ```
 
 ## CI/CD Pipeline (Recommended)
@@ -139,15 +138,15 @@ jobs:
 
 ## Rollback Strategy
 
-1. **Frontend:** Revert Git commit → redeploy via CI/CD
-2. **Database:** Use Supabase "Database Branching" or restore from backup
-3. **Edge Functions:** Redeploy previous version via `supabase functions deploy`
-4. **Stripe:** Configure webhook endpoint to point at previous function URL
+1. **Frontend:** Revert Git commit → redeploy via CI/CD (Cloudflare Pages / Netlify)
+2. **Database:** Restore PocketBase SQLite database from a previous automated backup (stored in `pb_data/backups/`)
+3. **Serverless Functions:** Redeploy previous Worker script version via Wrangler or Cloudflare Dashboard
+4. **Stripe:** Verify webhook delivery status or update endpoint URL if pointing to a different worker
 
 ## Release Process
 
 1. Create release branch: `release/vX.Y.Z`
-2. Run full test suite
+2. Run full test suite (`npm run test` / `npm run test:e2e`)
 3. Update version in `package.json`
 4. Deploy to staging environment
 5. Run smoke tests
@@ -161,5 +160,5 @@ jobs:
 2. Test auth flow (signup, login, OAuth)
 3. Test payment flow (create checkout, webhook callback)
 4. Test document upload
-5. Verify Edge Function logs in Supabase dashboard
-6. Check Stripe webhook delivery status
+5. Verify Worker execution logs in Cloudflare Dashboard (real-time stream or Logpush)
+6. Check Stripe webhook delivery status and log response codes

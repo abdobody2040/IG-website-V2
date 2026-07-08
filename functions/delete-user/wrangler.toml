@@ -1,0 +1,7 @@
+name = "instantgrow-delete-user"
+main = "index.ts"
+compatibility_date = "2024-03-01"
+
+[vars]
+ALLOWED_ORIGIN = "https://instantgrow.net"
+PB_URL = "https://pb.instantgrow.net"

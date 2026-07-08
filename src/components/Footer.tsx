@@ -1,27 +1,14 @@
-import { useState } from 'react'
-import { Mail, ArrowRight } from 'lucide-react'
 import { useLang } from '../i18n/LanguageContext'
 
 export default function Footer() {
   const { t, lang, setLang } = useLang()
   const f = t.footer
-  const isAr = lang === 'ar'
-  const [email, setEmail] = useState('')
-  const [subscribed, setSubscribed] = useState(false)
-
-  const handleSubscribe = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (email.trim()) {
-      setSubscribed(true)
-      setEmail('')
-    }
-  }
 
   const NavLink = ({ href, children }: { href: string; children: React.ReactNode }) => (
     <li>
       <a
         href={href}
-        className="text-white/40 text-[15px] hover:text-white transition-colors relative inline-block group/link"
+        className="text-white/50 text-[15px] hover:text-white transition-colors relative inline-block group/link"
       >
         {children}
         <span className="absolute -bottom-0.5 left-0 w-0 h-px bg-blue-400 transition-all duration-300 group-hover/link:w-full" />
@@ -29,14 +16,62 @@ export default function Footer() {
     </li>
   )
 
+  const socialLinks = [
+    { 
+      title: 'Facebook', 
+      href: 'https://www.facebook.com/profile.php?id=61577661225593',
+      svg: (
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" />
+        </svg>
+      )
+    },
+    { 
+      title: 'Twitter', 
+      href: '#',
+      svg: (
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+        </svg>
+      )
+    },
+    { 
+      title: 'LinkedIn', 
+      href: '#',
+      svg: (
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z" />
+        </svg>
+      )
+    },
+    { 
+      title: 'Instagram', 
+      href: 'https://instagram.com/instantgrow',
+      svg: (
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.051.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 1 0 0 12.324 6.162 6.162 0 0 0 0-12.324zM12 16a4 4 0 1 1 0-8 4 4 0 0 1 0 8zm6.406-11.845a1.44 1.44 0 1 0 0 2.881 1.44 1.44 0 0 0 0-2.881z" />
+        </svg>
+      )
+    },
+    { 
+      title: 'YouTube', 
+      href: '#',
+      svg: (
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M23.498 6.163a3.003 3.003 0 0 0-2.11-2.11C19.518 3.545 12 3.545 12 3.545s-7.518 0-9.388.507a3.003 3.003 0 0 0-2.11 2.11C0 8.033 0 12 0 12s0 3.967.502 5.837a3.003 3.003 0 0 0 2.11 2.11c1.87.508 9.388.508 9.388.508s7.518 0 9.388-.508a3.003 3.003 0 0 0 2.11-2.11C24 15.967 24 12 24 12s0-3.967-.502-5.837zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
+        </svg>
+      )
+    },
+  ]
+
   return (
-    <footer className="bg-[#070c18] text-white relative overflow-hidden">
+    <footer className="bg-[#070C1E] text-white relative overflow-hidden">
       {/* Top gradient line */}
-      <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-blue-500/30 to-transparent" />
+      <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-blue-500/20 to-transparent" />
 
       {/* Grid bg */}
       <div
-        className="absolute inset-0 opacity-[0.02] pointer-events-none"
+        className="absolute inset-0 opacity-[0.015] pointer-events-none"
         style={{
           backgroundImage: 'linear-gradient(rgba(255,255,255,0.6) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.6) 1px, transparent 1px)',
           backgroundSize: '48px 48px',
@@ -45,160 +80,128 @@ export default function Footer() {
 
       {/* Glow orbs */}
       <div className="absolute bottom-0 right-0 w-80 h-80 bg-blue-500/5 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute top-0 left-1/3 w-60 h-60 bg-cyan-500/4 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute top-0 left-1/3 w-60 h-60 bg-cyan-500/3 rounded-full blur-3xl pointer-events-none" />
 
-      <div className="max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-12">
-        {/* Main grid: 5 columns on desktop, 3 on tablet, 1 on mobile */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-10 md:gap-12 lg:gap-14 mb-14 text-center sm:text-left justify-items-center sm:justify-items-start">
-
-          {/* 1 — Brand */}
-          <div className="col-span-1 sm:col-span-2 md:col-span-3 lg:col-span-1 flex flex-col items-center sm:items-start text-center sm:text-left">
-            <div className="flex items-center gap-2 mb-4">
-              <img src="/logo.png" alt="Instant Grow" className="h-8 w-auto brightness-0 invert opacity-90" onError={() => {}} />
+      <div className="max-w-[1280px] mx-auto px-5 sm:px-8 lg:px-10 pt-20 pb-10">
+        
+        {/* Main 5 columns grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-10 lg:gap-8 mb-16 text-center sm:text-left rtl:sm:text-right justify-items-center sm:justify-items-start">
+          
+          {/* Column 1 — Brand info */}
+          <div className="flex flex-col items-center sm:items-start">
+            
+            {/* White Logo */}
+            <div className="flex items-center gap-3.5 mb-5 select-none">
+              <div className="w-12 h-12 overflow-hidden relative shrink-0">
+                <img 
+                  src="/logo.png" 
+                  alt="Instant Grow" 
+                  className="h-12 max-w-none absolute left-0 top-0 brightness-0 invert" 
+                  style={{ width: 'auto' }} 
+                  onError={() => {}} 
+                />
+              </div>
+              <div className="flex flex-col text-left leading-none font-bold">
+                <span className="text-white text-[15px] font-extrabold tracking-wider uppercase" style={{ fontFamily: 'Sora, Inter, sans-serif' }}>Instant</span>
+                <span className="text-white text-[15px] font-extrabold tracking-wider uppercase" style={{ fontFamily: 'Sora, Inter, sans-serif' }}>Grow</span>
+              </div>
             </div>
-            <p className="text-white/40 text-sm leading-relaxed mb-6 max-w-[260px]">
+
+            <p className="text-white/40 text-sm leading-relaxed mb-6 max-w-[260px] text-center sm:text-left rtl:sm:text-right">
               {f.tagline}
             </p>
-            {/* Social icons */}
-            <div className="flex items-center justify-center sm:justify-start gap-2.5 mb-6">
-              <a href="mailto:info@instantgrow.net" title="Email"
-                className="w-9 h-9 bg-white/5 rounded-full flex items-center justify-center hover:bg-blue-500/20 border border-white/5 transition-colors">
-                <Mail size={15} className="text-white/50" />
-              </a>
-              <a href="https://www.facebook.com/profile.php?id=61577661225593" target="_blank" rel="noopener noreferrer" title="Facebook"
-                className="w-9 h-9 bg-white/5 rounded-full flex items-center justify-center hover:bg-blue-500/20 border border-white/5 transition-colors">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" className="text-white/50">
-                  <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" />
-                </svg>
-              </a>
-              <a href="https://wa.me/1234567890" target="_blank" rel="noopener noreferrer" title="WhatsApp"
-                className="w-9 h-9 bg-white/5 rounded-full flex items-center justify-center hover:bg-green-500/20 border border-white/5 transition-colors">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" className="text-white/50">
-                  <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z" />
-                  <path d="M11.998 2C6.478 2 2 6.478 2 12c0 1.852.502 3.587 1.38 5.076L2.006 22l5.074-1.357A9.957 9.957 0 0012 22c5.52 0 9.998-4.478 9.998-10S17.518 2 11.998 2z" />
-                </svg>
-              </a>
-              <a href="https://instagram.com/instantgrow" target="_blank" rel="noopener noreferrer" title="Instagram"
-                className="w-9 h-9 bg-white/5 rounded-full flex items-center justify-center hover:bg-pink-500/20 border border-white/5 transition-colors">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white/50">
-                  <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
-                  <path d="M16 11.37A4 4 0 1112.63 8 4 4 0 0116 11.37z" />
-                  <line x1="17.5" y1="6.5" x2="17.51" y2="6.5" />
-                </svg>
-              </a>
-            </div>
 
-            {/* Small mascot */}
-            <img
-              src="/mascot-footer.png"
-              alt=""
-              className="w-20 h-auto opacity-60 mt-2"
-            />
+            {/* Social Icons */}
+            <div className="flex items-center gap-2">
+              {socialLinks.map((s, i) => (
+                <a 
+                  key={i} 
+                  href={s.href} 
+                  title={s.title}
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="w-9 h-9 border border-white/10 rounded-full flex items-center justify-center hover:bg-blue-600/10 hover:border-white/20 transition-all text-white/50 hover:text-white"
+                >
+                  {s.svg}
+                </a>
+              ))}
+            </div>
           </div>
 
-          {/* 2 — Services */}
-          <div>
-            <h4 className="font-semibold text-white/80 mb-6 text-sm uppercase tracking-wider">{f.servicesHeading}</h4>
-            <ul className="space-y-4">
+          {/* Column 2 — Services */}
+          <div className="flex flex-col items-center sm:items-start">
+            <h4 className="font-bold text-white/80 mb-5 text-sm uppercase tracking-wider">{f.servicesHeading}</h4>
+            <ul className="space-y-3.5 text-center sm:text-left rtl:sm:text-right">
               {f.services.map((link) => (
                 <NavLink key={link.label} href={link.href}>{link.label}</NavLink>
               ))}
             </ul>
           </div>
 
-          {/* 3 — Company */}
-          <div>
-            <h4 className="font-semibold text-white/80 mb-6 text-sm uppercase tracking-wider">{f.companyHeading}</h4>
-            <ul className="space-y-4">
+          {/* Column 3 — Company */}
+          <div className="flex flex-col items-center sm:items-start">
+            <h4 className="font-bold text-white/80 mb-5 text-sm uppercase tracking-wider">{f.companyHeading}</h4>
+            <ul className="space-y-3.5 text-center sm:text-left rtl:sm:text-right">
               {f.company.map((link) => (
                 <NavLink key={link.label} href={link.href}>{link.label}</NavLink>
               ))}
             </ul>
           </div>
 
-          {/* 4 — Legal */}
-          <div>
-            <h4 className="font-semibold text-white/80 mb-6 text-sm uppercase tracking-wider">{f.legalHeading}</h4>
-            <ul className="space-y-4">
+          {/* Column 4 — Resources */}
+          <div className="flex flex-col items-center sm:items-start">
+            <h4 className="font-bold text-white/80 mb-5 text-sm uppercase tracking-wider">{f.resourcesHeading}</h4>
+            <ul className="space-y-3.5 text-center sm:text-left rtl:sm:text-right">
+              {f.resources.map((link) => (
+                <NavLink key={link.label} href={link.href}>{link.label}</NavLink>
+              ))}
+            </ul>
+          </div>
+
+          {/* Column 5 — Legal */}
+          <div className="flex flex-col items-center sm:items-start">
+            <h4 className="font-bold text-white/80 mb-5 text-sm uppercase tracking-wider">{f.legalHeading}</h4>
+            <ul className="space-y-3.5 text-center sm:text-left rtl:sm:text-right">
               {f.legal.map((link) => (
                 <NavLink key={link.label} href={link.href}>{link.label}</NavLink>
               ))}
             </ul>
           </div>
 
-          {/* 5 — Newsletter */}
-          <div>
-            <h4 className="font-semibold text-white/80 mb-6 text-sm uppercase tracking-wider">
-              {isAr ? 'النشرة البريدية' : 'Newsletter'}
-            </h4>
-            <p className="text-white/40 text-xs leading-relaxed mb-4">
-              {isAr
-                ? 'احصل على آخر أخبار تأسيس الشركات والنصائح المهنية.'
-                : 'Get the latest company formation news and expert tips.'}
-            </p>
-            {subscribed ? (
-              <p className="text-emerald-400 text-sm font-medium">
-                {isAr ? '✓ تم الاشتراك بنجاح!' : '✓ Subscribed! Thank you.'}
-              </p>
-            ) : (
-              <form onSubmit={handleSubscribe} className="flex flex-col gap-3 w-full">
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder={isAr ? 'بريدك الإلكتروني' : 'your@email.com'}
-                  required
-                  className="bg-white/5 border border-white/10 rounded-xl px-4 py-3 h-12 text-sm text-white placeholder-white/25 focus:outline-none focus:ring-1 focus:ring-blue-500/50 focus:border-blue-500/50 transition-colors w-full"
-                />
-                <button
-                  type="submit"
-                  className="flex items-center justify-center gap-1.5 bg-blue-600 text-white text-sm font-semibold px-4 py-3.5 h-12 rounded-xl hover:bg-blue-50 transition-colors w-full"
-                >
-                  {isAr ? 'اشترك' : 'Subscribe'}
-                  <ArrowRight size={13} />
-                </button>
-              </form>
-            )}
-
-            {/* Language switcher */}
-            <div className="mt-6 flex flex-col items-center sm:items-start">
-              <p className="text-white/30 text-xs mb-2 uppercase tracking-wider">
-                {isAr ? 'اللغة' : 'Language'}
-              </p>
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => setLang('en')}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-                    lang === 'en' ? 'bg-blue-500 text-white' : 'bg-white/5 text-white/40 hover:text-white hover:bg-white/10'
-                  }`}
-                >
-                  EN
-                </button>
-                <button
-                  onClick={() => setLang('ar')}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-                    lang === 'ar' ? 'bg-blue-500 text-white' : 'bg-white/5 text-white/40 hover:text-white hover:bg-white/10'
-                  }`}
-                >
-                  AR
-                </button>
-              </div>
-            </div>
-          </div>
         </div>
 
         {/* Divider + Bottom bar */}
         <div className="border-t border-white/5 pt-7">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
-            <p className="text-white/30 text-sm text-center sm:text-left">
-              {f.copyright.replace('{year}', String(new Date().getFullYear()))}
-            </p>
-            <p className="text-white/20 text-xs max-w-xl text-center sm:text-right leading-relaxed">
+            <div className="flex flex-col sm:flex-row items-center gap-4 text-center sm:text-left">
+              <p className="text-white/30 text-sm">
+                {f.copyright.replace('{year}', String(new Date().getFullYear()))}
+              </p>
+              
+              {/* Language Switcher */}
+              <div className="flex items-center gap-2 border-l border-white/10 pl-4 rtl:border-l-0 rtl:border-r rtl:pl-0 rtl:pr-4">
+                <button 
+                  onClick={() => setLang('en')} 
+                  className={`text-xs font-semibold px-2 py-0.5 rounded transition-colors ${lang === 'en' ? 'text-white bg-blue-600' : 'text-white/40 hover:text-white'}`}
+                >
+                  EN
+                </button>
+                <button 
+                  onClick={() => setLang('ar')} 
+                  className={`text-xs font-semibold px-2 py-0.5 rounded transition-colors ${lang === 'ar' ? 'text-white bg-blue-600' : 'text-white/40 hover:text-white'}`}
+                >
+                  العربية
+                </button>
+              </div>
+            </div>
+            
+            <p className="text-white/20 text-xs max-w-xl text-center sm:text-right rtl:sm:text-left leading-relaxed">
               {f.disclaimer}
             </p>
           </div>
         </div>
       </div>
+
     </footer>
   )
 }

@@ -13,7 +13,7 @@ const readyPromise = new Promise<void>((resolve) => { readyResolve = resolve })
 // Initialize from persisted PocketBase session (synchronous — SDK loads from localStorage)
 if (pb.authStore.isValid && pb.authStore.model) {
   authInfo.userId = pb.authStore.model.id
-  authInfo.role = pb.authStore.model.email === 'instantgrow.net@gmail.com' ? 'admin' : ((pb.authStore.model['role'] as string) ?? 'client')
+  authInfo.role = (pb.authStore.model['role'] as string) ?? 'client'
   authInfo.ready = true
   readyResolve!()
 } else {
@@ -25,7 +25,7 @@ if (pb.authStore.isValid && pb.authStore.model) {
 pb.authStore.onChange((token, model) => {
   if (token && model) {
     authInfo.userId = model.id
-    authInfo.role = model.email === 'instantgrow.net@gmail.com' ? 'admin' : ((model['role'] as string) ?? 'client')
+    authInfo.role = (model['role'] as string) ?? 'client'
   } else {
     authInfo.userId = null
     authInfo.role = null

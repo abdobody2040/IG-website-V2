@@ -26,20 +26,14 @@ export default function LoginPage() {
     setServerError('')
     try {
       const authData = await pb.collection('users').authWithPassword(email, password)
-      const emailVal = authData.record['email'] as string
-      const role = emailVal === 'instantgrow.net@gmail.com' ? 'admin' : ((authData.record['role'] as string) ?? 'client')
+      const role = (authData.record['role'] as string) ?? 'client'
       if (role === 'admin') {
         navigate({ to: '/admin' })
       } else {
         navigate({ to: '/client/dashboard' })
       }
-    } catch (err: any) {
-      console.error('Login error details:', err)
-      const status = err?.status !== undefined ? ` [Status: ${err.status}]` : ''
-      const url = err?.url ? ` [URL: ${err.url}]` : ''
-      const details = err?.data && Object.keys(err.data).length > 0 ? ` (${JSON.stringify(err.data)})` : ''
-      const msg = err?.message || 'Invalid email or password.'
-      setServerError(`${msg}${status}${url}${details}`)
+    } catch {
+      setServerError('Invalid email or password.')
     }
   }
 
@@ -48,16 +42,14 @@ export default function LoginPage() {
     try {
       // PocketBase OAuth2 — opens a popup and resolves with the auth data
       await pb.collection('users').authWithOAuth2({ provider: 'google' })
-      const emailVal = pb.authStore.model?.email
-      const role = emailVal === 'instantgrow.net@gmail.com' ? 'admin' : ((pb.authStore.model?.['role'] as string) ?? 'client')
+      const role = (pb.authStore.model?.['role'] as string) ?? 'client'
       if (role === 'admin') {
         navigate({ to: '/admin' })
       } else {
         navigate({ to: '/client/dashboard' })
       }
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Google sign-in failed.'
-      setServerError(msg)
+    } catch {
+      setServerError('Sign-in failed. Please try again.')
     }
   }
 

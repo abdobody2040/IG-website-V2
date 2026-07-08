@@ -3,7 +3,7 @@ import { Link, useNavigate, Outlet, useLocation } from '@tanstack/react-router'
 import {
   LayoutDashboard, ShoppingBag, Users, BarChart3, Settings,
   Menu, X, LogOut, ChevronRight, Shield, Building2, FileText, CreditCard, Newspaper, Globe, Database,
-  Home, DollarSign
+  Home, DollarSign, Briefcase, Layers
 } from 'lucide-react'
 import { pb } from '../../lib/pocketbase'
 import { useAuth } from '../../hooks/useAuth'
@@ -28,6 +28,8 @@ const navItems: NavItem[] = [
   { label: 'Analytics',     href: '/admin/analytics',      icon: BarChart3 },
   { label: 'Home Editor',   href: '/admin/home-editor',    icon: Home },
   { label: 'Price Editor',  href: '/admin/pricing-editor', icon: DollarSign },
+  { label: 'Services',      href: '/admin/services',       icon: Briefcase },
+  { label: 'Pages Editor',  href: '/admin/pages',          icon: Layers },
   { label: 'Settings',      href: '/admin/settings',       icon: Settings },
 ]
 
@@ -52,6 +54,8 @@ export default function AdminLayout() {
   else if (currentPath.startsWith('/admin/analytics')) title = 'Analytics'
   else if (currentPath.startsWith('/admin/home-editor')) title = 'Home Editor'
   else if (currentPath.startsWith('/admin/pricing-editor')) title = 'Pricing Editor'
+  else if (currentPath.startsWith('/admin/services')) title = 'Services Manager'
+  else if (currentPath.startsWith('/admin/pages')) title = 'Pages Editor'
   else if (currentPath.startsWith('/admin/settings')) title = 'Settings'
 
   const handleLogout = async () => {

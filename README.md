@@ -2,7 +2,7 @@
 
 Automated LLC & LTD company formation platform for international entrepreneurs. Handles the full lifecycle from order placement through document filing, EIN/UTR processing, and ongoing compliance — so founders can focus on building their business.
 
-Built with **React + TypeScript + Vite** on the frontend, **Supabase** for auth and database, **Stripe** for payments, **Cloudflare R2** for document storage, and **Deno Edge Functions** for serverless backend logic.
+Built with **React + TypeScript + Vite** on the frontend, **PocketBase** for auth and database, **Stripe** for payments, **Cloudflare R2** for document storage, and **Cloudflare Workers** for serverless backend logic.
 
 ---
 
@@ -21,21 +21,22 @@ Built with **React + TypeScript + Vite** on the frontend, **Supabase** for auth 
 - **Order management** — Search, filter, edit status, view status history, delete orders
 - **Client management** — View all users with roles, order counts, total spend; drill into client detail pages with orders, companies, documents, and payments
 - **Document management** — Upload documents for clients via drag-and-drop with MIME type and file size validation (PDF, PNG, JPEG, WEBP, DOC, DOCX; max 10 MB)
-- **Analytics** — Revenue over time, orders by status/package/region (all live Supabase data, no mock fallbacks)
+- **Analytics** — Revenue over time, orders by status/package/region (all live PocketBase data, no mock fallbacks)
 - **Company management** — Track formed companies, statuses, EIN numbers, formation dates
 - **Payment tracking** — Revenue metrics, payment status filters, Stripe integration
 - **Settings** — Company info, email notification toggles (master switch, admin alerts, client notifications)
 
 ### Security
-- Row-Level Security (RLS) on all 8 database tables
+- Row-Level Security (RLS / collection rules) on all database collections
 - Strong password policy (uppercase, lowercase, number, special character)
 - File upload validation (10 MB limit + MIME type allowlist)
 - Cloudflare Turnstile CAPTCHA on contact form (opt-in)
 - CORS origin validation on Stripe webhooks
 - Security headers (X-Frame-Options, HSTS, CSP, Referrer-Policy)
-- Login error sanitization (no Supabase internals exposed)
+- HTTPS-only deployment enforcement via Cloudflare Page Rules (Always Use HTTPS)
+- Login error sanitization (no internal errors exposed)
 - Webhook idempotency via `stripe_session_id` unique constraint
-- Admin-only full user deletion (removes from both `profiles` and `auth.users`)
+- Admin-only full user deletion (removes from both `profiles`/`users` collections and auth)
 - Setup page blocked in production builds
 
 See [SECURITY.md](./SECURITY.md) for the full audit report.
@@ -52,11 +53,11 @@ See [SECURITY.md](./SECURITY.md) for the full audit report.
 | Data Fetching | TanStack Query (React Query) |
 | Styling | Tailwind CSS 3.3 + tailwindcss-animate |
 | Forms | React Hook Form + Zod validation |
-| Auth & Database | Supabase (Auth + PostgreSQL + RLS) |
+| Auth & Database | PocketBase (Auth + SQLite + Collection Rules) |
 | Payments | Stripe Checkout + Webhooks |
-| File Storage | Cloudflare R2 (primary) / Supabase Storage (fallback) |
+| File Storage | Cloudflare R2 (primary) / PocketBase Storage (fallback) |
 | Email | Resend (transactional) |
-| Edge Functions | Deno (Supabase Edge Functions) |
+| Edge Functions | Cloudflare Workers |
 | Charts | Recharts |
 | Icons | Lucide React |
 | Animations | Framer Motion |
@@ -69,16 +70,16 @@ See [SECURITY.md](./SECURITY.md) for the full audit report.
 ## Project Structure
 
 ```
-swyftform-clone/
-├── functions/                    # Deno Edge Functions (deployed to Supabase)
+instant-grow/
+├── functions/                    # Cloudflare Workers
 │   ├── create-checkout/          #   Stripe checkout session creation
 │   ├── stripe-webhook/           #   Stripe payment webhook handler
 │   ├── submit-contact/           #   Contact form with CAPTCHA verification
 │   └── delete-user/              #   Admin user deletion (auth + profile)
 │
-├── supabase/
-│   ├── schema.sql                # Full database schema + RLS policies
-│   └── migrations/               # Incremental schema changes
+├── pocketbase/                   # PocketBase SQLite backend
+│   ├── pb_schema.json            #   Database schema definitions
+│   └── pb_migrations/            #   Incremental schema changes
 │
 ├── src/
 │   ├── main.tsx                  # App entry point (React + QueryClient + Toaster)
@@ -206,53 +207,43 @@ npm run dev
 Create a `.env` file in the project root:
 
 ```env
-# Required — Supabase connection
-VITE_SUPABASE_URL=https://your-project-id.supabase.co
-VITE_SUPABASE_ANON_KEY=your-anon-key
+# Required — PocketBase connection
+VITE_PB_URL=http://127.0.0.1:8090
 
 # Optional — Stripe checkout (needed for payments)
-VITE_CHECKOUT_ENDPOINT=https://your-project.supabase.co/functions/v1/create-checkout
+VITE_CHECKOUT_ENDPOINT=https://create-checkout.your-subdomain.workers.dev
 
-# Optional — Cloudflare R2 file upload (falls back to Supabase Storage)
-VITE_R2_UPLOAD_ENDPOINT=
+# Optional — Cloudflare R2 file upload (falls back to PocketBase file storage)
+VITE_R2_UPLOAD_ENDPOINT=https://upload-validator.your-subdomain.workers.dev
 
 # Optional — Email via Resend
-VITE_EMAIL_ENDPOINT=
-
-# Optional — Cloudflare Turnstile CAPTCHA for contact form
-VITE_TURNSTILE_SITE_KEY=
-
-# Optional — Contact form server-side CAPTCHA verification
-VITE_CONTACT_ENDPOINT=
-
-# Optional — Full user deletion (auth + profile)
-VITE_DELETE_USER_ENDPOINT=
+VITE_EMAIL_ENDPOINT=https://send-email.your-subdomain.workers.dev
 ```
 
 ### Database Setup
 
-Run the schema in your **Supabase SQL Editor**:
+Run your local PocketBase server:
 
-1. Execute `supabase/schema.sql` — creates all tables, triggers, RLS policies
-2. Execute `supabase/migrations/20260424_add_order_customer_columns.sql` — adds PII columns to orders
-3. Execute `supabase/migrations/20260503_add_update_last_sign_in_rpc.sql` — adds last sign-in tracking
+1. Place the PocketBase binary in the `pocketbase/` folder and run `./pocketbase serve` (runs on `http://127.0.0.1:8090` by default).
+2. The schema will be applied from `pocketbase/pb_schema.json` and migrations.
+3. Seed the local DB with services, SEO countries, and mock data by running `npm run db:seed`.
 
 ### Creating an Admin Account
 
-1. Sign up through the app normally
-2. Go to **Supabase Dashboard → Table Editor → profiles**
-3. Find your user row and change `role` from `client` to `admin`
-4. Sign out and sign back in — you'll be redirected to `/admin`
+1. Sign up through the app normally.
+2. Go to the **PocketBase Admin UI** at `http://127.0.0.1:8090/_/` and log in.
+3. Locate the `users` collection, find your user row, and change `role` from `client` to `admin`.
+4. Sign out on the frontend and sign back in — you'll be redirected to `/admin`.
 
 ---
 
 ## Database Schema
 
-Eight tables with Row-Level Security enabled on all of them:
+Tables/collections with client-side access control (RLS-like collection rules) enabled on all of them:
 
-| Table | Purpose | Key Fields |
-|-------|---------|-----------|
-| **profiles** | User accounts (extends `auth.users`) | `role` (client/admin), `email`, `display_name`, `last_sign_in` |
+| Collection | Purpose | Key Fields |
+|------------|---------|------------|
+| **users** | User accounts | `role` (client/admin), `email`, `display_name`, `last_sign_in` |
 | **orders** | Formation & service orders | `order_number`, `package_name`, `company_name`, `status`, `amount`, `stripe_session_id` |
 | **order_updates** | Order status history | `order_id`, `status`, `message`, `created_by` |
 | **companies** | Formed legal entities | `company_name`, `company_type` (LLC/LTD), `state`, `ein_number`, `formation_date` |
@@ -301,16 +292,16 @@ Step 7: Review & Pay
 
 ---
 
-## Edge Functions
+## Edge Functions (Cloudflare Workers)
 
-Four Deno Edge Functions deployed to Supabase:
+Serverless functions deployed as Cloudflare Workers:
 
-| Function | Endpoint | Purpose |
-|----------|----------|---------|
-| `create-checkout` | `/functions/v1/create-checkout` | Creates Stripe checkout sessions for both formation orders and add-on services |
-| `stripe-webhook` | `/functions/v1/stripe-webhook` | Handles `checkout.session.completed` events — creates orders, payments, companies, and initial documents in Supabase. Includes idempotency check via `stripe_session_id` |
-| `submit-contact` | `/functions/v1/submit-contact` | Server-side contact form handler with Cloudflare Turnstile CAPTCHA verification |
-| `delete-user` | `/functions/v1/delete-user` | Admin-only endpoint that fully deletes a user from both `profiles` table and `auth.users`, nullifying all FK references first |
+| Worker | Endpoint | Purpose |
+|--------|----------|---------|
+| `create-checkout` | `/` (or `/create-checkout`) | Creates Stripe checkout sessions for both formation orders and add-on services |
+| `stripe-webhook` | `/` (or `/stripe-webhook`) | Handles `checkout.session.completed` events — creates orders, payments, companies, and initial documents in PocketBase. Includes idempotency check via `stripe_session_id` |
+| `submit-contact` | `/` (or `/submit-contact`) | Server-side contact form handler with Cloudflare Turnstile CAPTCHA verification |
+| `delete-user` | `/` (or `/delete-user`) | Admin-only endpoint that fully deletes a user, nullifying all FK references first |
 
 ---
 
@@ -359,31 +350,35 @@ Compatible with:
 - **Vercel** — Works out of the box
 - **Any static host** — Just serve the `dist/` directory
 
-### Edge Functions
+### Edge Functions (Cloudflare Workers)
 
-Deploy to Supabase:
+Deploy using Wrangler:
 
 ```bash
-supabase functions deploy create-checkout
-supabase functions deploy stripe-webhook
-supabase functions deploy submit-contact
-supabase functions deploy delete-user
+# Deploy each worker from its directory under functions/
+cd functions/create-checkout && npx wrangler deploy
+cd ../stripe-webhook && npx wrangler deploy
+cd ../submit-contact && npx wrangler deploy
+cd ../delete-user && npx wrangler deploy
 ```
 
-Required secrets on the Edge Functions:
+Configure secrets on the Cloudflare Workers:
 - `STRIPE_SECRET_KEY` — Stripe API key
 - `STRIPE_WEBHOOK_SECRET` — Stripe webhook signing secret
 - `ALLOWED_ORIGIN` — Your frontend domain (CORS)
 - `TURNSTILE_SECRET_KEY` — Cloudflare Turnstile secret (for `submit-contact`)
+- `PB_URL` — Your PocketBase API endpoint (e.g. `http://127.0.0.1:8090`)
+- `PB_ADMIN_EMAIL` / `PB_ADMIN_PASSWORD` — Admin login credentials for PocketBase
+- `RESEND_API_KEY` — Resend API key (for `send-email`)
 
 ---
 
 ## File Upload
 
-Document uploads support two storage backends:
+Document uploads support two storage options:
 
-1. **Cloudflare R2** (primary) — Set `VITE_R2_UPLOAD_ENDPOINT` to your R2 proxy worker
-2. **Supabase Storage** (fallback) — Create a `documents` bucket in Supabase Storage
+1. **Cloudflare R2** (primary/production) — Set `VITE_R2_UPLOAD_ENDPOINT` to your upload validator worker.
+2. **PocketBase Storage** (fallback/local) — Files are uploaded directly to the PocketBase instance and served from the filesystem/SQLite DB.
 
 Validation enforced on both client and server:
 - **Max file size**: 10 MB

@@ -31,6 +31,7 @@ export default function OrderWizard() {
   const [stateFee, setStateFee] = useState(0)
   const [selectedAddOns, setSelectedAddOns] = useState<string[]>([])
   const [submitting, setSubmitting] = useState(false)
+  const [paymentMethod, setPaymentMethod] = useState<'stripe' | 'invoice'>('stripe')
   const [members, setMembers] = useState<Member[]>([{
     id: crypto.randomUUID(),
     fullName: '',
@@ -63,7 +64,7 @@ export default function OrderWizard() {
   const next = async () => {
     let valid = true
     if (step === 0) valid = await trigger(['companyName'])
-    if (step === 4) valid = await trigger(['fullName', 'email'])
+    if (step === 5) valid = await trigger(['fullName', 'email'])
     if (valid) setStep(s => Math.min(s + 1, TOTAL_STEPS - 1))
   }
 
@@ -96,8 +97,8 @@ export default function OrderWizard() {
       const totalAmount = selectedPlan.price + stateFee + addOnTotal
       const checkoutEndpoint = import.meta.env.VITE_CHECKOUT_ENDPOINT as string | undefined
 
-      if (checkoutEndpoint && !import.meta.env.DEV) {
-        // ── Production: redirect to Stripe Checkout ──
+      if (paymentMethod === 'stripe' && checkoutEndpoint && !import.meta.env.DEV) {
+        // ── Production Stripe: redirect to Stripe Checkout ──
         const headers: Record<string, string> = { 'Content-Type': 'application/json' }
         if (pb.authStore.token) headers.Authorization = `Bearer ${pb.authStore.token}`
 
@@ -106,8 +107,7 @@ export default function OrderWizard() {
           headers,
           body: JSON.stringify({
             mode: 'formation',
-            planName: selectedPlan.name,
-            amount: totalAmount,
+            planId,
             companyName: data.companyName,
             companyState: data.companyState || (planId.startsWith('uk') ? 'UK' : 'N/A'),
             companyType: data.companyType ?? (planId.startsWith('uk') ? 'LTD' : 'LLC'),
@@ -118,6 +118,7 @@ export default function OrderWizard() {
             customerCountry: '',
             customerAddress: members[0]?.address ?? '',
             userId: uid,
+            selectedAddOns,
             successUrl: `${window.location.origin}/order/success`,
             cancelUrl: `${window.location.origin}/order?plan=${planId}`,
           }),
@@ -129,12 +130,12 @@ export default function OrderWizard() {
 
         window.location.href = checkoutData.url
       } else {
-        // ── Dev mode: create order directly in PocketBase ──
+        // ── Invoice OR Dev mode: create order directly in PocketBase ──
         const orderNumber = 'IG-' + crypto.randomUUID().slice(0, 6).toUpperCase()
         const state = data.companyState || (planId.startsWith('uk') ? 'UK' : 'N/A')
         const companyType = data.companyType ?? (planId.startsWith('uk') ? 'LTD' : 'LLC')
 
-        await pb.collection('orders').create({
+        const createdOrder = await pb.collection('orders').create({
           user: uid,
           order_number: orderNumber,
           package_name: selectedPlan.name,
@@ -147,13 +148,30 @@ export default function OrderWizard() {
           customer_name: data.fullName,
           customer_email: data.email,
           customer_phone: data.phone ?? null,
-          notes: 'Dev/test order',
+          notes: paymentMethod === 'invoice' ? 'Invoice Payment Selected' : 'Dev/test order',
         })
 
-        navigate({
-          to: '/order/success',
-          search: { orderNumber, plan: selectedPlan.name, company: data.companyName || 'Your Company' },
-        })
+        // Also create a payment record in PocketBase
+        await pb.collection('payments').create({
+          user: uid,
+          order: createdOrder.id,
+          service: selectedPlan.name,
+          invoice_id: `INV-${orderNumber.split("-").pop()}`,
+          amount: totalAmount,
+          currency: selectedPlan.currency,
+          status: 'pending',
+          notes: paymentMethod === 'invoice' ? 'Pending Invoice Payment' : 'Dev payment',
+        }).catch(err => console.error('Failed to create payment record:', err))
+
+        if (paymentMethod === 'invoice') {
+          toast.success(lang === 'ar' ? 'تم تقديم الطلب بنجاح!' : 'Order submitted successfully!')
+          navigate({ to: '/client/dashboard' })
+        } else {
+          navigate({
+            to: '/order/success',
+            search: { orderNumber, plan: selectedPlan.name, company: data.companyName || 'Your Company', method: paymentMethod },
+          })
+        }
       }
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Failed to place order. Please try again.'
@@ -222,18 +240,23 @@ export default function OrderWizard() {
                 <StepServicePackage planId={planId} setPlanId={handleSetPlanId} />
               )}
               {step === 3 && (
-                <StepAddOns selectedAddOns={selectedAddOns} setSelectedAddOns={setSelectedAddOns} />
+                <StepAddOns category="compliance" selectedAddOns={selectedAddOns} setSelectedAddOns={setSelectedAddOns} />
               )}
               {step === 4 && (
-                <StepAccount user={user} register={register} errors={errors} />
+                <StepAddOns category="tech" selectedAddOns={selectedAddOns} setSelectedAddOns={setSelectedAddOns} />
               )}
               {step === 5 && (
+                <StepAccount user={user} register={register} errors={errors} />
+              )}
+              {step === 6 && (
                 <StepReviewPay
                   data={{ ...formValues, planId }}
                   plan={plan}
                   stateFee={stateFee}
                   selectedAddOns={addOnObjects}
                   members={members}
+                  paymentMethod={paymentMethod}
+                  setPaymentMethod={setPaymentMethod}
                 />
               )}
 

@@ -1,107 +1,88 @@
-import { motion, useInView } from 'framer-motion'
-import { useRef } from 'react'
-import { ArrowRight, MousePointer, FileText, Settings, CheckCircle } from 'lucide-react'
+import { motion } from 'framer-motion'
+import { MousePointerClick, FileCheck, ShieldCheck, BadgeCheck, ChevronRight, ChevronLeft } from 'lucide-react'
 import { useLang } from '../i18n/LanguageContext'
 
-const stepIcons = [MousePointer, FileText, Settings, CheckCircle]
-const stepColors = ['#2563EB', '#7C3AED', '#059669', '#D97706']
-const stepBgs = ['#EFF6FF', '#F5F3FF', '#ECFDF5', '#FFFBEB']
+const stepIcons = [MousePointerClick, FileCheck, ShieldCheck, BadgeCheck]
 
 export default function HowItWorks() {
   const { t, lang } = useLang()
   const h = t.howItWorks
   const isAr = lang === 'ar'
   const steps = h.steps.slice(0, 4)
-  const lineRef = useRef<HTMLDivElement>(null)
-  const inView = useInView(lineRef, { once: true, margin: '-100px' })
 
-  const stepTitlesEn = [
-    'Choose Your Service',
-    'Submit Your Info',
-    'We Handle The Rest',
-    "You're Ready!",
-  ]
-  const stepDescsEn = [
-    'Select the service that fits your needs.',
-    'We collect your information securely.',
-    'Our experts process your application.',
-    'Receive your documents and start your business.',
-  ]
+  const arrowStyle = isAr
+    ? { right: 'calc(50% + 48px + 12px)', left: 'auto' }
+    : { left: 'calc(50% + 48px + 12px)', right: 'auto' }
 
   return (
-    <section id="how-it-works" className="ig-section bg-white">
-      <div className="max-w-[1280px] mx-auto">
+    <section id="how-it-works" className="ig-section bg-white py-20">
+      <div className="max-w-[1280px] mx-auto px-5 sm:px-8 lg:px-10">
 
-        <div className="text-center mb-16">
+        <div className="text-center mb-10 sm:mb-16">
           <h2
-            className="text-4xl sm:text-[54px] font-bold text-[#0F172A] leading-tight tracking-tight mb-4"
+            className="text-[28px] sm:text-[38px] lg:text-[42px] font-bold text-[#0F172A] leading-tight tracking-tight mb-3"
             style={{ fontFamily: 'Sora, Inter, sans-serif' }}
           >
-            {isAr ? 'كيف يعمل النظام' : 'How It Works'}
+            {h.heading}
           </h2>
-          <p className="text-base sm:text-lg lg:text-xl text-slate-500 max-w-xl mx-auto">
-            {isAr
-              ? 'احصل على عملك وشغّله في 4 خطوات بسيطة'
-              : 'Get your business up and running in 4 simple steps'}
+          <p className="text-sm sm:text-base text-slate-500 max-w-xl mx-auto">
+            {h.subheading}
           </p>
         </div>
 
         {/* Steps + Mascot row */}
-        <div className="flex flex-col lg:flex-row items-start gap-12">
+        <div className="flex flex-col lg:flex-row items-center lg:items-start gap-10 lg:gap-8">
           {/* Steps grid */}
-          <div className="flex-1 relative">
-            {/* Animated connector line (desktop) */}
-            <div ref={lineRef} className="hidden lg:block absolute top-[58px] left-[calc(12.5%+24px)] right-[calc(12.5%+24px)] h-1 bg-gray-100 z-0">
-              <motion.div
-                className="h-full rounded-full origin-left"
-                style={{ background: 'linear-gradient(90deg, #2563EB, #7C3AED, #059669, #D97706)' }}
-                initial={{ scaleX: 0 }}
-                animate={{ scaleX: inView ? 1 : 0 }}
-                transition={{ duration: 1.2, delay: 0.3, ease: 'easeOut' }}
-              />
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 relative z-10">
+          <div className="flex-1 w-full relative">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-y-8 sm:gap-y-12 gap-x-4 sm:gap-x-6 relative z-10">
               {steps.map((step, i) => {
-                const Icon = stepIcons[i] ?? CheckCircle
+                const Icon = stepIcons[i] ?? BadgeCheck
                 return (
                   <motion.div
                     key={i}
-                    initial={{ opacity: 0, y: 24 }}
+                    initial={{ opacity: 0, y: 20 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true, margin: '-40px' }}
                     transition={{ delay: i * 0.1, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-                    className="group bg-white rounded-[24px] border border-gray-100 px-8 py-9 flex flex-col items-center text-center relative"
-                    style={{ boxShadow: '0 4px 24px rgba(15,23,42,0.06)', transition: 'transform 0.3s ease, box-shadow 0.3s ease' }}
-                    whileHover={{ y: -6, boxShadow: '0 20px 60px rgba(15,23,42,0.1)' }}
+                    className="group flex flex-col items-center text-center relative"
+                    whileHover={{ y: -4 }}
                   >
-                    {/* Step number badge */}
-                    <div
-                      className="w-12 h-12 rounded-full flex items-center justify-center text-white text-base font-bold mb-5 shrink-0 relative z-10"
-                      style={{ background: stepColors[i] }}
-                    >
-                      {`0${i + 1}`}
+                    {/* Icon circle */}
+                    <div className="w-16 h-16 sm:w-24 sm:h-24 rounded-full bg-white border border-slate-100 flex items-center justify-center mb-4 sm:mb-6 relative z-10 transition-all duration-300 group-hover:border-blue-200 group-hover:shadow-[0_12px_40px_rgba(26,86,255,0.06)] shadow-[0_8px_30px_rgba(0,0,0,0.03)]">
+                      <Icon className="w-6 h-6 sm:w-9 sm:h-9 text-[#1A56FF]" />
                     </div>
 
-                    {/* Icon */}
-                    <div
-                      className="w-14 h-14 rounded-2xl flex items-center justify-center mb-5 transition-transform duration-300 group-hover:scale-110"
-                      style={{ background: stepBgs[i] }}
-                    >
-                      <Icon size={26} style={{ color: stepColors[i] }} />
+                    {/* Step number badge & Title */}
+                    <div className="flex items-center gap-2 mb-2 sm:mb-3">
+                      <span className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-[#E8EDFF] text-[#1A56FF] font-bold text-[10px] sm:text-xs flex items-center justify-center shrink-0">
+                        {i + 1}
+                      </span>
+                      <h3 className="text-sm sm:text-base font-bold text-[#0F172A]" style={{ fontFamily: 'Sora, Inter, sans-serif' }}>
+                        {step.title}
+                      </h3>
                     </div>
 
-                    <h3 className="text-base font-bold text-[#0F172A] mb-2.5" style={{ fontFamily: 'Sora, Inter, sans-serif' }}>
-                      {isAr ? step.title : (stepTitlesEn[i] ?? step.title)}
-                    </h3>
-                    <p className="text-sm text-slate-500 leading-relaxed">
-                      {isAr ? step.description : (stepDescsEn[i] ?? step.description)}
+                    {/* Description */}
+                    <p className="text-xs sm:text-sm text-slate-500 leading-relaxed max-w-[200px] sm:max-w-none lg:max-w-[200px]">
+                      {step.description}
                     </p>
 
-                    {/* Arrow (not last) */}
-                    {i < steps.length - 1 && (
-                      <div className="hidden lg:flex absolute -right-3 top-14 z-20 w-6 h-6 bg-white rounded-full border border-gray-100 items-center justify-center shadow-sm">
-                        <ArrowRight size={12} className="text-slate-400" />
+                    {/* Connector Arrow (desktop only) */}
+                    {i < 3 && (
+                      <div
+                        className="hidden lg:flex absolute items-center w-[calc(100%-96px)]"
+                        style={{
+                          top: '48px', // center of the 96px circle
+                          transform: 'translateY(-50%)',
+                          ...arrowStyle,
+                        }}
+                      >
+                        <div className="flex-1 border-t-2 border-dashed border-blue-200" />
+                        {isAr ? (
+                          <ChevronLeft size={14} className="text-blue-400 -mr-1 shrink-0" />
+                        ) : (
+                          <ChevronRight size={14} className="text-blue-400 -ml-1 shrink-0" />
+                        )}
                       </div>
                     )}
                   </motion.div>
@@ -110,7 +91,7 @@ export default function HowItWorks() {
             </div>
           </div>
 
-          {/* Mascot — desktop only (increased by 20%) */}
+          {/* Mascot (leave as is) */}
           <motion.div
             className="hidden lg:flex items-end justify-center w-56 xl:w-64 shrink-0 self-end"
             initial={{ opacity: 0, x: 20 }}
@@ -132,22 +113,6 @@ export default function HowItWorks() {
           </motion.div>
         </div>
 
-        {/* CTA */}
-        <motion.div
-          className="flex justify-center mt-12"
-          initial={{ opacity: 0, y: 16 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ delay: 0.3 }}
-        >
-          <a
-            href="/order"
-            className="shimmer-btn inline-flex items-center justify-center gap-2 bg-[#2563EB] text-white font-semibold text-base px-8 py-4 min-h-[48px] rounded-2xl hover:bg-[#1d4ed8] transition-all duration-200 shadow-[0_4px_24px_rgba(37,99,235,0.3)] hover:-translate-y-0.5 group w-full sm:w-auto text-center"
-          >
-            {isAr ? 'ابدأ الآن' : h.getStarted}
-            <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
-          </a>
-        </motion.div>
       </div>
     </section>
   )

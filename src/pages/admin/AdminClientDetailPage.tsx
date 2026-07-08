@@ -24,7 +24,7 @@ import SendMessageModal from '../../components/SendMessageModal'
 
 export default function AdminClientDetailPage() {
   const { isLoading: authLoading } = useRequireAdmin()
-  const { userId } = useParams({ from: '/admin/clients/$userId' })
+  const { userId } = useParams({ strict: false }) as { userId: string }
   const qc = useQueryClient()
 
   const { data: user, isLoading: userLoading } = useQuery({

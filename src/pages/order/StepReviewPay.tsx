@@ -1,19 +1,22 @@
-import { Globe } from 'lucide-react'
+import { Globe, CreditCard, FileText } from 'lucide-react'
 import { useLang } from '../../i18n/LanguageContext'
 import type { WizardData, Plan, AddOn, Member } from './data'
 
 export function StepReviewPay({
-  data, plan, stateFee, selectedAddOns, members
+  data, plan, stateFee, selectedAddOns, members, paymentMethod, setPaymentMethod
 }: {
   data: Partial<WizardData>
   plan: Plan | undefined
   stateFee: number
   selectedAddOns: AddOn[]
   members: Member[]
+  paymentMethod: 'stripe' | 'invoice'
+  setPaymentMethod: (method: 'stripe' | 'invoice') => void
 }) {
-  const { t } = useLang()
+  const { t, isRTL } = useLang()
   const addOnTotal = selectedAddOns.reduce((s, a) => s + a.price, 0)
   const total = (plan?.price || 0) + stateFee + addOnTotal
+  const orderTranslations = t.order as any
 
   return (
     <div>
@@ -21,6 +24,58 @@ export function StepReviewPay({
       <p className="text-slate-500 text-sm mb-6">{t.order.reviewPayDesc}</p>
 
       <div className="space-y-4">
+        {/* Payment Method Selector */}
+        <div className="bg-white border border-slate-200 rounded-2xl p-5">
+          <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">
+            {isRTL ? 'طريقة الدفع' : 'Payment Method'}
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Card (Stripe) Option */}
+            <label
+              className={`flex items-start gap-3 p-4 rounded-xl border-2 cursor-pointer transition-all ${
+                paymentMethod === 'stripe' ? 'border-[#1a56ff] bg-[#1a56ff]/5' : 'border-slate-200 hover:border-[#1a56ff]/30'
+              }`}
+              onClick={() => setPaymentMethod('stripe')}
+            >
+              <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${
+                paymentMethod === 'stripe' ? 'bg-[#1a56ff] text-white' : 'bg-slate-100 text-slate-500'
+              }`}>
+                <CreditCard size={16} />
+              </div>
+              <div className="flex-1">
+                <p className="text-sm font-semibold text-slate-900">
+                  {orderTranslations.payCardTitle}
+                </p>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  {orderTranslations.payCardDesc}
+                </p>
+              </div>
+            </label>
+
+            {/* Invoice Option */}
+            <label
+              className={`flex items-start gap-3 p-4 rounded-xl border-2 cursor-pointer transition-all ${
+                paymentMethod === 'invoice' ? 'border-[#1a56ff] bg-[#1a56ff]/5' : 'border-slate-200 hover:border-[#1a56ff]/30'
+              }`}
+              onClick={() => setPaymentMethod('invoice')}
+            >
+              <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${
+                paymentMethod === 'invoice' ? 'bg-[#1a56ff] text-white' : 'bg-slate-100 text-slate-500'
+              }`}>
+                <FileText size={16} />
+              </div>
+              <div className="flex-1">
+                <p className="text-sm font-semibold text-slate-900">
+                  {orderTranslations.payInvoiceTitle}
+                </p>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  {orderTranslations.payInvoiceDesc}
+                </p>
+              </div>
+            </label>
+          </div>
+        </div>
+
         <div className="bg-white border border-slate-200 rounded-2xl p-5">
           <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">{t.order.formationPackage}</p>
           <div className="flex items-center justify-between">
@@ -82,17 +137,31 @@ export function StepReviewPay({
           </div>
         </div>
 
-        <div className="bg-[#0a0f1e] rounded-2xl p-5 text-white">
-          <div className="flex items-start gap-3">
-            <div className="w-8 h-8 bg-[#1a56ff] rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
-              <Globe size={16} />
-            </div>
-            <div>
-              <p className="font-semibold mb-1">{t.order.paymentViaInvoice}</p>
-              <p className="text-white/60 text-sm">{t.order.paymentNote}</p>
+        {paymentMethod === 'stripe' ? (
+          <div className="bg-[#0a0f1e] rounded-2xl p-5 text-white">
+            <div className="flex items-start gap-3">
+              <div className="w-8 h-8 bg-[#1a56ff] rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
+                <CreditCard size={16} />
+              </div>
+              <div>
+                <p className="font-semibold mb-1">{orderTranslations.paymentViaStripe}</p>
+                <p className="text-white/60 text-sm">{orderTranslations.payCardDesc}</p>
+              </div>
             </div>
           </div>
-        </div>
+        ) : (
+          <div className="bg-[#0a0f1e] rounded-2xl p-5 text-white">
+            <div className="flex items-start gap-3">
+              <div className="w-8 h-8 bg-[#1a56ff] rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
+                <Globe size={16} />
+              </div>
+              <div>
+                <p className="font-semibold mb-1">{t.order.paymentViaInvoice}</p>
+                <p className="text-white/60 text-sm">{t.order.paymentNote}</p>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )

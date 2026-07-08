@@ -3,13 +3,15 @@ import { Link, useNavigate } from '@tanstack/react-router'
 import {
   LayoutDashboard, Building2, FileText, Zap,
   Menu, X, LogOut, ChevronRight, Bell, Settings, CreditCard,
-  Mail, ShieldCheck
+  Mail, ShieldCheck, Briefcase, Plus, ChevronDown, Loader2
 } from 'lucide-react'
 import { pb } from '../../lib/pocketbase'
 import { useAuth } from '../../hooks/useAuth'
 import { useOrderRealtime } from '../../hooks/useOrderRealtime'
 import NotificationCenter from '../../components/NotificationCenter'
 import { useLang } from '../../i18n/LanguageContext'
+import { useWorkspace } from '../../hooks/useWorkspace'
+import toast from 'react-hot-toast'
 
 interface NavItem {
   label: string
@@ -27,6 +29,7 @@ function useNavItems(): NavItem[] {
     { label: t.client.nav.mailInbox,     href: '/client/mail-inbox',    icon: Mail },
     { label: t.client.nav.services,      href: '/client/services',      icon: Zap },
     { label: t.client.nav.verifications, href: '/client/verifications', icon: ShieldCheck },
+    { label: 'Workspace Settings',       href: '/client/workspace-settings', icon: Briefcase },
     { label: t.client.nav.notifications, href: '/client/notifications',  icon: Bell },
     { label: t.client.nav.settings,      href: '/client/settings',      icon: Settings },
   ]
@@ -45,9 +48,32 @@ export default function ClientLayout({ children, currentPath, title }: ClientLay
   const navigate = useNavigate()
   const navItems = useNavItems()
 
+  // Workspace Switcher States
+  const { workspaces, activeWorkspace, switchWorkspace, createWorkspace } = useWorkspace()
+  const [switcherOpen, setSwitcherOpen] = useState(false)
+  const [createModalOpen, setCreateModalOpen] = useState(false)
+  const [newWorkspaceName, setNewWorkspaceName] = useState('')
+  const [creating, setCreating] = useState(false)
+
   const handleLogout = async () => {
     await pb.authStore.clear()
     navigate({ to: '/auth/login' })
+  }
+
+  const handleCreateWorkspace = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!newWorkspaceName.trim()) return
+    setCreating(true)
+    try {
+      await createWorkspace(newWorkspaceName.trim())
+      setNewWorkspaceName('')
+      setCreateModalOpen(false)
+      toast.success('Workspace created!')
+    } catch (err) {
+      toast.error('Failed to create workspace')
+    } finally {
+      setCreating(false)
+    }
   }
 
   useOrderRealtime(user?.id)
@@ -64,6 +90,43 @@ export default function ClientLayout({ children, currentPath, title }: ClientLay
         />
       )}
 
+      {/* Create Workspace Modal */}
+      {createModalOpen && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <form onSubmit={handleCreateWorkspace} className="bg-white rounded-xl max-w-sm w-full p-6 shadow-xl space-y-4">
+            <h3 className="text-lg font-bold text-slate-900">Create New Workspace</h3>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Workspace Name</label>
+              <input
+                type="text"
+                required
+                value={newWorkspaceName}
+                onChange={e => setNewWorkspaceName(e.target.value)}
+                placeholder="e.g. Acme Corp"
+                className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#1a56ff]"
+              />
+            </div>
+            <div className="flex gap-3 justify-end pt-2">
+              <button
+                type="button"
+                onClick={() => setCreateModalOpen(false)}
+                className="px-4 py-2 border border-slate-200 rounded-lg text-slate-700 text-sm hover:bg-slate-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={creating}
+                className="px-4 py-2 bg-[#1a56ff] text-white text-sm font-semibold rounded-lg hover:bg-blue-700 disabled:opacity-60 flex items-center gap-1.5"
+              >
+                {creating && <Loader2 size={14} className="animate-spin" />}
+                Create
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+
       <aside
         className={`fixed lg:static inset-y-0 z-30 w-64 flex flex-col bg-[#0a0f1e] text-white transition-transform duration-300 ${
           isRTL ? 'right-0' : 'left-0'
@@ -78,6 +141,59 @@ export default function ClientLayout({ children, currentPath, title }: ClientLay
           <button className="lg:hidden text-white/60 hover:text-white" onClick={() => setSidebarOpen(false)}>
             <X size={18} />
           </button>
+        </div>
+
+        {/* Workspace Switcher */}
+        <div className="px-3 py-3 border-b border-white/10 relative z-40">
+          <button
+            onClick={() => setSwitcherOpen(v => !v)}
+            className="w-full flex items-center justify-between gap-2 px-3 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-left transition-colors"
+          >
+            <div className="min-w-0">
+              <p className="text-xs text-white/40 uppercase font-semibold tracking-wider">Active Workspace</p>
+              <p className="text-sm font-medium text-white truncate mt-0.5">
+                {activeWorkspace ? activeWorkspace.name : 'Select Workspace'}
+              </p>
+            </div>
+            <ChevronDown size={16} className={`text-white/40 transition-transform ${switcherOpen ? 'rotate-180' : ''}`} />
+          </button>
+
+          {switcherOpen && (
+            <div className="absolute left-3 right-3 mt-1 bg-[#121829] border border-white/10 rounded-lg shadow-xl py-1 z-50 max-h-60 overflow-y-auto custom-scrollbar">
+              <div className="text-[10px] text-white/30 font-semibold uppercase tracking-wider px-3 py-1.5 border-b border-white/5">
+                My Workspaces
+              </div>
+              {workspaces.map(ws => (
+                <button
+                  key={ws.id}
+                  onClick={() => {
+                    switchWorkspace(ws.id)
+                    setSwitcherOpen(false)
+                  }}
+                  className={`w-full text-left px-3 py-2 text-sm transition-colors flex items-center justify-between ${
+                    activeWorkspace?.id === ws.id
+                      ? 'bg-[#1a56ff] text-white font-medium'
+                      : 'text-white/70 hover:bg-white/5 hover:text-white'
+                  }`}
+                >
+                  <span className="truncate">{ws.name}</span>
+                  {activeWorkspace?.id === ws.id && <span className="w-1.5 h-1.5 rounded-full bg-white" />}
+                </button>
+              ))}
+              <div className="border-t border-white/5 mt-1 pt-1">
+                <button
+                  onClick={() => {
+                    setSwitcherOpen(false)
+                    setCreateModalOpen(true)
+                  }}
+                  className="w-full text-left px-3 py-2 text-sm text-[#1a56ff] hover:bg-white/5 hover:text-blue-400 font-semibold flex items-center gap-1.5 transition-colors"
+                >
+                  <Plus size={14} />
+                  Create Workspace
+                </button>
+              </div>
+            </div>
+          )}
         </div>
 
         <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">

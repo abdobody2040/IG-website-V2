@@ -16,7 +16,9 @@ const IDs = {
   admin_audit_log: 'audit_log_col_i', // 15 chars
   invitations: 'invitation_col_', // 15 chars
   contact_messages: 'contact_msg_col', // 15 chars
-  notification_preferences: 'notif_pref_col1' // 15 chars
+  notification_preferences: 'notif_pref_col1', // 15 chars
+  services: 'services_col_id', // 15 chars
+  pages: 'pages_col_id123' // 15 chars
 };
 
 function run() {

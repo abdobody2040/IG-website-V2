@@ -5,10 +5,12 @@ import { useSeoPageBySlug } from '../hooks/useSeoPages'
 import { setPageMeta, injectJsonLd, generateFaqSchema, generateOrganizationSchema, getCanonical, injectBreadcrumb } from '../lib/seo'
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
+import { useLang } from '../i18n/LanguageContext'
 
 export default function SeoCountryPage() {
   const { slug } = useParams({ from: '/us-company/$slug' })
   const { data: page, isLoading, error } = useSeoPageBySlug(slug)
+  const { lang } = useLang()
 
   useEffect(() => {
     if (!page) return
@@ -16,6 +18,7 @@ export default function SeoCountryPage() {
       title: page.metaTitle,
       description: page.metaDescription,
       keywords: [page.mainKeyword, ...page.secondaryKeywords],
+      ogImage: page.featuredImage || `/og/seo-${page.slug}-${lang}.png`,
       canonical: getCanonical(`/us-company/${page.slug}`),
     })
 
@@ -33,7 +36,7 @@ export default function SeoCountryPage() {
       { name: 'US Company Formation', url: getCanonical('/us-company') },
       { name: page.countryName, url: getCanonical(`/us-company/${page.slug}`) },
     ])
-  }, [page])
+  }, [page, lang])
 
   if (isLoading) {
     return (

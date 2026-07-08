@@ -18,8 +18,7 @@ export default function AuthCallbackPage() {
     // Give SDK a moment to process any OAuth callback params
     const check = () => {
       if (pb.authStore.isValid && pb.authStore.model) {
-        const emailVal = pb.authStore.model.email
-        const role = emailVal === 'instantgrow.net@gmail.com' ? 'admin' : ((pb.authStore.model['role'] as string) ?? 'client')
+        const role = (pb.authStore.model['role'] as string) ?? 'client'
         if (role === 'admin') {
           navigate({ to: '/admin' })
         } else {

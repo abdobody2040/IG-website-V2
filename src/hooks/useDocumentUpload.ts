@@ -80,7 +80,9 @@ export function useDocumentUpload({ userId, orderId = '', companyId = '' }: Uplo
         const json = await res.json() as { url: string }
         publicUrl = json.url
       } else {
-        // Fallback: upload directly to PocketBase file storage
+        // Fallback: upload directly to PocketBase file storage.
+        // SECURITY NOTE: This bypasses upload-validator Worker. Ensure PocketBase collection
+        // API rules validate file MIME types and sizes server-side to prevent malicious uploads.
         const formData = new FormData()
         formData.append('user', userId)
         formData.append('order', orderId || '')

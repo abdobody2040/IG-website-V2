@@ -1,13 +1,14 @@
-import { useState, useMemo } from 'react'
+import { useState } from 'react'
 import { FileText, Search, Edit2, Trash2, X, Loader2, ExternalLink } from 'lucide-react'
 import { DeleteConfirmModal } from '../../components/DeleteConfirmModal'
 import { useQueryClient } from '@tanstack/react-query'
-import { useAllDocuments } from '../../hooks/useAdminData'
+import { useDocuments } from '../../hooks/useAdminData'
 import { useRequireAdmin } from '../../hooks/useRequireAuth'
 import { pb } from '../../lib/pocketbase'
 import toast from 'react-hot-toast'
 import type { Document } from '../../types/db'
 import { logAdminAction } from '../../hooks/useAdminAuditLog'
+import { PaginationBar } from '../../components/PaginationBar'
 
 const DOC_TYPE_OPTIONS = [
   { value: 'articles_of_org', label: 'Articles of Organization' },
@@ -227,9 +228,9 @@ function EditDocumentModal({
 // ── Main Page ─────────────────────────────────────────────────────
 export default function AdminDocumentsPage() {
   const { isLoading: authLoading } = useRequireAdmin()
-  const { documents, isLoading } = useAllDocuments()
-  const queryClient = useQueryClient()
-
+  
+  const [page, setPage] = useState(1)
+  const perPage = 20
   const [search, setSearch] = useState('')
   const [docTypeFilter, setDocTypeFilter] = useState('all')
   const [statusFilter, setStatusFilter] = useState('all')
@@ -237,15 +238,15 @@ export default function AdminDocumentsPage() {
   const [deletingDoc, setDeletingDoc] = useState<Document | null>(null)
   const [deleteLoading, setDeleteLoading] = useState(false)
 
-  const filtered = useMemo(() => {
-    return documents.filter(d => {
-      const q = search.toLowerCase()
-      const matchSearch = !search || d.name?.toLowerCase().includes(q)
-      const matchType = docTypeFilter === 'all' || d.docType === docTypeFilter
-      const matchStatus = statusFilter === 'all' || d.status === statusFilter
-      return matchSearch && matchType && matchStatus
-    })
-  }, [documents, search, docTypeFilter, statusFilter])
+  const { data, isLoading } = useDocuments({
+    page,
+    perPage,
+    search,
+    docType: docTypeFilter,
+    status: statusFilter,
+  })
+
+  const queryClient = useQueryClient()
 
   if (authLoading) return <div className="flex items-center justify-center h-screen"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#1a56ff]" /></div>
 
@@ -277,7 +278,7 @@ export default function AdminDocumentsPage() {
         <div className="flex items-center gap-2 mb-0.5">
           <FileText className="h-5 w-5 text-[#1a56ff]" />
           <h2 className="text-xl font-bold text-slate-900">All Documents</h2>
-          <span className="bg-slate-100 text-slate-600 text-xs font-medium px-2 py-0.5 rounded-full">{documents.length}</span>
+          <span className="bg-slate-100 text-slate-600 text-xs font-medium px-2 py-0.5 rounded-full">{data?.totalItems || 0}</span>
         </div>
         <p className="text-slate-500 text-sm mt-0.5">Manage client documents and formation files</p>
       </div>
@@ -290,13 +291,13 @@ export default function AdminDocumentsPage() {
             type="text"
             placeholder="Search by document name"
             value={search}
-            onChange={e => setSearch(e.target.value)}
+            onChange={e => { setSearch(e.target.value); setPage(1); }}
             className="pl-9 pr-4 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:border-[#1a56ff] bg-white w-64"
           />
         </div>
         <select
           value={docTypeFilter}
-          onChange={e => setDocTypeFilter(e.target.value)}
+          onChange={e => { setDocTypeFilter(e.target.value); setPage(1); }}
           className="py-2 px-3 text-sm border border-slate-200 rounded-lg focus:outline-none focus:border-[#1a56ff] bg-white"
         >
           <option value="all">All Types</option>
@@ -306,7 +307,7 @@ export default function AdminDocumentsPage() {
         </select>
         <select
           value={statusFilter}
-          onChange={e => setStatusFilter(e.target.value)}
+          onChange={e => { setStatusFilter(e.target.value); setPage(1); }}
           className="py-2 px-3 text-sm border border-slate-200 rounded-lg focus:outline-none focus:border-[#1a56ff] bg-white"
         >
           <option value="all">All Statuses</option>
@@ -314,7 +315,7 @@ export default function AdminDocumentsPage() {
             <option key={opt.value} value={opt.value}>{opt.label}</option>
           ))}
         </select>
-        <span className="py-2 text-sm text-slate-500">{filtered.length} document{filtered.length !== 1 ? 's' : ''}</span>
+        <span className="py-2 text-sm text-slate-500">{data?.totalItems || 0} document{data?.totalItems !== 1 ? 's' : ''}</span>
       </div>
 
       {/* Table */}
@@ -323,13 +324,13 @@ export default function AdminDocumentsPage() {
           <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#1a56ff]" />
           <span className="text-slate-500 text-sm">Loading documents…</span>
         </div>
-      ) : filtered.length === 0 ? (
+      ) : !data || data.items.length === 0 ? (
         <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-12 text-center">
           <FileText size={36} className="text-slate-300 mx-auto mb-3" />
           <p className="text-slate-500 text-sm">No documents found</p>
         </div>
       ) : (
-        <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+        <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
           <div className="overflow-x-auto">
             <table className="w-full text-sm min-w-[900px]">
               <thead>
@@ -340,7 +341,7 @@ export default function AdminDocumentsPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {filtered.map(doc => (
+                {data.items.map(doc => (
                   <tr key={doc.id} className="hover:bg-slate-50 transition-colors">
                     <td className="px-5 py-3">
                       <p className="font-medium text-slate-900">{doc.name}</p>
@@ -392,6 +393,14 @@ export default function AdminDocumentsPage() {
               </tbody>
             </table>
           </div>
+          <PaginationBar
+            page={page}
+            totalPages={data.totalPages}
+            totalItems={data.totalItems}
+            perPage={perPage}
+            onPageChange={setPage}
+            label="documents"
+          />
         </div>
       )}
 

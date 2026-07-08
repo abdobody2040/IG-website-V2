@@ -1,7 +1,7 @@
-import { useState, useMemo } from 'react'
+import { useState } from 'react'
 import { Building2, Search, Edit2, Trash2 } from 'lucide-react'
 import { useQueryClient } from '@tanstack/react-query'
-import { useAllCompanies } from '../../hooks/useAdminData'
+import { useCompanies } from '../../hooks/useAdminData'
 import { useRequireAdmin } from '../../hooks/useRequireAuth'
 import { pb } from '../../lib/pocketbase'
 import toast from 'react-hot-toast'
@@ -10,27 +10,30 @@ import { logAdminAction } from '../../hooks/useAdminAuditLog'
 import { DeleteConfirmModal } from '../../components/DeleteConfirmModal'
 import { EditCompanyModal } from './EditCompanyModal'
 import { COMPANY_STATUS_OPTIONS, COMPLIANCE_COLORS, STATUS_COLORS, formatDate, renderBadge } from './adminUtils'
+import { PaginationBar } from '../../components/PaginationBar'
 
 // ── Main Page ─────────────────────────────────────────────────────
 export default function AdminCompaniesPage() {
   const { isLoading: authLoading } = useRequireAdmin()
-  const { companies, isLoading } = useAllCompanies()
-  const queryClient = useQueryClient()
-
+  
+  const [page, setPage] = useState(1)
+  const perPage = 20
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
+  const [complianceFilter, setComplianceFilter] = useState('all')
   const [editingCompany, setEditingCompany] = useState<Company | null>(null)
   const [deletingCompany, setDeletingCompany] = useState<Company | null>(null)
   const [deleteLoading, setDeleteLoading] = useState(false)
 
-  const filtered = useMemo(() => {
-    return companies.filter(c => {
-      const q = search.toLowerCase()
-      const matchSearch = !search || c.companyName?.toLowerCase().includes(q)
-      const matchStatus = statusFilter === 'all' || c.status === statusFilter
-      return matchSearch && matchStatus
-    })
-  }, [companies, search, statusFilter])
+  const { data, isLoading } = useCompanies({
+    page,
+    perPage,
+    search,
+    status: statusFilter,
+    compliance: complianceFilter,
+  })
+
+  const queryClient = useQueryClient()
 
   if (authLoading) return <div className="flex items-center justify-center h-screen"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#1a56ff]" /></div>
 
@@ -62,7 +65,7 @@ export default function AdminCompaniesPage() {
         <div className="flex items-center gap-2 mb-0.5">
           <Building2 className="h-5 w-5 text-[#1a56ff]" />
           <h2 className="text-xl font-bold text-slate-900">All Companies</h2>
-          <span className="bg-slate-100 text-slate-600 text-xs font-medium px-2 py-0.5 rounded-full">{companies.length}</span>
+          <span className="bg-slate-100 text-slate-600 text-xs font-medium px-2 py-0.5 rounded-full">{data?.totalItems || 0}</span>
         </div>
         <p className="text-slate-500 text-sm mt-0.5">Manage registered companies and their formation details</p>
       </div>
@@ -75,13 +78,13 @@ export default function AdminCompaniesPage() {
             type="text"
             placeholder="Search by company name"
             value={search}
-            onChange={e => setSearch(e.target.value)}
+            onChange={e => { setSearch(e.target.value); setPage(1); }}
             className="pl-9 pr-4 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:border-[#1a56ff] bg-white w-64"
           />
         </div>
         <select
           value={statusFilter}
-          onChange={e => setStatusFilter(e.target.value)}
+          onChange={e => { setStatusFilter(e.target.value); setPage(1); }}
           className="py-2 px-3 text-sm border border-slate-200 rounded-lg focus:outline-none focus:border-[#1a56ff] bg-white"
         >
           <option value="all">All Statuses</option>
@@ -89,7 +92,18 @@ export default function AdminCompaniesPage() {
             <option key={opt.value} value={opt.value}>{opt.label}</option>
           ))}
         </select>
-        <span className="py-2 text-sm text-slate-500">{filtered.length} compan{filtered.length !== 1 ? 'ies' : 'y'}</span>
+        <select
+          value={complianceFilter}
+          onChange={e => { setComplianceFilter(e.target.value); setPage(1); }}
+          className="py-2 px-3 text-sm border border-slate-200 rounded-lg focus:outline-none focus:border-[#1a56ff] bg-white"
+        >
+          <option value="all">All Compliance</option>
+          <option value="overdue">🔴 Overdue</option>
+          <option value="due_soon">🟡 Due Soon (≤30 days)</option>
+          <option value="compliant">🟢 Compliant</option>
+          <option value="no_dates">⚪ No Dates Set</option>
+        </select>
+        <span className="py-2 text-sm text-slate-500">{data?.totalItems || 0} compan{data?.totalItems !== 1 ? 'ies' : 'y'}</span>
       </div>
 
       {/* Table */}
@@ -98,13 +112,13 @@ export default function AdminCompaniesPage() {
           <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#1a56ff]" />
           <span className="text-slate-500 text-sm">Loading companies…</span>
         </div>
-      ) : filtered.length === 0 ? (
+      ) : !data || data.items.length === 0 ? (
         <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-12 text-center">
           <Building2 size={36} className="text-slate-300 mx-auto mb-3" />
           <p className="text-slate-500 text-sm">No companies found</p>
         </div>
       ) : (
-        <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+        <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
           <div className="overflow-x-auto">
             <table className="w-full text-sm min-w-[1000px]">
               <thead>
@@ -115,7 +129,7 @@ export default function AdminCompaniesPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {filtered.map(company => (
+                {data.items.map(company => (
                   <tr key={company.id} className="hover:bg-slate-50 transition-colors">
                     <td className="px-5 py-3">
                       <p className="font-medium text-slate-900">{company.companyName}</p>
@@ -154,6 +168,14 @@ export default function AdminCompaniesPage() {
               </tbody>
             </table>
           </div>
+          <PaginationBar
+            page={page}
+            totalPages={data.totalPages}
+            totalItems={data.totalItems}
+            perPage={perPage}
+            onPageChange={setPage}
+            label="companies"
+          />
         </div>
       )}
 

@@ -1,12 +1,14 @@
 # Instant Grow — Architecture Decisions
 
-## ADR-001: Supabase as Backend
+## ADR-001: Supabase as Backend (SUPERCEDED)
 
-**Title:** Use Supabase (Auth + PostgreSQL + RLS) as primary backend
+**Title:** [SUPERCEDED by ADR-010] Use Supabase (Auth + PostgreSQL + RLS) as primary backend
+
+**Status:** SUPERCEDED — Migrated to PocketBase (local/self-hosted SQLite backend) as detailed in ADR-010. Former benefits and trade-offs are kept for historical context.
 
 **Why Chosen:**
-- Provides auth, database, storage, and edge functions in one platform
-- Row-Level Security enables fine-grained access control without backend code
+- Provided auth, database, storage, and edge functions in one platform
+- Row-Level Security enabled fine-grained access control without backend code
 - PostgreSQL is production-grade and scales well
 - Generous free tier for development
 - Built-in auth with multiple providers (Google OAuth)
@@ -29,8 +31,7 @@
 - Edge Functions are Deno-only (not Node.js)
 
 **Future Implications:**
-- If migrating away, PostgreSQL schema is portable
-- Real-time subscriptions can be enabled without architecture changes
+- Migrated successfully to PocketBase (SQLite) to lower cost to $0 and simplify local development.
 
 ---
 
@@ -189,64 +190,56 @@
 
 ---
 
-## ADR-007: Edge Functions for Serverless Logic
+## ADR-007: Edge Functions for Serverless Logic (SUPERCEDED)
 
-**Title:** Use Supabase Edge Functions (Deno) for serverless backend
+**Title:** Use Cloudflare Workers for serverless backend (replaces Deno Supabase Edge Functions)
 
 **Why Chosen:**
-- Co-located with Supabase project
-- Deno runtime is secure by default
-- Fast cold starts compared to Node.js Lambda
-- No additional infrastructure to manage
+- Cloudflare Workers are globally distributed with zero cold starts.
+- Fully compatible with Node.js modules and standard web APIs.
+- Co-located with Cloudflare R2 storage for fast operations.
+- Free tier is very generous (100k requests/day).
 
 **Alternatives Considered:**
-- Cloudflare Workers: Better edge distribution but different runtime
-- AWS Lambda: More complex setup, slower cold starts
-- Vercel Functions: Tied to Vercel deployment
+- Supabase Edge Functions (Deno): Migrated away when migrating to PocketBase.
+- AWS Lambda: High cold starts, complex setup.
 
 **Pros:**
-- Integrated with Supabase ecosystem
-- TypeScript support natively
-- Sub-millisecond cold starts
-- Free tier available
+- Exceptional edge performance.
+- Easy deployment via Wrangler CLI.
+- No cold starts.
 
 **Cons:**
-- Deno-specific APIs (not Node.js compatible)
-- Limited package ecosystem compared to npm
-- Debugging is more difficult than local Node.js
+- Separate deployment required (handled via Wrangler/Cloudflare Pages).
 
 **Future Implications:**
-- Functions are portable to other Deno hosts (Deno Deploy, Fly.io)
-- Can be migrated to Cloudflare Workers with adaptation
+- Serverless Workers are easily maintainable and cheap/free at current scale.
 
 ---
 
-## ADR-008: Dual Storage (R2 + Supabase Storage)
+## ADR-008: Dual Storage (R2 + PocketBase Storage)
 
-**Title:** Cloudflare R2 as primary storage, Supabase Storage as fallback
+**Title:** Cloudflare R2 as primary storage, PocketBase Storage as fallback
 
 **Why Chosen:**
-- R2 is S3-compatible, no egress fees, global CDN
-- Supabase Storage provides built-in fallback with no additional setup
-- Abstracted behind upload endpoint so switching is trivial
+- R2 is S3-compatible, has no egress fees, and has a global CDN.
+- PocketBase Storage provides a built-in fallback using the local SQLite db / filesystem without any third-party cloud configuration.
+- Abstracted behind useDocumentUpload hook and upload-validator endpoint.
 
 **Alternatives Considered:**
-- AWS S3: Egress fees, more complex IAM setup
-- Supabase Storage only: Limited to Supabase region
-- Local filesystem: Not scalable
+- AWS S3: High egress fees.
+- PocketBase Storage only: OK for local/dev, but R2 is preferred in production to offload file serving from the VPS.
 
 **Pros:**
-- Cost-effective at scale (no egress fees)
-- Global distribution via Cloudflare CDN
-- Graceful degradation with fallback
+- Cost-effective at scale.
+- No egress fees with R2.
+- Local development works completely offline using PocketBase storage fallback.
 
 **Cons:**
-- Two systems to maintain
-- R2 requires a Worker proxy for uploads
+- R2 requires a Worker proxy for client uploads.
 
 **Future Implications:**
-- Easy to switch storage providers behind the upload abstraction
-- R2 can serve as origin for Cloudflare Images transforms
+- Easy to swap storage backends behind the client upload abstraction.
 
 ---
 
@@ -307,4 +300,29 @@
 **Future Implications:**
 - Scaling can be achieved by running PocketBase on any low-cost VPS (e.g. Hetzner, DigitalOcean) with automated daily SQLite backups.
 - Local tests can run without hitting cloud rate-limits.
+
+---
+
+## ADR-011: Database-Level Stripe Sync Hooks
+
+**Title:** Sync PocketBase services to Stripe via database-level JSVM event hooks
+
+**Why Chosen:**
+- Whenever admins modify or create services in the PocketBase Admin panel, changes must reflect on Stripe immediately to ensure consistency.
+- Doing this via database-level hooks guarantees synchronization regardless of the client (REST API, direct Go/admin interface, or seed scripts).
+- Eliminates manual sync efforts and keeps Stripe inventory and pricing metadata 100% aligned.
+
+**Alternatives Considered:**
+- Synchronize from the frontend (Vite React app): Relies on client network stability, bypasses backend security, and risks incomplete transactions.
+- Periodic cron jobs to sync: Leads to state divergence between database and Stripe, causing checkout errors for newly added services.
+
+**Pros:**
+- Complete atomicity: Database changes and Stripe updates happen in the same lifecycle transaction.
+- Scoped strictly to the `services` collection to prevent side effects on other collections.
+- Safe fallback handles cases when Stripe secret key is not in environment without crashing local development or seeding.
+
+**Cons:**
+- Increases database model save latency slightly due to blocking Stripe API calls (mitigated by fast HTTP request handlers).
+- Relies on isolated Goja context execution where global functions must be scoped locally inside each event callback.
+
 

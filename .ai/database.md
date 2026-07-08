@@ -11,106 +11,39 @@
 ## Entity Relationship Diagram
 
 ```
-┌───────────────┐
-│  auth.users   │  (managed by Supabase Auth)
-└───────┬───────┘
-        │ 1:1
-┌───────▼──────────┐
-│    profiles      │  extends auth.users with role, display_name, etc.
-├──────────────────┤
-│ id (PK, FK→auth) │
-│ email            │
-│ display_name     │
-│ role (client|admin) │
-│ last_sign_in     │
-│ email_verified   │
-│ phone            │
-│ country          │
-│ address          │
-│ metadata (JSON)  │
+┌──────────────────┐
+│      users       │  (PocketBase Auth Collection)
 └───────┬──────────┘
         │
-        │ 1:N
-┌───────▼──────────┐     ┌─────────────────────┐
-│     orders       │─────│   order_updates      │
-├──────────────────┤ 1:N ├─────────────────────┤
-│ id (PK)          │     │ id (PK)             │
-│ user_id (FK)     │     │ order_id (FK)       │
-│ order_number (UQ)│     │ status              │
-│ package_name     │     │ message             │
-│ company_name     │     │ created_by          │
-│ company_state    │     │ created_at          │
-│ company_type     │     └─────────────────────┘
-│ status           │
-│ amount           │
-│ currency         │
-│ customer_name    │
-│ customer_email   │
-│ customer_phone   │
-│ customer_country │
-│ customer_address │
-│ business_activity│
-│ stripe_session_id (UQ)│
-│ notes            │
-│ created_at       │
-│ updated_at       │
-└───────┬──────────┘
+        ├──────────────────────┐
+        │ 1:N                  │ 1:N
+┌───────▼──────────┐    ┌──────▼───────────┐
+│   workspaces     │◄───┤workspace_members │
+├──────────────────┤ 1  ├──────────────────┤
+│ id (PK)          │    │ id (PK)          │
+│ name             │    │ workspace (FK)   │
+│ owner (FK→users) │    │ user (FK→users)  │
+│ created/updated  │    │ role (admin/etc) │
+└───────┬──────────┘    └──────────────────┘
         │
-        │ 1:N
-┌───────▼──────────┐
-│    companies     │
-├──────────────────┤
-│ id (PK)          │
-│ user_id (FK)     │
-│ order_id (FK)    │
-│ company_name     │
-│ company_type     │
-│ state            │
-│ status           │
-│ ein_number       │
-│ formation_date   │
-│ registered_agent │
-│ renewal_due_date │
-│ annual_report_due_date│
-│ tax_filing_due_date   │
-│ registered_agent_renewal_date│
-│ compliance_status│
-│ compliance_notes │
-│ created_at       │
-│ updated_at       │
-└───────┬──────────┘
-        │
-        │ 1:N
-┌───────▼──────────┐
-│   documents      │
-├──────────────────┤
-│ id (PK)          │
-│ user_id (FK)     │
-│ order_id (FK)    │
-│ company_id (FK)  │
-│ name             │
-│ type (duplicate) │
-│ doc_type         │
-│ file_url         │
-│ file_name        │
-│ status           │
-│ notes            │
-│ created_at       │
-│ updated_at       │
-└──────────────────┘
+        ├──────────────────────┬──────────────────────┐
+        │ 1:N                  │ 1:N                  │ 1:N
+┌───────▼──────────┐    ┌──────▼───────────┐   ┌──────▼───────────┐
+│     orders       │    │    companies     │   │    documents     │
+├──────────────────┤    ├──────────────────┤   ├──────────────────┤
+│ id (PK)          │    │ id (PK)          │   │ id (PK)          │
+│ user (FK→users)  │    │ user (FK→users)  │   │ user (FK→users)  │
+│ workspace (FK)   │    │ workspace (FK)   │   │ workspace (FK)   │
+│ order_number     │    │ order (FK→orders)│   │ order (FK→orders)│
+│ status           │    │ company_name     │   │ company (FK)     │
+│ created/updated  │    │ status           │   │ name / doc_type  │
+└──────────────────┘    │ created/updated  │   │ created/updated  │
+                        └──────────────────┘   └──────────────────┘
 
 ┌──────────────────┐     ┌─────────────────────────┐
 │    payments      │     │ notification_preferences │
 ├──────────────────┤     ├─────────────────────────┤
 │ id (PK)          │     │ id (PK)                 │
-│ user_id (FK)     │     │ user_id (FK, UQ)        │
-│ order_id (FK)    │     │ role                    │
-│ invoice_id (UQ)  │     │ email_enabled           │
-│ service          │     │ order_updates           │
-│ amount           │     │ payment_updates         │
-│ currency         │     │ document_updates        │
-│ status           │     │ marketing_emails        │
-│ stripe_payment_id│     │ order_placed            │
 │ notes            │     │ order_status_changed    │
 │ created_at       │     │ document_ready          │
 │ updated_at       │     │ payment_received        │
@@ -140,41 +73,55 @@
 
 ## Table Details
 
-### profiles
-- **Purpose:** Extends `auth.users` with application-specific fields
-- **PK:** `id` (references `auth.users(id)`)
-- **Key Fields:** `role` (client/admin), `email_verified`, `last_sign_in`
-- **Triggers:** `on_auth_user_created` — auto-creates profile on signup
+### users
+- **Purpose:** User accounts (PocketBase Auth Collection)
+- **PK:** `id` (15-char string)
+- **Key Fields:** `role` (client/admin), `emailVerified`, `last_sign_in`, `metadata` (JSON containing preferences and API tokens)
 - **RLS:** Users read/update own; admins full access
+
+### workspaces
+- **Purpose:** Multi-tenant containers representing B2B accounts/organizations
+- **PK:** `id` (15-char string)
+- **FK:** `owner` → users(id)
+- **Key Fields:** `name` (workspace name)
+- **RLS:** Owners and members have access
+
+### workspace_members
+- **Purpose:** Junction table linking users to workspaces with specific roles
+- **PK:** `id` (15-char string)
+- **FK:** `workspace` → workspaces(id) ON DELETE CASCADE, `user` → users(id) ON DELETE CASCADE
+- **Key Fields:** `role` ('admin' | 'member' | 'viewer')
+- **RLS:** Workspace members have view access; admins have manage access
 
 ### orders
 - **Purpose:** Formation and add-on service orders
-- **PK:** `id` (UUID v4)
-- **Unique:** `order_number`, `stripe_session_id`
+- **PK:** `id` (15-char string)
+- **Unique:** `order_number`
+- **FK:** `user` → users(id), `workspace` → workspaces(id)
 - **Status Enum:** pending, in_review, processing, documents_filed, ein_processing, completed, cancelled, in_progress
-- **FK:** `user_id` → profiles(id)
-- **RLS:** Users own rows; admins all
+- **RLS:** Workspace members own rows; admins all
 
 ### order_updates
 - **Purpose:** Status history/audit trail for orders
-- **PK:** `id` (UUID v4)
-- **FK:** `order_id` → orders(id) ON DELETE CASCADE
-- **RLS:** Visible to order owner and admins
+- **PK:** `id` (15-char string)
+- **FK:** `order` → orders(id) ON DELETE CASCADE
+- **RLS:** Visible to workspace members and admins
 
 ### companies
 - **Purpose:** Formed legal entities
-- **PK:** `id` (UUID v4)
-- **FK:** `user_id` → profiles(id), `order_id` → orders(id)
+- **PK:** `id` (15-char string)
+- **FK:** `user` → users(id), `order` → orders(id), `workspace` → workspaces(id)
 - **Status:** pending, active, suspended, completed, dissolved
 - **Compliance Status:** not_started, up_to_date, due_soon, overdue, completed
-- **RLS:** Users own rows; admins all
+- **RLS:** Workspace members own rows; admins all
 
 ### documents
 - **Purpose:** Legal documents and filings
-- **PK:** `id` (UUID v4)
-- **FK:** `user_id` → profiles(id), `order_id` → orders(id), `company_id` → companies(id)
+- **PK:** `id` (15-char string)
+- **FK:** `user` → users(id), `order` → orders(id), `company` → companies(id), `workspace` → workspaces(id)
 - **Status:** pending, ready, uploaded, approved, rejected
 - **Note:** Has duplicate `type` and `doc_type` columns (tech debt)
+- **RLS:** Workspace members own rows; admins all
 - **RLS:** Users own rows; admins all
 
 ### payments
@@ -212,28 +159,32 @@
 
 ## Relations Summary
 
-| Table A | Relation | Table B | FK Column | On Delete |
-|---------|----------|---------|-----------|-----------|
-| profiles | 1:1 | auth.users | id | CASCADE |
-| orders | N:1 | profiles | user_id | RESTRICT |
-| order_updates | N:1 | orders | order_id | CASCADE |
-| companies | N:1 | profiles | user_id | RESTRICT |
-| companies | N:1 | orders | order_id | RESTRICT |
-| documents | N:1 | profiles | user_id | RESTRICT |
-| documents | N:1 | orders | order_id | RESTRICT |
-| documents | N:1 | companies | company_id | RESTRICT |
-| payments | N:1 | profiles | user_id | RESTRICT |
-| payments | N:1 | orders | order_id | RESTRICT |
-| contact_messages | N:1 | profiles | user_id | RESTRICT |
-| notification_preferences | 1:1 | profiles | user_id | RESTRICT |
+| Collection A | Relation | Collection B | FK Field | On Delete |
+|--------------|----------|--------------|----------|-----------|
+| workspaces   | N:1      | users        | owner    | RESTRICT  |
+| workspace_members | N:1  | workspaces   | workspace| CASCADE   |
+| workspace_members | N:1  | users        | user     | CASCADE   |
+| orders       | N:1      | users        | user     | RESTRICT  |
+| orders       | N:1      | workspaces   | workspace| RESTRICT  |
+| order_updates| N:1      | orders       | order    | CASCADE   |
+| companies    | N:1      | users        | user     | RESTRICT  |
+| companies    | N:1      | orders       | order    | RESTRICT  |
+| companies    | N:1      | workspaces   | workspace| RESTRICT  |
+| documents    | N:1      | users        | user     | RESTRICT  |
+| documents    | N:1      | orders       | order    | RESTRICT  |
+| documents    | N:1      | companies    | company  | RESTRICT  |
+| documents    | N:1      | workspaces   | workspace| RESTRICT  |
+| payments     | N:1      | users        | user     | RESTRICT  |
+| payments     | N:1      | orders       | order    | RESTRICT  |
+| contact_messages | N:1  | users        | user     | RESTRICT  |
+| notification_preferences | 1:1 | users | user     | RESTRICT  |
 
 ## Migration Rules
 
-1. All schema changes require a SQL migration in `supabase/migrations/`
-2. Migration files are prefixed with date: `YYYYMMDD_description.sql`
-3. After running migration, update `schema.sql` to reflect the current schema
-4. Migrations must be idempotent (use `IF NOT EXISTS` / `add column if not exists`)
-5. Never delete a migration file (database state depends on history)
+1. All schema changes are defined in the schema file: [pb_schema.json](file:///g:/Vibe%20coding/IG%20website%20V2/pocketbase/pb_schema.json)
+2. PocketBase handles schema updates via migrations stored in `pocketbase/pb_migrations/`.
+3. To generate a migration after changing collections in the Admin UI, run `pocketbase migrate collections`.
+4. Ensure schema updates are tested locally before committing `pb_schema.json` or migrations.
 
 ## Indexing Strategy
 
@@ -244,39 +195,51 @@ Current indexes:
 - Primary keys on all tables (auto-indexed)
 
 Recommended additional indexes:
-- `orders.user_id` — for user order lookups (frequently queried)
+- `orders.user` — for user order lookups (frequently queried)
 - `orders.status` — for admin filtering
-- `companies.user_id` — for user company lookups
-- `documents.user_id` — for user document lookups
-- `order_updates.order_id` — for status history lookups
-- `payments.user_id` — for user payment history
+- `companies.user` — for user company lookups
+- `documents.user` — for user document lookups
+- `order_updates.order` — for status history lookups
+- `payments.user` — for user payment history
 
 ## Backup Strategy
 
-- Backups stored in `backups/` directory as JSON files
-- Each backup is timestamped: `YYYY-MM-DDTHH-MM-SS-sssZ/`
-- Tables backed up individually as `.json` files
-- Schema backed up as `schema.local.sql`
-- **Production:** Enable automated Supabase backups (Pro plan includes daily backups)
-- **Before migrations:** Always take a manual backup
+- PocketBase backups can be managed manually or via scripts under the pocketbase `backups/` directory or zip exports.
+- **Production:** Run a daily server cron job backing up `pocketbase/pb_data/data.db` (the SQLite database file).
+- **Before migrations:** Always take a copy of `data.db`.
 
 ## Transaction Rules
 
-- Edge Functions use implicit transactions (single `await` calls)
-- For multi-table operations, rely on Supabase/REST atomicity
-- No explicit BEGIN/COMMIT (not available via REST API)
-- For critical multi-table writes, use Supabase Edge Functions with service role
+- PocketBase operations are atomic at the request level.
+- Multi-table transactions can be created server-side within JSVM hooks (e.g. `pb_hooks/` scripts) or via transactions API if supported.
+- Cloudflare Workers coordinates multi-step inserts with error rollback if needed.
 
 ## Soft Delete Policy
 
 - **Current:** Hard deletes used (no soft delete pattern)
-- **Recommendation:** Add `deleted_at` timestamptz column for soft deletes
-- RLS policies should filter `WHERE deleted_at IS NULL` for non-admin queries
+- **Recommendation:** Add `deleted_at` column for soft deletes
+- API rules should filter `deleted_at = null` for non-admin queries
 - Admin queries can include deleted records
 
 ## Audit Logging Policy
 
 - **Order status changes:** Tracked in `order_updates` table with `created_by` field
 - **Profile changes:** No audit log (consider adding trigger-based audit)
-- **Admin actions:** No audit log (consider adding for compliance)
-- **Edge Functions:** Log via `console.log`/`console.error` (viewable in Supabase logs)
+- **Admin actions:** Audit logs collection stores administrative action events
+- **Edge Functions:** Log via `console.log`/`console.error` (viewable in Cloudflare Worker logs)
+
+## PocketBase JSVM Database Hooks
+
+PocketBase v0.22.x supports server-side JavaScript VM (Goja) event hooks placed in the `pocketbase/pb_hooks` directory. These hooks act as database-level event triggers.
+
+### services.pb.js
+- **Purpose**: Automatically synchronizes services created or updated by admins in PocketBase directly to Stripe.
+- **Events**:
+  - `onModelBeforeCreate`: Fired when a new service record is created.
+  - `onModelBeforeUpdate`: Fired when an existing service record is modified.
+- **Rules & Scoping**:
+  - Explicit table checks using `e.model.tableName() === "services"` ensure that hooks only run for the `services` collection.
+  - Function helper methods (`formUrlEncode`, `getStripeSecret`) are defined inline inside the callbacks to ensure correct scoping in the isolated Goja execution context.
+  - Returns normally (no `e.next()` invocation) to succeed, and throws errors to block transactions and reject database creation/updates.
+  - If `STRIPE_SECRET_KEY` is not present, it logs a clean warning and skips calls to make offline seeding/testing resilient.
+

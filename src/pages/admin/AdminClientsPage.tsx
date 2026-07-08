@@ -1,8 +1,8 @@
-import { useState, useMemo } from 'react'
+import { useState } from 'react'
 import { Users, Search, Edit2, Trash2, X, Loader2, Shield, CheckCircle, XCircle, Eye, UserPlus, Download, UserRoundPlus, MessageSquare } from 'lucide-react'
 import { DeleteConfirmModal } from '../../components/DeleteConfirmModal'
 import { Link } from '@tanstack/react-router'
-import { useAllUsers, useAllOrders } from '../../hooks/useAdminData'
+import { useUsers, useAllOrders } from '../../hooks/useAdminData'
 import { useRequireAdmin } from '../../hooks/useRequireAuth'
 import { pb } from '../../lib/pocketbase'
 import { useQueryClient } from '@tanstack/react-query'
@@ -12,6 +12,7 @@ import type { User } from '../../types/db'
 import InviteClientModal from '../../components/InviteClientModal'
 import AddClientModal from '../../components/AddClientModal'
 import SendMessageModal from '../../components/SendMessageModal'
+import { Skeleton } from '../../components/ui/Skeleton'
 
 // ── Status Badge ────────────────────────────────────────────────
 function RoleBadge({ role }: { role: string }) {
@@ -189,13 +190,12 @@ function EditUserDrawer({
 // ── Main Page ─────────────────────────────────────────────────────
 export default function AdminClientsPage() {
   const { isLoading: authLoading } = useRequireAdmin()
-  const { users, isLoading } = useAllUsers()
-  const { orders } = useAllOrders()
   const queryClient = useQueryClient()
   const { exportCsv } = useExportCsv()
 
   const [search, setSearch] = useState('')
   const [roleFilter, setRoleFilter] = useState('all')
+  const [page, setPage] = useState(1)
   const [editingUser, setEditingUser] = useState<User | null>(null)
   const [deletingUser, setDeletingUser] = useState<User | null>(null)
   const [deleteLoading, setDeleteLoading] = useState(false)
@@ -203,16 +203,13 @@ export default function AdminClientsPage() {
   const [showAddModal, setShowAddModal] = useState(false)
   const [messagingUser, setMessagingUser] = useState<User | null>(null)
 
-  const filtered = useMemo(() => {
-    return users.filter(u => {
-      const q = search.toLowerCase()
-      const matchSearch = !search ||
-        u.email?.toLowerCase().includes(q) ||
-        u.displayName?.toLowerCase().includes(q)
-      const matchRole = roleFilter === 'all' || u.role === roleFilter
-      return matchSearch && matchRole
-    })
-  }, [users, search, roleFilter])
+  const { data, isLoading } = useUsers({ page, perPage: 20, search, role: roleFilter })
+  // We still need all orders to calculate total spend... Or just use the hook and live with it for now.
+  const { orders } = useAllOrders()
+
+  const filtered = data?.items || []
+  const totalPages = data?.totalPages || 1
+  const totalItems = data?.totalItems || 0
 
   if (authLoading) return <div className="flex items-center justify-center h-screen"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#1a56ff]" /></div>
 
@@ -263,7 +260,7 @@ export default function AdminClientsPage() {
         <div className="flex items-center gap-2 mb-0.5">
           <Users className="h-5 w-5 text-[#1a56ff]" />
           <h2 className="text-xl font-bold text-slate-900">All Clients</h2>
-          <span className="bg-slate-100 text-slate-600 text-xs font-medium px-2 py-0.5 rounded-full">{users.length}</span>
+          <span className="bg-slate-100 text-slate-600 text-xs font-medium px-2 py-0.5 rounded-full">{totalItems}</span>
         </div>
         <p className="text-slate-500 text-sm mt-0.5">View, edit, and manage all registered users</p>
       </div>
@@ -276,13 +273,13 @@ export default function AdminClientsPage() {
             type="text"
             placeholder="Search by name or email"
             value={search}
-            onChange={e => setSearch(e.target.value)}
+            onChange={e => { setSearch(e.target.value); setPage(1); }}
             className="pl-9 pr-4 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:border-[#1a56ff] bg-white w-72"
           />
         </div>
         <select
           value={roleFilter}
-          onChange={e => setRoleFilter(e.target.value)}
+          onChange={e => { setRoleFilter(e.target.value); setPage(1); }}
           className="py-2 px-3 text-sm border border-slate-200 rounded-lg focus:outline-none focus:border-[#1a56ff] bg-white"
         >
           <option value="all">All Roles</option>
@@ -322,9 +319,41 @@ export default function AdminClientsPage() {
 
       {/* Table */}
       {isLoading ? (
-        <div className="flex items-center gap-3 py-12 justify-center">
-          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#1a56ff]" />
-          <span className="text-slate-500 text-sm">Loading users…</span>
+        <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+          <table className="w-full text-sm min-w-[900px]">
+            <thead>
+              <tr className="border-b border-slate-100 bg-slate-50">
+                <th className="px-5 py-3 text-left"><Skeleton className="h-4 w-24" /></th>
+                <th className="px-5 py-3 text-left"><Skeleton className="h-4 w-16" /></th>
+                <th className="px-5 py-3 text-left"><Skeleton className="h-4 w-24" /></th>
+                <th className="px-5 py-3 text-left"><Skeleton className="h-4 w-16" /></th>
+                <th className="px-5 py-3 text-left"><Skeleton className="h-4 w-20" /></th>
+                <th className="px-5 py-3 text-left"><Skeleton className="h-4 w-20" /></th>
+                <th className="px-5 py-3 text-left"><Skeleton className="h-4 w-40" /></th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {[1, 2, 3, 4, 5].map(i => (
+                <tr key={i}>
+                  <td className="px-5 py-3">
+                    <div className="flex items-center gap-3">
+                      <Skeleton className="w-8 h-8 rounded-full" />
+                      <div>
+                        <Skeleton className="h-4 w-28 mb-1" />
+                        <Skeleton className="h-3 w-32" />
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-5 py-3"><Skeleton className="h-5 w-16 rounded-full" /></td>
+                  <td className="px-5 py-3"><Skeleton className="h-4 w-24" /></td>
+                  <td className="px-5 py-3"><Skeleton className="h-4 w-8" /></td>
+                  <td className="px-5 py-3"><Skeleton className="h-4 w-16" /></td>
+                  <td className="px-5 py-3"><Skeleton className="h-4 w-20" /></td>
+                  <td className="px-5 py-3"><Skeleton className="h-8 w-40" /></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       ) : filtered.length === 0 ? (
         <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-12 text-center">
@@ -406,6 +435,31 @@ export default function AdminClientsPage() {
               </tbody>
             </table>
           </div>
+          
+          {/* Pagination Controls */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between px-5 py-3 border-t border-slate-100 bg-slate-50">
+              <span className="text-sm text-slate-500">
+                Page {page} of {totalPages}
+              </span>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setPage(p => Math.max(1, p - 1))}
+                  disabled={page === 1}
+                  className="px-3 py-1 text-sm border border-slate-200 rounded-md bg-white text-slate-600 disabled:opacity-50 hover:bg-slate-50"
+                >
+                  Previous
+                </button>
+                <button
+                  onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                  disabled={page === totalPages}
+                  className="px-3 py-1 text-sm border border-slate-200 rounded-md bg-white text-slate-600 disabled:opacity-50 hover:bg-slate-50"
+                >
+                  Next
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       )}
 

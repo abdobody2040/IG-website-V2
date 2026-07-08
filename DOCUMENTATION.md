@@ -1,6 +1,6 @@
 # Instant Grow – Full Application Documentation
 
-> LLC & LTD company formation service. Built with **Vite + React + TypeScript + Tailwind CSS**, backed by **Supabase** (auth + database), **Cloudflare R2** (file storage), **Stripe** (payments), and **Resend** (transactional email).
+> LLC & LTD company formation service. Built with **Vite + React + TypeScript + Tailwind CSS**, backed by **PocketBase** (auth + database), **Cloudflare R2** (file storage), **Stripe** (payments), and **Resend** (transactional email).
 
 ---
 
@@ -68,8 +68,8 @@ npm run build
 | 3D               | `@react-three/fiber` + `@react-three/drei`                   |
 | Toasts           | `react-hot-toast`                                             |
 | Drag-and-Drop    | `@dnd-kit/core`                                               |
-| Auth + Database  | Supabase (`@supabase/supabase-js`)                            |
-| File Storage     | Cloudflare R2 (with Supabase Storage fallback)                |
+| Auth + Database  | PocketBase (`pocketbase` SDK)                                  |
+| File Storage     | Cloudflare R2 (with PocketBase Storage fallback)              |
 | Payments         | Stripe (Checkout Sessions)                                    |
 | Email            | Resend (via HTTP API)                                         |
 
@@ -81,33 +81,32 @@ Create a `.env` file in the project root:
 
 ```env
 # ── Required ──────────────────────────────────────────────
-VITE_SUPABASE_URL=https://your-project.supabase.co
-VITE_SUPABASE_ANON_KEY=eyJ...your-anon-key
+VITE_PB_URL=http://127.0.0.1:8090
 
 # ── Optional (features degrade gracefully without these) ──
-VITE_CHECKOUT_ENDPOINT=https://your-domain.com/functions/v1/create-checkout
-VITE_R2_UPLOAD_ENDPOINT=https://your-r2-proxy.workers.dev/upload
-VITE_EMAIL_ENDPOINT=https://your-domain.com/functions/v1/send-email
+VITE_CHECKOUT_ENDPOINT=https://create-checkout.your-subdomain.workers.dev
+VITE_R2_UPLOAD_ENDPOINT=https://upload-validator.your-subdomain.workers.dev
+VITE_EMAIL_ENDPOINT=https://send-email.your-subdomain.workers.dev
 ```
 
 | Variable                   | Required | Description                                                                 |
 |----------------------------|----------|-----------------------------------------------------------------------------|
-| `VITE_SUPABASE_URL`        | Yes      | Your Supabase project URL                                                   |
-| `VITE_SUPABASE_ANON_KEY`   | Yes      | Supabase anonymous/public API key                                           |
+| `VITE_PB_URL`              | Yes      | Your PocketBase project API URL                                             |
 | `VITE_CHECKOUT_ENDPOINT`   | No       | URL to the Stripe checkout serverless function                              |
-| `VITE_R2_UPLOAD_ENDPOINT`  | No       | URL to Cloudflare R2 upload proxy. Falls back to Supabase Storage if absent |
+| `VITE_R2_UPLOAD_ENDPOINT`  | No       | URL to Cloudflare R2 upload proxy. Falls back to PocketBase storage if absent|
 | `VITE_EMAIL_ENDPOINT`      | No       | URL to email sending endpoint (Resend). Emails are skipped if absent        |
 
 The serverless functions (`functions/`) also need these server-side env vars:
 
 | Variable                 | Where                | Description                           |
 |--------------------------|----------------------|---------------------------------------|
-| `STRIPE_SECRET_KEY`      | Edge Function / Worker | Stripe secret key                    |
-| `STRIPE_WEBHOOK_SECRET`  | Stripe Webhook handler | Webhook signing secret               |
-| `SUPABASE_URL`           | Edge Function / Worker | Supabase project URL                 |
-| `SUPABASE_SERVICE_ROLE_KEY` | Edge Function / Worker | Server-only key for webhook writes |
-| `ALLOWED_ORIGIN`         | Edge Function / Worker | Production frontend origin for CORS  |
-| `RESEND_API_KEY`         | Email endpoint         | Resend API key (free tier available)  |
+| `STRIPE_SECRET_KEY`      | Cloudflare Worker    | Stripe secret key                    |
+| `STRIPE_WEBHOOK_SECRET`  | Stripe Webhook Worker | Webhook signing secret               |
+| `PB_URL`                 | Cloudflare Workers   | PocketBase project URL                |
+| `PB_ADMIN_EMAIL`         | Cloudflare Workers   | PocketBase superuser/admin email      |
+| `PB_ADMIN_PASSWORD`      | Cloudflare Workers   | PocketBase superuser/admin password   |
+| `ALLOWED_ORIGIN`         | Cloudflare Workers   | Production frontend origin for CORS  |
+| `RESEND_API_KEY`         | Email Worker         | Resend API key (free tier available)  |
 
 ---
 
@@ -131,10 +130,10 @@ swyftform-clone/
 │   ├── logo.png                        # Instant Grow logo
 │   └── vite.svg
 │
-├── supabase/
-│   └── schema.sql                      # Full database schema + RLS policies + triggers
+├── pocketbase/
+│   └── pb_schema.json                  # PocketBase schema definitions
 │
-├── functions/                          # Serverless functions (Deno-based, for Supabase Edge Functions)
+├── functions/                          # Cloudflare Workers serverless logic
 │   ├── create-checkout/
 │   │   └── index.ts                    # Stripe Checkout Session creation (formation + add-on)
 │   └── stripe-webhook/
@@ -150,7 +149,7 @@ swyftform-clone/
     ├── style.css                       # Extra style sheet
     │
     ├── lib/
-    │   ├── supabase.ts                 # Supabase client initialization
+    │   ├── pocketbase.ts               # PocketBase client initialization
     │   └── utils.ts                    # cn() utility (clsx + twMerge)
     │
     ├── types/
@@ -161,12 +160,12 @@ swyftform-clone/
     │   └── translations.ts            # All translation strings (English + Arabic)
     │
     ├── hooks/
-    │   ├── useAuth.ts                  # Auth state hook (Supabase session + profile role)
+    │   ├── useAuth.ts                  # Auth state hook (PocketBase session + syncLastSignIn)
     │   ├── useRequireAuth.ts           # Auth guard hooks (useRequireAuth, useRequireAdmin)
-    │   ├── useOrders.ts                # Fetch user's orders from Supabase
-    │   ├── useCompanies.ts             # Fetch user's companies from Supabase
-    │   ├── useDocuments.ts             # Fetch user's documents from Supabase
-    │   ├── useDocumentUpload.ts        # Upload files to R2 or Supabase Storage + create DB record
+    │   ├── useOrders.ts                # Fetch user's orders from PocketBase
+    │   ├── useCompanies.ts             # Fetch user's companies from PocketBase
+    │   ├── useDocuments.ts             # Fetch user's documents from PocketBase
+    │   ├── useDocumentUpload.ts        # Upload files to R2 or PocketBase Storage + create DB record
     │   ├── useServiceCheckout.ts       # Add-on service Stripe checkout
     │   ├── useEmailNotifications.ts    # Email notification functions (order confirmation, status updates, etc.)
     │   └── useAdminData.ts             # Admin hooks: useAllOrders, useAllUsers, useAllCompanies, useAllDocuments, useAllPayments
@@ -413,7 +412,7 @@ All tables have RLS enabled. Key policies:
 
 ## Authentication
 
-Authentication uses **Supabase Auth** with two methods:
+Authentication uses **PocketBase Auth** with two methods:
 
 1. **Email/Password** — Standard signup/login through `/auth/signup` and `/auth/login`
 2. **Google OAuth** — "Continue with Google" button on both login and signup pages
@@ -422,9 +421,9 @@ Authentication uses **Supabase Auth** with two methods:
 
 ```
 User clicks Google OAuth
-  → Supabase redirects to Google
+  → PocketBase redirects to Google provider
   → Google callback returns to /auth/callback
-  → AuthCallbackPage resolves user role from profiles table
+  → AuthCallbackPage resolves user details and role from PocketBase
   → Admin → /admin
   → Client → /client/dashboard
 ```
@@ -433,16 +432,16 @@ User clicks Google OAuth
 
 | Hook              | File                        | Purpose                                    |
 |-------------------|-----------------------------|---------------------------------------------|
-| `useAuth()`       | `src/hooks/useAuth.ts`      | Returns `{ user, isLoading, isAuthenticated }`. Fetches profile role from Supabase. |
+| `useAuth()`       | `src/hooks/useAuth.ts`      | Returns `{ user, isLoading, isAuthenticated }`. Synchronizes and stores auth state. |
 | `useRequireAuth()`| `src/hooks/useRequireAuth.ts`| Auth guard: redirects to `/auth/login` if not authenticated. |
 | `useRequireAdmin()`| `src/hooks/useRequireAuth.ts`| Admin guard: redirects non-admins to `/client/dashboard`. |
 
-### Google OAuth Configuration (Supabase Dashboard)
+### Google OAuth Configuration (PocketBase Dashboard)
 
-1. Go to **Authentication → Providers → Google** in your Supabase dashboard
-2. Add your Google OAuth Client ID and Client Secret
-3. Set the redirect URL to: `https://your-domain.com/auth/callback`
-4. Enable the Google provider
+1. Go to **Settings → Auth providers → Google** in your PocketBase Admin panel.
+2. Add your Google OAuth Client ID and Client Secret (obtained from Google Cloud Console).
+3. Set the authorized redirect URI to: `http://localhost:8090/api/oauth2-redirect` or your production PocketBase equivalent.
+4. Enable the Google provider.
 
 ---
 
@@ -456,7 +455,7 @@ User clicks Google OAuth
 | `useOrders`             | `src/hooks/useOrders.ts`          | Fetch orders for a user                                    |
 | `useCompanies`          | `src/hooks/useCompanies.ts`       | Fetch companies for a user                                 |
 | `useDocuments`          | `src/hooks/useDocuments.ts`       | Fetch documents for a user                                 |
-| `useDocumentUpload`     | `src/hooks/useDocumentUpload.ts`  | Upload files to R2/Supabase Storage + create DB record     |
+| `useDocumentUpload`     | `src/hooks/useDocumentUpload.ts`  | Upload files to R2/PocketBase Storage + create DB record   |
 | `useServiceCheckout`    | `src/hooks/useServiceCheckout.ts` | Initiate Stripe Checkout for add-on services               |
 | `useEmailNotifications` | `src/hooks/useEmailNotifications.ts` | Send transactional emails (order, status, payment, etc.) |
 | `useAllOrders`          | `src/hooks/useAdminData.ts`       | Admin: fetch all orders                                    |
@@ -469,7 +468,7 @@ User clicks Google OAuth
 
 ## Serverless Functions
 
-Located in `functions/`, designed as **Deno-based edge functions** (deployable to Supabase Edge Functions or Cloudflare Workers).
+Located in `functions/`, designed as **Cloudflare Workers** (deployable to Cloudflare Edge).
 
 ### `functions/create-checkout/index.ts`
 
@@ -543,36 +542,25 @@ A language toggle button appears in the Navbar and order page header, switching 
 
 ---
 
-## Supabase Setup
+## PocketBase Setup
 
-### 1. Create a Supabase Project
+### 1. Run PocketBase locally
 
-1. Go to [supabase.com](https://supabase.com) and create a new project
-2. Copy the **Project URL** and **anon/public key** from Settings → API
+1. Download PocketBase from [pocketbase.io](https://pocketbase.io) or run the pre-installed executable in the `pocketbase/` directory.
+2. Start the local server: `./pocketbase serve` (runs on `http://127.0.0.1:8090` by default).
 
-### 2. Run the Database Schema
+### 2. Schema and Migrations
 
-1. Open the **SQL Editor** in your Supabase dashboard
-2. Paste the contents of `supabase/schema.sql`
-3. Run the query — this creates all tables, triggers, and RLS policies
+1. Collection configurations are defined in `pocketbase/pb_schema.json` and are applied via migrations in `pocketbase/pb_migrations/`.
+2. Access the Admin UI at `http://127.0.0.1:8090/_/` to inspect collections, users, and logs.
 
-### 3. Enable Google OAuth
+### 3. Seeding Database
 
-1. Go to **Authentication → Providers → Google**
-2. Enter your Google OAuth Client ID and Secret (from [Google Cloud Console](https://console.cloud.google.com/apis/credentials))
-3. Set authorized redirect URI in Google Console: `https://<your-supabase-project>.supabase.co/auth/v1/callback`
+Run the seeding script to populate services, blogs, SEO country pages, and mock client/admin users:
 
-### 4. Set Environment Variables
-
-Add `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` to your `.env` file.
-
-### 5. (Optional) Create Supabase Storage Bucket
-
-If not using Cloudflare R2, create a `documents` bucket in Supabase Storage:
-
-1. Go to **Storage** in your Supabase dashboard
-2. Create a new bucket named `documents`
-3. Set it to **public** if you want public document URLs
+```bash
+npm run db:seed
+```
 
 ---
 
@@ -682,30 +670,27 @@ Set the same environment variables from the [Environment Variables](#environment
 
 ### Serverless Functions Deployment
 
-#### Supabase Edge Functions
+Serverless functions are deployed as Cloudflare Workers using Wrangler.
 
 ```bash
-# Install Supabase CLI
-npm install -g supabase
+# 1. Login to Cloudflare
+npx wrangler login
 
-# Link your project
-supabase link --project-ref your-project-ref
+# 2. Deploy each worker
+cd functions/create-checkout && npx wrangler deploy
+cd ../stripe-webhook && npx wrangler deploy
+cd ../submit-contact && npx wrangler deploy
+cd ../delete-user && npx wrangler deploy
 
-# Deploy functions
-supabase functions deploy create-checkout
-supabase functions deploy stripe-webhook
-
-# Set secrets
-supabase secrets set STRIPE_SECRET_KEY=sk_live_...
-supabase secrets set STRIPE_WEBHOOK_SECRET=whsec_...
-supabase secrets set SUPABASE_URL=https://your-project.supabase.co
-supabase secrets set SUPABASE_SERVICE_ROLE_KEY=...
-supabase secrets set ALLOWED_ORIGIN=https://your-domain.com
+# 3. Configure secrets on Cloudflare Dashboard or via Wrangler
+npx wrangler secret put STRIPE_SECRET_KEY
+npx wrangler secret put STRIPE_WEBHOOK_SECRET
+npx wrangler secret put PB_URL
+npx wrangler secret put PB_ADMIN_EMAIL
+npx wrangler secret put PB_ADMIN_PASSWORD
+npx wrangler secret put RESEND_API_KEY
+npx wrangler secret put ALLOWED_ORIGIN
 ```
-
-#### Cloudflare Workers (Alternative)
-
-You can also adapt and deploy the functions as Cloudflare Workers using `wrangler`.
 
 ---
 
@@ -740,10 +725,5 @@ npm run check:css-classes # Check CSS class usage
 
 ## Known Limitations
 
-1. **`emailVerified` field**: Always shows `0` — Supabase `auth.users` is not directly queryable from the client. Needs a server-side function to sync verification status.
-
-2. **`lastSignIn` field**: Shows `"—"` in admin views — Supabase stores this in `auth.users` which isn't accessible via the anon key. A server-side function would be needed to expose this.
-
-3. **No real-time subscriptions**: The app uses polling via React Query. Supabase real-time could be added for live updates on order status changes.
-
-4. **No password reset flow**: Not yet implemented. Supabase provides `resetPasswordForEmail()` which could be wired up.
+1. **Self-hosted database VMs**: Since PocketBase uses SQLite, it requires running as a persistent process on a VM or VPS.
+2. **Database scaling limits**: SQLite performs all writes sequentially, which means it cannot scale horizontally to multiple write nodes. However, for Instant Grow's typical formation volumes, SQLite is more than fast enough.

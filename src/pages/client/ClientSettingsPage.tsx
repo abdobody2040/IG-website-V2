@@ -4,6 +4,7 @@ import ClientLayout from './ClientLayout'
 import { pb } from '../../lib/pocketbase'
 import { useAuth } from '../../hooks/useAuth'
 import { useLang } from '../../i18n/LanguageContext'
+import { useEmailVerificationSync } from '../../hooks/useEmailVerificationSync'
 import toast from 'react-hot-toast'
 
 interface NotifPrefs {
@@ -47,6 +48,8 @@ export default function ClientSettingsPage() {
   const { t } = useLang()
   const sp = t.client.settingsPage
   const { user } = useAuth()
+  // Sync email verification status in real-time when admin verifies account (B-001)
+  useEmailVerificationSync()
   const [saving, setSaving] = useState(false)
   const [displayName, setDisplayName] = useState('')
   const [phone, setPhone] = useState('')
@@ -61,15 +64,41 @@ export default function ClientSettingsPage() {
   useEffect(() => {
     if (!user) return
     setDisplayName(user.displayName ?? '')
+    
+    try {
+      const meta = typeof user.metadata === 'string' 
+        ? JSON.parse(user.metadata || '{}') 
+        : (user.metadata || {})
+        
+      if (meta.prefs) {
+        setPrefs(meta.prefs)
+      }
+    } catch (e) {
+      // Ignore parse error
+    }
   }, [user])
 
   const handleSave = async () => {
     if (!user?.id) return
     setSaving(true)
     try {
+      const updates: Record<string, any> = {}
       if (displayName && displayName !== user.displayName) {
-        const { error: updateErr } = await pb.collection('profiles').update(user.id, { display_name: displayName })
-        if (updateErr) throw updateErr
+        updates.display_name = displayName
+      }
+      
+      const currentMetadata = typeof user.metadata === 'string' 
+        ? JSON.parse(user.metadata || '{}') 
+        : (user.metadata || {})
+        
+      const newMetadata = { ...currentMetadata, prefs }
+      
+      if (JSON.stringify(currentMetadata.prefs) !== JSON.stringify(prefs)) {
+        updates.metadata = JSON.stringify(newMetadata)
+      }
+      
+      if (Object.keys(updates).length > 0) {
+        await pb.collection('users').update(user.id, updates)
       }
       toast.success(sp.saved)
     } catch {
@@ -107,12 +136,36 @@ export default function ClientSettingsPage() {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1.5">{sp.emailAddress}</label>
-                  <input
-                    type="email"
-                    value={user?.email ?? ''}
-                    disabled
-                    className="w-full border border-slate-200 rounded-lg px-3 py-2.5 text-sm bg-slate-50 text-slate-400 cursor-not-allowed"
-                  />
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="email"
+                      value={user?.email ?? ''}
+                      disabled
+                      className="flex-1 border border-slate-200 rounded-lg px-3 py-2.5 text-sm bg-slate-50 text-slate-400 cursor-not-allowed"
+                    />
+                    {user?.emailVerified ? (
+                      <span className="flex items-center gap-1.5 text-xs font-semibold text-green-600 bg-green-50 px-2.5 py-1.5 rounded-lg border border-green-200">
+                        <Shield size={14} />
+                        Verified
+                      </span>
+                    ) : (
+                      <button
+                        onClick={async () => {
+                          if (user?.email) {
+                            try {
+                              await pb.collection('users').requestVerification(user.email);
+                              toast.success('Verification email sent!');
+                            } catch (e) {
+                              toast.error('Failed to send verification email.');
+                            }
+                          }
+                        }}
+                        className="flex-shrink-0 text-xs font-semibold text-[#1a56ff] bg-blue-50 hover:bg-blue-100 px-3 py-2 rounded-lg transition-colors border border-blue-200"
+                      >
+                        Verify Email
+                      </button>
+                    )}
+                  </div>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1.5">{sp.phoneNumber}</label>

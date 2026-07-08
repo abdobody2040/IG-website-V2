@@ -9,7 +9,7 @@ This roadmap lists the remaining work needed to turn the current application int
 - `npm audit` currently reports `0 vulnerabilities`.
 - Production integrations are not fully connected yet because local environment values are placeholders.
 
-## Phase 1: Supabase Foundation
+## Phase 1: PocketBase Foundation
 
 Priority: Critical
 
@@ -17,16 +17,14 @@ Goal: Make authentication, profiles, orders, companies, documents, payments, and
 
 Tasks:
 
-- Create a production Supabase project.
-- Run `supabase/schema.sql` in the Supabase SQL Editor.
-- Run `supabase/migrations/20260424_add_order_customer_columns.sql`.
-- Run `supabase/migrations/20260503_add_update_last_sign_in_rpc.sql`.
+- Create a production PocketBase instance.
+- Configure collections and rules via `pocketbase/pb_schema.json`.
+- Run SQL seeds (`pocketbase/seed-sql/`) to populate countries and blog data.
+- Sync admin superuser account.
 - Create a real `.env.local` or deployment environment with:
-  - `VITE_SUPABASE_URL`
-  - `VITE_SUPABASE_ANON_KEY`
-- Create the first admin account safely.
-- Verify Row Level Security policies with both client and admin users.
-- Create a `documents` Supabase Storage bucket if Cloudflare R2 is not used.
+  - `VITE_PB_URL`
+- Verify API access rules with both client and admin users.
+- Ensure fallback to PocketBase local storage works if Cloudflare R2 is not used.
 
 Done when:
 
@@ -45,15 +43,16 @@ Goal: Deploy all backend functions and remove any non-production SDK usage.
 Tasks:
 
 - Completed: removed the remaining `@blinkdotnew/sdk` import from `functions/create-checkout/index.ts`.
-- Use Supabase-compatible server-side code where database access is needed.
-- Deploy:
-  - `functions/create-checkout/index.ts`
-  - `functions/stripe-webhook/index.ts`
-  - `functions/submit-contact/index.ts`
-  - `functions/delete-user/index.ts`
+- Use PocketBase Admin API / SDK in serverless code where database access is needed.
+- Deploy Cloudflare Workers:
+  - `functions/create-checkout/`
+  - `functions/stripe-webhook/`
+  - `functions/submit-contact/`
+  - `functions/delete-user/`
 - Configure server-side secrets:
-  - `SUPABASE_URL`
-  - `SUPABASE_SERVICE_ROLE_KEY`
+  - `PB_URL`
+  - `PB_ADMIN_EMAIL`
+  - `PB_ADMIN_PASSWORD`
   - `STRIPE_SECRET_KEY`
   - `STRIPE_WEBHOOK_SECRET`
   - `ALLOWED_ORIGIN`
@@ -104,9 +103,9 @@ Goal: Make legal document upload, storage, and client delivery production-safe.
 Tasks:
 
 - Choose final storage provider:
-  - Supabase Storage for simplicity.
+  - PocketBase Local Storage for simplicity.
   - Cloudflare R2 for production file hosting.
-- If using R2, deploy an upload proxy Worker and set `VITE_R2_UPLOAD_ENDPOINT`.
+- If using R2, deploy upload-validator Worker and set `VITE_R2_UPLOAD_ENDPOINT`.
 - Enforce file size and MIME type limits.
 - Confirm document uploads from admin pages.
 - Confirm clients can view/download only their own documents.
@@ -134,14 +133,14 @@ Completed:
   - `registered_agent_renewal_date`
   - `compliance_status`
   - `compliance_notes`
-- Added Supabase migration `20260522_add_company_compliance_dates.sql`.
+- Added collection schema updates under `pocketbase/pb_schema.json`.
 - Added client dashboard "Next Renewal" snapshot.
 - Added client company "Renewals & Compliance" card.
 - Added admin company edit controls for renewal dates and compliance status.
 
 Remaining:
 
-- Run the new migration on the live Supabase database.
+- Ensure schema migrations are applied to the production database.
 - Add automated reminders before due dates.
 - Add admin filters for due soon and overdue companies.
 - Add notification emails for renewal reminders.
@@ -186,8 +185,8 @@ Tasks:
 - Add password reset request page.
 - Add password update page after reset link.
 - Configure Google OAuth for production redirect URLs.
-- Sync email verification status from Supabase Auth into profiles.
-- Sync or expose last sign-in data through a secure server-side function.
+- Sync email verification status from PocketBase Auth.
+- Sync or expose last sign-in data through PocketBase authentication listeners.
 - Review `/setup` behavior and remove or restrict demo account creation before launch.
 - Add account deletion or support-request flow if required by policy.
 
@@ -236,9 +235,9 @@ Goal: Reduce production risk before launch.
 Tasks:
 
 - Re-run `npm audit`.
-- Review RLS policies manually.
-- Confirm service role key is never exposed to frontend.
-- Set strict `ALLOWED_ORIGIN` on functions.
+- Review PocketBase collection API rules manually.
+- Confirm admin credentials are never exposed to frontend.
+- Set strict `ALLOWED_ORIGIN` on Cloudflare Workers.
 - Enable Turnstile on contact form if spam is a concern.
 - Confirm security headers in `public/_headers`.
 - Confirm HTTPS-only deployment.
@@ -251,7 +250,7 @@ Done when:
 - `npm audit` reports `0 vulnerabilities`.
 - No secrets are committed.
 - Admin-only operations cannot be called by clients.
-- Function CORS and webhook signature checks are enforced.
+- Worker CORS and webhook signature checks are enforced.
 
 ## Phase 9: Performance And Polish
 
@@ -292,10 +291,10 @@ Tasks:
 - Configure output directory: `dist`.
 - Add all production environment variables.
 - Connect production domain.
-- Configure Supabase auth redirect URLs.
-- Configure Stripe webhook production URL.
+- Configure PocketBase auth redirect URLs (Google provider redirect URI).
+- Configure Stripe webhook production URL on the Stripe Dashboard.
 - Run a full live-mode smoke test.
-- Create backup and monitoring routine.
+- Create backup and monitoring routine for PocketBase.
 - Document admin operating procedures.
 
 Done when:
@@ -306,7 +305,7 @@ Done when:
 
 ## Recommended Next Sprint
 
-1. Connect a real Supabase project.
-2. Deploy checkout and webhook functions.
+1. Deploy PocketBase to production VM (e.g. Fly.io, DigitalOcean).
+2. Deploy Cloudflare Workers via Wrangler.
 3. Complete one successful Stripe test payment.
 4. Verify the resulting order appears in both client and admin portals.

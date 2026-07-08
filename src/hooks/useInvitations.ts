@@ -69,16 +69,12 @@ export function useInvitations() {
 
 export function useInvitationByToken(token: string | null) {
   return useQuery({
-    queryKey: ['invitation', token],
+    queryKey: ['invitations', token],
     queryFn: async () => {
       if (!token) return null
       try {
-        // Invitations are looked up by email filter for the invite flow
-        const result = await pb.collection('invitations').getList(1, 1, {
-          filter: `id = "${token}" && status = "pending"`,
-        })
-        if (result.items.length === 0) return null
-        return mapInvitation(result.items[0] as unknown as Record<string, unknown>)
+        const item = await pb.collection('invitations').getOne(token)
+        return mapInvitation(item)
       } catch {
         return null
       }

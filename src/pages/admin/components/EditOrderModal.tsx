@@ -56,6 +56,27 @@ export function EditOrderModal({ order, onClose, onSaved }: { order: Order; onCl
           created_at: new Date().toISOString(),
         })
         if (insertErr) throw insertErr
+
+        // Fire webhook to Make/Zapier
+        const webhookUrl = import.meta.env.VITE_ORDER_WEBHOOK_URL
+        if (webhookUrl) {
+          try {
+            await fetch(webhookUrl, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                event: 'order.status.updated',
+                orderId: order.id,
+                status: form.status,
+                orderNumber: order.orderNumber,
+                companyName: form.companyName,
+                timestamp: new Date().toISOString()
+              })
+            })
+          } catch (err) {
+            console.error('Failed to trigger order webhook', err)
+          }
+        }
       }
       toast.success('Order updated')
       onSaved()

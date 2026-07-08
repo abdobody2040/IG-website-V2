@@ -27,6 +27,8 @@ export default function InfiniteMarquee({ children, reverse, duration = 40 }: Pr
       >
         {children}
         {children}
+        {children}
+        {children}
       </div>
     </div>
   )

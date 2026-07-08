@@ -5,8 +5,13 @@ import { fileURLToPath } from 'url'
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 const PB_URL = process.env.PB_URL ?? 'http://127.0.0.1:8090'
-const ADMIN_EMAIL = process.argv[2] ?? process.env.PB_ADMIN_EMAIL ?? 'admin@example.com'
-const ADMIN_PASSWORD = process.argv[3] ?? process.env.PB_ADMIN_PASSWORD ?? 'admin123456'
+const ADMIN_EMAIL = process.argv[2] ?? process.env.PB_ADMIN_EMAIL
+const ADMIN_PASSWORD = process.argv[3] ?? process.env.PB_ADMIN_PASSWORD
+
+if (!ADMIN_EMAIL || !ADMIN_PASSWORD) {
+  console.error('Error: PB_ADMIN_EMAIL and PB_ADMIN_PASSWORD (or CLI arguments) must be set.');
+  process.exit(1);
+}
 
 const translations = {
   'why-stripe-doesnt-work-your-country': {

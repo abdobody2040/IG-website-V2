@@ -6,6 +6,7 @@ import { StatusBadge, STATUS_OPTIONS } from './StatusBadge'
 import type { Order } from '../../types/db'
 import toast from 'react-hot-toast'
 import { sendStatusUpdateEmail } from '../../hooks/useEmailNotifications'
+import { useUpdateOrderStatus } from '../../hooks/useAdminData'
 
 interface Props {
   order: Order
@@ -18,11 +19,12 @@ export function UpdateStatusModal({ order, onClose }: Props) {
   const [saving, setSaving] = useState(false)
   const [sendEmail, setSendEmail] = useState(true)
   const queryClient = useQueryClient()
+  const updateOrderStatus = useUpdateOrderStatus()
 
   const handleSave = async () => {
     setSaving(true)
     try {
-      await pb.collection('orders').update(order.id, { status })
+      await updateOrderStatus.mutateAsync({ orderId: order.id, status })
 
       // Log status change activity
       try {

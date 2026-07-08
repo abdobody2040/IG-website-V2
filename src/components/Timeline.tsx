@@ -1,6 +1,5 @@
-import { motion, useInView } from 'framer-motion'
-import { useRef } from 'react'
-import { FileText, CheckCircle, Hash, Landmark, Zap } from 'lucide-react'
+import { motion } from 'framer-motion'
+import { FileText, Shield, Landmark, Check } from 'lucide-react'
 import { useLang } from '../i18n/LanguageContext'
 
 const timelineSteps = [
@@ -8,84 +7,100 @@ const timelineSteps = [
     day: 'Day 1',
     dayAr: 'اليوم 1',
     label: 'Submit Your Info',
-    labelAr: 'تقديم معلوماتك',
-    icon: FileText,
-    color: '#2563EB',
-    bg: '#EFF6FF',
-    done: true,
+    labelAr: 'أرسل بياناتك',
+    type: 'outlined',
+    icon: 'file',
   },
   {
     day: 'Day 2',
     dayAr: 'اليوم 2',
     label: 'LLC Approved & Documents',
     labelAr: 'اعتماد الشركة والمستندات',
-    icon: CheckCircle,
-    color: '#7C3AED',
-    bg: '#F5F3FF',
-    done: true,
+    type: 'filled',
+    icon: 'check',
   },
   {
     day: 'Day 4',
     dayAr: 'اليوم 4',
     label: 'EIN Issued',
     labelAr: 'إصدار الرقم الضريبي',
-    icon: Hash,
-    color: '#059669',
-    bg: '#ECFDF5',
-    done: true,
+    type: 'outlined',
+    icon: 'shield',
   },
   {
     day: 'Day 6',
     dayAr: 'اليوم 6',
     label: 'Bank Account Assistance',
     labelAr: 'مساعدة فتح الحساب البنكي',
-    icon: Landmark,
-    color: '#D97706',
-    bg: '#FFFBEB',
-    done: false,
+    type: 'outlined',
+    icon: 'bank',
   },
   {
     day: 'Day 8',
     dayAr: 'اليوم 8',
     label: 'Stripe Account Ready',
     labelAr: 'حساب Stripe جاهز',
-    icon: Zap,
-    color: '#0284C7',
-    bg: '#F0F9FF',
-    done: false,
+    type: 'filled',
+    icon: 'stripe',
   },
 ]
 
 export default function Timeline() {
   const { lang } = useLang()
   const isAr = lang === 'ar'
-  const lineRefMobile = useRef<HTMLDivElement>(null)
-  const lineRefDesktop = useRef<HTMLDivElement>(null)
-  const inViewMobile = useInView(lineRefMobile, { once: true, margin: '-100px' })
-  const inViewDesktop = useInView(lineRefDesktop, { once: true, margin: '-100px' })
+
+  const renderIcon = (iconName: string) => {
+    switch (iconName) {
+      case 'file':
+        return <FileText className="w-6 h-6 text-[#1A56FF]" />
+      case 'check':
+        return <Check className="w-7 h-7 text-emerald-400 stroke-[3px]" />
+      case 'shield':
+        return (
+          <div className="relative flex items-center justify-center">
+            <Shield className="w-6 h-6 text-[#1A56FF]" />
+            <span className="absolute text-[8px] text-[#1A56FF] font-bold pb-0.5">★</span>
+          </div>
+        )
+      case 'bank':
+        return <Landmark className="w-6 h-6 text-[#1A56FF]" />
+      case 'stripe':
+        return (
+          <span className="text-white font-extrabold text-2xl select-none" style={{ fontFamily: 'system-ui, sans-serif' }}>
+            S
+          </span>
+        )
+      default:
+        return null
+    }
+  }
+
+  const lineStyle = isAr
+    ? { right: '-40px', left: '10%' }
+    : { left: '-40px', right: '10%' }
 
   return (
-    <section id="timeline" className="ig-section bg-white">
-      <div className="max-w-[1280px] mx-auto">
+    <section id="timeline" className="ig-section bg-white py-20">
+      <div className="max-w-[1280px] mx-auto px-5 sm:px-8 lg:px-10">
 
-        <div className="text-center mb-14">
+        <div className="text-center mb-16">
           <h2
-            className="text-4xl sm:text-[54px] font-bold text-[#0F172A] leading-tight tracking-tight mb-4"
+            className="text-3xl sm:text-[42px] font-bold text-[#0F172A] leading-tight tracking-tight mb-3"
             style={{ fontFamily: 'Sora, Inter, sans-serif' }}
           >
-            {isAr ? 'من البداية إلى النجاح في أيام' : 'From Start to Success in Just Days'}
+            {isAr ? 'من البداية إلى النجاح في أيام معدودة' : 'From Start to Success in Just Days'}
           </h2>
-          <p className="text-base sm:text-lg lg:text-xl text-slate-500 max-w-xl mx-auto">
+          <p className="text-sm sm:text-base text-slate-500 max-w-xl mx-auto">
             {isAr
-              ? 'خط زمني لإطلاق عملك التجاري'
-              : 'A step-by-step timeline to launch your business'}
+              ? 'خط زمني بسيط لإطلاق عملك التجاري.'
+              : 'A simple timeline to launch your business.'}
           </p>
         </div>
 
         {/* Mascot + Timeline row */}
         <div className="flex flex-col lg:flex-row items-center gap-14">
 
-          {/* Mascot — left (increased by 20%) */}
+          {/* Mascot — left */}
           <motion.div
             className="hidden lg:flex flex-col items-center shrink-0 w-56 xl:w-64"
             initial={{ opacity: 0, x: -24 }}
@@ -101,43 +116,30 @@ export default function Timeline() {
               <img
                 src="/mascot-timeline.png"
                 alt="Instant Grow Mascot"
-                className="w-full h-auto drop-shadow-xl"
+                className={`w-full h-auto drop-shadow-xl ${isAr ? 'scale-x-[-1]' : ''}`}
               />
             </motion.div>
           </motion.div>
 
           {/* Timeline steps */}
-          <div className="flex-1 relative">
-            {/* Vertical connector line (mobile) */}
-            <div className="lg:hidden absolute left-[27px] top-0 bottom-0 w-1 bg-gray-200" ref={lineRefMobile}>
-              <motion.div
-                className="w-full rounded-full origin-top"
-                style={{ background: 'linear-gradient(180deg, #2563EB, #7C3AED, #059669, #D97706, #0284C7)', height: '100%' }}
-                initial={{ scaleY: 0 }}
-                animate={{ scaleY: inViewMobile ? 1 : 0 }}
-                transition={{ duration: 1.5, delay: 0.2, ease: 'easeOut' }}
-              />
-            </div>
+          <div className="flex-1 w-full relative">
+            {/* Vertical connector line (mobile only) */}
+            <div className="lg:hidden absolute left-[40px] rtl:left-auto rtl:right-[40px] top-[40px] bottom-[40px] border-l-2 border-dashed border-blue-200 z-0" />
 
-            {/* Horizontal connector line (desktop) */}
-            <div className="hidden lg:block absolute top-[28px] left-[28px] right-[28px] h-1 bg-gray-200" ref={lineRefDesktop}>
-              <motion.div
-                className="h-full rounded-full origin-left"
-                style={{ background: 'linear-gradient(90deg, #2563EB, #7C3AED, #059669, #D97706, #0284C7)' }}
-                initial={{ scaleX: 0 }}
-                animate={{ scaleX: inViewDesktop ? 1 : 0 }}
-                transition={{ duration: 1.5, delay: 0.2, ease: 'easeOut' }}
-              />
-            </div>
+            {/* Horizontal connector line (desktop only) */}
+            <div
+              className="hidden lg:block absolute top-[40px] h-0.5 border-t border-dashed border-blue-200 z-0"
+              style={lineStyle}
+            />
 
             {/* Steps */}
-            <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 lg:gap-6 relative z-10">
+            <div className="grid grid-cols-1 lg:grid-cols-5 gap-y-10 gap-x-6 relative z-10">
               {timelineSteps.map((step, i) => {
-                const Icon = step.icon
+                const isFilled = step.type === 'filled'
                 return (
                   <motion.div
                     key={i}
-                    className="flex flex-row lg:flex-col items-start lg:items-center gap-5 lg:gap-4 lg:text-center"
+                    className="flex flex-row lg:flex-col items-center lg:items-center gap-5 lg:gap-4 lg:text-center"
                     initial={{ opacity: 0, y: 20 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
@@ -146,27 +148,24 @@ export default function Timeline() {
                     {/* Circle with icon */}
                     <div className="relative shrink-0">
                       <div
-                        className="w-14 h-14 rounded-full flex items-center justify-center border-2"
-                        style={{
-                          background: step.done ? step.color : '#fff',
-                          borderColor: step.color,
-                        }}
+                        className={`w-20 h-20 rounded-full flex items-center justify-center border-2 transition-all duration-300 ${
+                          isFilled
+                            ? 'bg-[#1A56FF] border-transparent shadow-[0_8px_30px_rgba(26,86,255,0.15)]'
+                            : 'bg-white border-slate-100 shadow-[0_8px_30px_rgba(0,0,0,0.03)]'
+                        }`}
                       >
-                        <Icon size={22} color={step.done ? '#fff' : step.color} />
+                        {renderIcon(step.icon)}
                       </div>
-                      {/* Pulse ring for active */}
-                      {i === 3 && (
-                        <span className="absolute -inset-2 rounded-full border-2 opacity-35 animate-ping"
-                          style={{ borderColor: step.color, animationDuration: '2s' }} />
-                      )}
                     </div>
 
-                    {/* Text */}
-                    <div>
-                      <p className="text-xs font-bold uppercase tracking-wider mb-1" style={{ color: step.color }}>
+                    {/* Text block */}
+                    <div className="flex flex-col lg:items-center">
+                      {/* Day Pill */}
+                      <span className="inline-flex items-center justify-center bg-[#E8EDFF] text-[#1A56FF] font-bold text-xs px-3.5 py-1 rounded-full mb-2 w-fit">
                         {isAr ? step.dayAr : step.day}
-                      </p>
-                      <p className="text-[15px] font-semibold text-[#0F172A] leading-snug">
+                      </span>
+                      {/* Label */}
+                      <p className="text-sm font-bold text-[#0F172A] leading-snug max-w-[150px] lg:max-w-none">
                         {isAr ? step.labelAr : step.label}
                       </p>
                     </div>

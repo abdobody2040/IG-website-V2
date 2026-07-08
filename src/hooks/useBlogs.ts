@@ -34,7 +34,10 @@ export function useBlogs(filters?: { published?: boolean; featured?: boolean; li
       const filterParts: string[] = []
       if (filters?.published !== undefined) filterParts.push(`published = ${filters.published}`)
       if (filters?.featured) filterParts.push('featured = true')
-      if (filters?.language) filterParts.push(`language = "${filters.language}"`)
+      // Allowlist: only 'en' and 'ar' are valid language values
+      if (filters?.language && ['en', 'ar'].includes(filters.language)) {
+        filterParts.push(`language = "${filters.language}"`)
+      }
 
       const result = await pb.collection('blogs').getList(1, filters?.limit ?? 200, {
         filter: filterParts.join(' && ') || undefined,

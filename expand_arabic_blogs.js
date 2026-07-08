@@ -8,9 +8,9 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 const GEMINI_API_KEY = 'YOUR_GEMINI_API_KEY';
 
 // 2. Your PocketBase Admin Credentials
-const PB_URL = 'http://127.0.0.1:8090';
-const ADMIN_EMAIL = 'instantgrow.net@gmail.com';
-const ADMIN_PASSWORD = 'YOUR_ADMIN_PASSWORD';
+const PB_URL = process.env.PB_URL || 'http://127.0.0.1:8090';
+const ADMIN_EMAIL = process.env.PB_ADMIN_EMAIL || 'admin@example.local';
+const ADMIN_PASSWORD = process.env.PB_ADMIN_PASSWORD || 'YOUR_ADMIN_PASSWORD';
 // ============================================================================
 
 async function run() {

@@ -17,15 +17,15 @@
 4. **Consistent Naming:**
    - Components: PascalCase (e.g., `ClientDashboardPage.tsx`)
    - Hooks: camelCase with `use` prefix (e.g., `useAuth.ts`)
-   - Utils: camelCase (e.g., `supabase.ts`)
+   - Utils: camelCase (e.g., `pocketbase.ts`)
    - Types: PascalCase (e.g., `Order.ts`)
    - Files: Match the exported name
 
 ## Architecture Boundaries
 
 1. **No Business Logic in Components:** Extract to hooks or services.
-2. **Hooks Call APIs:** Components call hooks. Hooks call Supabase/fetch.
-3. **No Direct Supabase in Components:** Use custom hooks for all DB access.
+2. **Hooks Call APIs:** Components call hooks. Hooks call PocketBase/fetch.
+3. **No Direct PocketBase in Components:** Use custom hooks for all DB access.
 4. **Types in `types/`:** All TypeScript interfaces in `types/` directory.
 5. **Components in `components/`:** Reusable UI components only.
 6. **Pages in `pages/`:** One file per route. Subdirectories for logical groups.
@@ -36,7 +36,7 @@
 2. **Query Keys follow pattern:** `[entity, identifier]` e.g., `['orders', userId]`
 3. **Error Handling:** Every query must handle loading, error, and empty states.
 4. **Mutations:** Use `useMutation` with `onSuccess` invalidation.
-5. **No raw SQL:** Use Supabase client methods (`.select()`, `.insert()`, etc.)
+5. **No raw SQL:** Use PocketBase SDK methods (`pb.collection().create()`, `getFullList()`, etc.)
 
 ## Environment Rules
 
@@ -61,8 +61,8 @@
 ## Testing Rules
 
 1. **Test Coverage:** All hooks must have unit tests.
-2. **API Mocks:** Mock Supabase client, not the network.
-3. **No Side Effects:** Tests should not depend on real Supabase data.
+2. **API Mocks:** Mock PocketBase client, not the network.
+3. **No Side Effects:** Tests should not depend on real PocketBase data.
 4. **Describe/It Pattern:** Use nested describe blocks for organization.
 
 ## Naming Conventions
@@ -84,12 +84,12 @@
 
 ## Database Access Rules
 
-1. **Client-Side:** Always through RLS (service role never exposed)
-2. **Edge Functions:** Use service role key for admin operations
-3. **Webhook:** Service role key for creating records
-4. **Migrations:** All schema changes through SQL migrations in `supabase/migrations/`
-5. **RLS Policies:** Required for every new table
-6. **No ON DELETE CASCADE:** Use application-level cleanup (see delete-user function)
+1. **Client-Side:** Enforced via PocketBase collection rules/RLS.
+2. **Edge Functions:** Cloudflare Workers use admin API privileges for administrative operations.
+3. **Webhook:** Webhook handler Worker uses admin credentials to create records.
+4. **Migrations:** Database schemas are defined in `pocketbase/pb_schema.json` and migrations are generated in `pocketbase/pb_migrations/`.
+5. **Collection Rules:** Access rules (RLS-like) must be set on every collection.
+6. **No ON DELETE CASCADE:** Use application-level cleanup (see delete-user Worker)
 
 ## Import Rules
 

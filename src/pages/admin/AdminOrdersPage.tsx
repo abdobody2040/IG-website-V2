@@ -1,14 +1,15 @@
-import { useState, useMemo } from 'react'
+import { useState } from 'react'
 import { ShoppingBag, Search, Edit2, Trash2, X, Loader2, Clock, Download } from 'lucide-react'
 import { DeleteConfirmModal } from '../../components/DeleteConfirmModal'
 import { useQueryClient } from '@tanstack/react-query'
-import { useAllOrders } from '../../hooks/useAdminData'
+import { useOrders } from '../../hooks/useAdminData'
 import { useRequireAdmin } from '../../hooks/useRequireAuth'
 import { pb } from '../../lib/pocketbase'
 import toast from 'react-hot-toast'
 import type { Order } from '../../types/db'
 import { logAdminAction } from '../../hooks/useAdminAuditLog'
 import { useExportCsv } from '../../hooks/useExportCsv'
+import { Skeleton } from '../../components/ui/Skeleton'
 
 const ORDER_STATUS_OPTIONS = [
   { value: 'pending', label: 'Pending' },
@@ -82,6 +83,27 @@ function EditOrderModal({
           recordId: order.id,
           details: { message: `Status changed from ${prevStatus} to ${status} by admin` },
         })
+
+        // Fire webhook to Make/Zapier
+        const webhookUrl = import.meta.env.VITE_ORDER_WEBHOOK_URL
+        if (webhookUrl) {
+          try {
+            await fetch(webhookUrl, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                event: 'order.status.updated',
+                orderId: order.id,
+                status,
+                orderNumber: order.orderNumber,
+                companyName,
+                timestamp: new Date().toISOString()
+              })
+            })
+          } catch (err) {
+            console.error('Failed to trigger order webhook', err)
+          }
+        }
       }
 
       toast.success('Order updated successfully')
@@ -244,27 +266,21 @@ function EditOrderModal({
 // ── Main Page ─────────────────────────────────────────────────────
 export default function AdminOrdersPage() {
   const { isLoading: authLoading } = useRequireAdmin()
-  const { orders, isLoading } = useAllOrders()
   const queryClient = useQueryClient()
 
   const { exportCsv } = useExportCsv()
 
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
+  const [page, setPage] = useState(1)
   const [editingOrder, setEditingOrder] = useState<Order | null>(null)
   const [deletingOrder, setDeletingOrder] = useState<Order | null>(null)
   const [deleteLoading, setDeleteLoading] = useState(false)
 
-  const filtered = useMemo(() => {
-    return orders.filter(o => {
-      const q = search.toLowerCase()
-      const matchSearch = !search ||
-        o.companyName?.toLowerCase().includes(q) ||
-        o.orderNumber?.includes(search)
-      const matchStatus = statusFilter === 'all' || o.status === statusFilter
-      return matchSearch && matchStatus
-    })
-  }, [orders, search, statusFilter])
+  const { data, isLoading } = useOrders({ page, perPage: 20, search, status: statusFilter })
+  const filtered = data?.items || []
+  const totalPages = data?.totalPages || 1
+  const totalItems = data?.totalItems || 0
 
   if (authLoading) return <div className="flex items-center justify-center h-screen"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#1a56ff]" /></div>
 
@@ -296,7 +312,7 @@ export default function AdminOrdersPage() {
         <div className="flex items-center gap-2 mb-0.5">
           <ShoppingBag className="h-5 w-5 text-[#1a56ff]" />
           <h2 className="text-xl font-bold text-slate-900">All Orders</h2>
-          <span className="bg-slate-100 text-slate-600 text-xs font-medium px-2 py-0.5 rounded-full">{orders.length}</span>
+          <span className="bg-slate-100 text-slate-600 text-xs font-medium px-2 py-0.5 rounded-full">{totalItems}</span>
         </div>
         <p className="text-slate-500 text-sm mt-0.5">Manage and update LLC formation orders</p>
       </div>
@@ -309,13 +325,13 @@ export default function AdminOrdersPage() {
             type="text"
             placeholder="Search company or order #"
             value={search}
-            onChange={e => setSearch(e.target.value)}
+            onChange={e => { setSearch(e.target.value); setPage(1); }}
             className="pl-9 pr-4 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:border-[#1a56ff] bg-white w-64"
           />
         </div>
         <select
           value={statusFilter}
-          onChange={e => setStatusFilter(e.target.value)}
+          onChange={e => { setStatusFilter(e.target.value); setPage(1); }}
           className="py-2 px-3 text-sm border border-slate-200 rounded-lg focus:outline-none focus:border-[#1a56ff] bg-white"
         >
           <option value="all">All Statuses</option>
@@ -344,9 +360,38 @@ export default function AdminOrdersPage() {
 
       {/* Table */}
       {isLoading ? (
-        <div className="flex items-center gap-3 py-12 justify-center">
-          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#1a56ff]" />
-          <span className="text-slate-500 text-sm">Loading orders…</span>
+        <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+          <table className="w-full text-sm min-w-[900px]">
+            <thead>
+              <tr className="border-b border-slate-100 bg-slate-50">
+                <th className="px-5 py-3 text-left"><Skeleton className="h-4 w-16" /></th>
+                <th className="px-5 py-3 text-left"><Skeleton className="h-4 w-24" /></th>
+                <th className="px-5 py-3 text-left"><Skeleton className="h-4 w-20" /></th>
+                <th className="px-5 py-3 text-left"><Skeleton className="h-4 w-16" /></th>
+                <th className="px-5 py-3 text-left"><Skeleton className="h-4 w-20" /></th>
+                <th className="px-5 py-3 text-left"><Skeleton className="h-4 w-16" /></th>
+                <th className="px-5 py-3 text-left"><Skeleton className="h-4 w-24" /></th>
+                <th className="px-5 py-3 text-left"><Skeleton className="h-4 w-20" /></th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {[1, 2, 3, 4, 5].map(i => (
+                <tr key={i}>
+                  <td className="px-5 py-3"><Skeleton className="h-4 w-20" /></td>
+                  <td className="px-5 py-3">
+                    <Skeleton className="h-4 w-32 mb-1" />
+                    <Skeleton className="h-3 w-24" />
+                  </td>
+                  <td className="px-5 py-3"><Skeleton className="h-4 w-24" /></td>
+                  <td className="px-5 py-3"><Skeleton className="h-4 w-16" /></td>
+                  <td className="px-5 py-3"><Skeleton className="h-6 w-24 rounded-full" /></td>
+                  <td className="px-5 py-3"><Skeleton className="h-4 w-20" /></td>
+                  <td className="px-5 py-3"><Skeleton className="h-4 w-32" /></td>
+                  <td className="px-5 py-3"><Skeleton className="h-8 w-32" /></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       ) : filtered.length === 0 ? (
         <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-12 text-center">
@@ -402,6 +447,31 @@ export default function AdminOrdersPage() {
               </tbody>
             </table>
           </div>
+          
+          {/* Pagination Controls */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between px-5 py-3 border-t border-slate-100 bg-slate-50">
+              <span className="text-sm text-slate-500">
+                Page {page} of {totalPages}
+              </span>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setPage(p => Math.max(1, p - 1))}
+                  disabled={page === 1}
+                  className="px-3 py-1 text-sm border border-slate-200 rounded-md bg-white text-slate-600 disabled:opacity-50 hover:bg-slate-50"
+                >
+                  Previous
+                </button>
+                <button
+                  onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                  disabled={page === totalPages}
+                  className="px-3 py-1 text-sm border border-slate-200 rounded-md bg-white text-slate-600 disabled:opacity-50 hover:bg-slate-50"
+                >
+                  Next
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       )}
 

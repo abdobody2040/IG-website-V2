@@ -9,6 +9,7 @@ import {
 import { LanguageProvider } from './i18n/LanguageContext'
 import { lazyImport } from './lib/lazyImport'
 import { waitForAuthReady, getAuthInfo } from './lib/authState'
+import { pb } from './lib/pocketbase'
 import Navbar from './components/Navbar'
 import Hero from './components/Hero'
 import TrustLogos from './components/TrustLogos'
@@ -26,7 +27,7 @@ import StickyCTABar from './components/StickyCTABar'
 import { MouseGlow, AmbientBackground } from './components/effects'
 import Lenis from 'lenis'
 import { useLang } from './i18n/LanguageContext'
-import { setPageMeta, injectJsonLd, generateOrganizationSchema, generateWebSiteSchema, getCanonical } from './lib/seo'
+import { setPageMeta, injectJsonLd, generateOrganizationSchema, generateWebSiteSchema, generateProfessionalServiceSchema, generateFaqSchema, getCanonical } from './lib/seo'
 
 import SupportWidget from './components/SupportWidget'
 
@@ -55,10 +56,47 @@ function LandingPage() {
     injectJsonLd({
       '@graph': [
         generateOrganizationSchema(),
-        generateWebSiteSchema()
+        generateWebSiteSchema(),
+        generateProfessionalServiceSchema(),
+        // FAQPage schema — keeps rich results in sync with the FAQ component (B-schema-landing)
+        generateFaqSchema(
+          (t.faq.items as unknown as Array<{ question: string; answer: string }>).map(item => ({
+            question: item.question,
+            answer: item.answer,
+          }))
+        ),
+        // ItemList of core services for rich search results
+        {
+          '@context': 'https://schema.org',
+          '@type': 'ItemList',
+          name: 'Company Formation Services',
+          itemListElement: [
+            {
+              '@type': 'ListItem',
+              position: 1,
+              name: 'US LLC Formation',
+              url: `${window.location.origin}/order`,
+              description: 'Form a US Limited Liability Company from anywhere in the world. Includes EIN, registered agent, and compliance support.',
+            },
+            {
+              '@type': 'ListItem',
+              position: 2,
+              name: 'UK LTD Formation',
+              url: `${window.location.origin}/order`,
+              description: 'Register a UK Private Limited Company with Companies House. Includes registered office address and UTR number.',
+            },
+            {
+              '@type': 'ListItem',
+              position: 3,
+              name: 'Add-On Services',
+              url: `${window.location.origin}/services`,
+              description: 'Business website, logo design, express processing, and other formation add-ons.',
+            },
+          ],
+        },
       ]
     })
-  }, [s])
+  }, [s, t])
 
   useEffect(() => {
     const lenis = new Lenis({ duration: 1.2, easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)) })
@@ -155,6 +193,12 @@ const resetPasswordRoute = createRoute({
   component: lazyImport(() => import('./pages/auth/ResetPasswordPage')),
 })
 
+const pendingConfirmationRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/auth/pending-confirmation',
+  component: lazyImport(() => import('./pages/auth/PendingConfirmationPage')),
+})
+
 // ── Order routes ───────────────────────────────────────────────────────────
 const orderRoute = createRoute({
   getParentRoute: () => rootRoute,
@@ -173,6 +217,42 @@ const requireAuthGuard = async () => {
   await waitForAuthReady()
   const info = getAuthInfo()
   if (!info.userId) throw redirect({ to: '/auth/login' })
+
+  // Ensure client users have paid and been confirmed by the admin before accessing client pages.
+  if (info.role === 'client') {
+    const cacheKey = `ig_has_paid_order_${info.userId}`
+    const hasPaidOrder = sessionStorage.getItem(cacheKey) === 'true'
+
+    if (!hasPaidOrder) {
+      let totalOrders = 0
+      let hasConfirmedOrder = false
+      try {
+        const orders = await pb.collection('orders').getList(1, 100, {
+          filter: `user = "${info.userId}"`,
+        })
+        totalOrders = orders.totalItems
+        hasConfirmedOrder = orders.items.some(
+          o => o.status !== 'pending' && o.status !== 'cancelled'
+        )
+        if (hasConfirmedOrder) {
+          sessionStorage.setItem(cacheKey, 'true')
+        }
+      } catch (err) {
+        console.error('Error verifying user orders:', err)
+        // Graceful degradation: in case of temp db/network error, allow user through
+        totalOrders = 1
+        hasConfirmedOrder = true
+      }
+
+      if (totalOrders === 0) {
+        throw redirect({ to: '/order' })
+      }
+
+      if (!hasConfirmedOrder) {
+        throw redirect({ to: '/auth/pending-confirmation' })
+      }
+    }
+  }
 }
 
 const dashboardRedirectRoute = createRoute({
@@ -243,6 +323,13 @@ const clientSettingsRoute = createRoute({
   path: '/client/settings',
   beforeLoad: requireAuthGuard,
   component: lazyImport(() => import('./pages/client/ClientSettingsPage')),
+})
+
+const clientWorkspaceSettingsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/client/workspace-settings',
+  beforeLoad: requireAuthGuard,
+  component: lazyImport(() => import('./pages/client/WorkspaceSettingsPage')),
 })
 
 // ── Admin routes ───────────────────────────────────────────────────────────
@@ -372,6 +459,27 @@ const adminPriceEditorRoute = createRoute({
   component: lazyImport(() => import('./pages/admin/AdminPriceEditorPage')),
 })
 
+const adminServicesRoute = createRoute({
+  getParentRoute: () => adminLayoutRoute,
+  path: '/admin/services',
+  beforeLoad: requireAdminGuard,
+  component: lazyImport(() => import('./pages/admin/AdminServicesPage')),
+})
+
+const adminPagesRoute = createRoute({
+  getParentRoute: () => adminLayoutRoute,
+  path: '/admin/pages',
+  beforeLoad: requireAdminGuard,
+  component: lazyImport(() => import('./pages/admin/AdminPagesPage')),
+})
+
+const adminPageEditorRoute = createRoute({
+  getParentRoute: () => adminLayoutRoute,
+  path: '/admin/pages/$id/edit',
+  beforeLoad: requireAdminGuard,
+  component: lazyImport(() => import('./pages/admin/AdminPageEditorPage')),
+})
+
 // ── SEO country routes ─────────────────────────────────────────────────────
 const seoCountryListRoute = createRoute({
   getParentRoute: () => rootRoute,
@@ -417,11 +525,6 @@ const contactRoute = createRoute({
   ),
 })
 
-const setupRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  path: '/setup',
-  component: lazyImport(() => import('./pages/SetupPage')),
-})
 
 const privacyPolicyRoute = createRoute({
   getParentRoute: () => rootRoute,
@@ -459,6 +562,30 @@ const kycAmlRoute = createRoute({
   component: lazyImport(() => import('./pages/KycAmlPage')),
 })
 
+const customPageRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/p/$slug',
+  component: lazyImport(() => import('./pages/CustomDynamicPage')),
+})
+
+const publicServicesRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/services',
+  component: lazyImport(() => import('./pages/ServicesPage')),
+})
+
+const serviceCategoryRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/services/$categorySlug',
+  component: lazyImport(() => import('./pages/ServiceCategoryPage')),
+})
+
+const serviceDetailRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/services/$categorySlug/$serviceSlug',
+  component: lazyImport(() => import('./pages/ServiceDetailPage')),
+})
+
 // ── Route tree ─────────────────────────────────────────────────────────────
 
 const adminTree = adminLayoutRoute.addChildren([
@@ -478,6 +605,9 @@ const adminTree = adminLayoutRoute.addChildren([
   adminSeoEditorRoute,
   adminHomeEditorRoute,
   adminPriceEditorRoute,
+  adminServicesRoute,
+  adminPagesRoute,
+  adminPageEditorRoute,
 ])
 
 const routeTree = rootRoute.addChildren([
@@ -488,6 +618,7 @@ const routeTree = rootRoute.addChildren([
   authCallbackRoute,
   forgotPasswordRoute,
   resetPasswordRoute,
+  pendingConfirmationRoute,
   // Order
   orderRoute,
   orderSuccessRoute,
@@ -502,6 +633,7 @@ const routeTree = rootRoute.addChildren([
   clientVerificationsRoute,
   clientNotificationsRoute,
   clientSettingsRoute,
+  clientWorkspaceSettingsRoute,
   // Admin
   adminTree,
   // SEO country
@@ -514,13 +646,16 @@ const routeTree = rootRoute.addChildren([
   sitemapRoute,
   // Other
   contactRoute,
-  setupRoute,
   privacyPolicyRoute,
   termsRoute,
   refundRoute,
   disclaimerRoute,
   accessibilityRoute,
   kycAmlRoute,
+  customPageRoute,
+  publicServicesRoute,
+  serviceCategoryRoute,
+  serviceDetailRoute,
 ])
 
 export const router = createRouter({ routeTree })

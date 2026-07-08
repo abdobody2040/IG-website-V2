@@ -2,9 +2,16 @@
 
 ## Current State
 
-**No automated test suite exists.** All testing is currently manual.
+We have implemented a comprehensive unit/integration test suite using **Vitest** and end-to-end (E2E) testing using **Playwright**.
+- **Unit & Integration Suite**: Located in `src/test/` and `src/**/*.test.ts`, covering Stripe payment sessions, webhook routing, security validation, and database helpers.
+- **E2E Test Suite**: Located in `tests/e2e/`, fully sanitized to run with environment variables (`process.env.PB_ADMIN_EMAIL`/`process.env.PB_ADMIN_PASSWORD`) and safe generic test defaults (`admin@example.local` / `AdminTestPassword123!`), covering:
+  - `auth.spec.ts`: User authentication, basic toggle language, and logout sequence.
+  - `order-flow.spec.ts`: End-to-end order wizard completion (6 distinct steps).
+  - `admin-panel.spec.ts`: Admin logging, navigation, payment lists, and CSV/PDF downloads.
+  - `rtl-and-mobile.spec.ts`: Specialized layout tests validating `dir="rtl"` toggling, bilingual Arabic translations, and mobile viewport hamburger sidebar overlay visibility.
+- **Database Test Scripts**: Programmatic seed sync tests (`scripts/ensure-admin-user.mjs`, etc.) updated to construct the admin account dynamically using safe environment-driven parameters.
+- **Validation**: Full E2E verification successfully ran on July 7, 2026, with all 6 specs passing cleanly against a clean PocketBase test instance.
 
-## Testing Recommendations
 
 ### Unit Testing
 
@@ -26,17 +33,13 @@ import { renderHook, waitFor } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { useOrders } from '@/hooks/useOrders'
 
-// Mock Supabase client
-vi.mock('@/lib/supabase', () => ({
-  supabase: {
-    from: vi.fn(() => ({
-      select: vi.fn(() => ({
-        eq: vi.fn(() => ({
-          order: vi.fn(() => ({
-            data: mockOrders,
-            error: null
-          }))
-        }))
+// Mock PocketBase client
+vi.mock('@/lib/pocketbase', () => ({
+  pb: {
+    collection: vi.fn(() => ({
+      getList: vi.fn(() => Promise.resolve({
+        items: mockOrders,
+        totalItems: mockOrders.length
       }))
     }))
   }
@@ -98,18 +101,18 @@ describe('useOrders', () => {
 
 ### Database Testing
 
-**Framework:** Vitest + Supabase local
+**Framework:** Vitest + PocketBase local
 **Location:** `tests/db/`
 
 **Coverage:**
-1. RLS policy correctness (user vs admin access)
-2. Trigger behavior (profile auto-creation)
+1. Access rules correctness (user vs admin access)
+2. Sync trigger behavior (e.g. syncLastSignIn)
 3. Constraint enforcement (unique stripe_session_id)
 4. Migration correctness
 
 ## Testing Conventions
 
-1. **Mock Supabase client** — Never hit real Supabase in tests
+1. **Mock PocketBase client** — Never hit real PocketBase in tests
 2. **Use QueryClientProvider wrapper** — All hook tests need this
 3. **Test error states** — Mock API errors and verify error handling
 4. **Test loading states** — Verify loading spinners/skeletons render

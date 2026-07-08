@@ -1,6 +1,6 @@
 import { pb } from '../lib/pocketbase'
 
-const ADMIN_EMAIL = 'info@instantgrow.net'
+const ADMIN_EMAIL = (import.meta.env.VITE_ADMIN_EMAIL as string) || 'info@instantgrow.net'
 const EMAIL_ENDPOINT = import.meta.env.VITE_EMAIL_ENDPOINT as string | undefined
 
 function escapeHtml(str: string): string {

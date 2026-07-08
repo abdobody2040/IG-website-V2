@@ -93,16 +93,16 @@ export default function Features() {
     <section id="features" className="ig-section bg-gradient-to-b from-[#F8FAFC] to-white">
       <div className="max-w-[1280px] mx-auto">
 
-        <div className="text-center mb-14">
+        <div className="text-center mb-10 sm:mb-14">
           <h2
-            className="text-4xl sm:text-[54px] font-bold text-[#0F172A] leading-tight tracking-tight mb-4"
+            className="text-[30px] sm:text-[42px] lg:text-[54px] font-bold text-[#0F172A] leading-tight tracking-tight mb-3 sm:mb-4"
             style={{ fontFamily: 'Sora, Inter, sans-serif' }}
           >
             {isAr ? 'لماذا يختار رواد الأعمال' : 'Why Entrepreneurs Choose'}
             <br />
             <span className="text-[#2563EB]">Instant Grow</span>
           </h2>
-          <p className="text-base sm:text-lg lg:text-xl text-slate-500 max-w-2xl mx-auto leading-relaxed">
+          <p className="text-sm sm:text-base lg:text-xl text-slate-500 max-w-2xl mx-auto leading-relaxed">
             {isAr
               ? 'كل ما تحتاجه للبدء والنمو في مكان واحد'
               : 'Everything you need to start and grow — in one place.'}
@@ -124,7 +124,7 @@ export default function Features() {
                 key={i}
                 variants={itemV}
                 onMouseMove={handleMouseMove}
-                className="spotlight-card group bg-white rounded-[24px] border border-gray-100 px-8 py-9 flex items-start gap-5 cursor-default"
+                className="spotlight-card group bg-white rounded-[20px] sm:rounded-[24px] border border-gray-100 px-5 py-6 sm:px-8 sm:py-9 flex items-start gap-4 sm:gap-5 cursor-default"
                 style={{
                   boxShadow: '0 4px 24px rgba(15,23,42,0.06)',
                   transition: 'transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease',
@@ -137,23 +137,24 @@ export default function Features() {
               >
                 {/* Icon */}
                 <motion.div
-                  className="w-14 h-14 rounded-2xl flex items-center justify-center shrink-0"
+                  className="w-11 h-11 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl flex items-center justify-center shrink-0"
                   style={{ background: feat.bg }}
                   whileHover={{ scale: 1.1, rotate: 5 }}
                   transition={{ type: 'spring', stiffness: 400, damping: 10 }}
                 >
-                  <Icon size={26} style={{ color: feat.color }} />
+                  <Icon size={20} className="sm:hidden" style={{ color: feat.color }} />
+                  <Icon size={26} className="hidden sm:block" style={{ color: feat.color }} />
                 </motion.div>
 
                 {/* Text */}
                 <div>
                   <h3
-                    className="text-lg font-bold text-[#0F172A] mb-1.5"
+                    className="text-base sm:text-lg font-bold text-[#0F172A] mb-1"
                     style={{ fontFamily: 'Sora, Inter, sans-serif' }}
                   >
                     {isAr ? feat.titleAr : feat.titleEn}
                   </h3>
-                  <p className="text-[15px] text-slate-500 leading-relaxed">
+                  <p className="text-[13px] sm:text-[15px] text-slate-500 leading-relaxed">
                     {isAr ? feat.descAr : feat.descEn}
                   </p>
                 </div>

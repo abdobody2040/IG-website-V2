@@ -64,8 +64,7 @@ export default function SignupPage() {
         } catch { /* ignore invite errors */ }
       }
 
-      const emailVal = pb.authStore.model?.email
-      const role = emailVal === 'instantgrow.net@gmail.com' ? 'admin' : ((pb.authStore.model?.['role'] as string) ?? 'client')
+      const role = (pb.authStore.model?.['role'] as string) ?? 'client'
       if (role === 'admin') {
         navigate({ to: '/admin' })
       } else {
@@ -82,8 +81,7 @@ export default function SignupPage() {
     setServerError('')
     try {
       await pb.collection('users').authWithOAuth2({ provider: 'google' })
-      const emailVal = pb.authStore.model?.email
-      const role = emailVal === 'instantgrow.net@gmail.com' ? 'admin' : ((pb.authStore.model?.['role'] as string) ?? 'client')
+      const role = (pb.authStore.model?.['role'] as string) ?? 'client'
       if (role === 'admin') {
         navigate({ to: '/admin' })
       } else {

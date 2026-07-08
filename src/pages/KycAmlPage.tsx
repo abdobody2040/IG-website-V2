@@ -1,23 +1,28 @@
 import { useEffect } from 'react'
+import DOMPurify from 'dompurify'
 import { useLang } from '../i18n/LanguageContext'
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
 import { setPageMeta, getCanonical } from '../lib/seo'
 import { Key } from 'lucide-react'
+import { usePageContent } from '../hooks/usePageContent'
 
 export default function KycAmlPage() {
   const { lang, isRTL } = useLang()
   const isAr = lang === 'ar'
+  const { page } = usePageContent('kyc-aml')
+
+  const title = (page && page.active) ? (isAr ? page.title_ar : page.title_en) : (isAr ? 'سياسة اعرف عميلك ومكافحة غسيل الأموال' : 'KYC / AML Policy')
 
   useEffect(() => {
     setPageMeta({
-      title: isAr ? 'سياسة اعرف عميلك ومكافحة غسيل الأموال | Instant Grow' : 'KYC / AML Policy | Instant Grow',
+      title: `${title} | Instant Grow`,
       description: isAr
         ? 'سياسة اعرف عميلك (KYC) ومكافحة غسيل الأموال (AML) الخاصة بـ Instant Grow. نحن نلتزم بالأنظمة واللوائح القانونية.'
         : 'KYC / AML Policy for Instant Grow. Learn how we verify customer identity and comply with anti-money laundering regulations.',
       canonical: getCanonical('/kyc-aml'),
     })
-  }, [isAr])
+  }, [isAr, title])
 
   return (
     <div className="min-h-screen bg-slate-50 font-sans flex flex-col">
@@ -38,7 +43,7 @@ export default function KycAmlPage() {
                 {isAr ? 'امتثال' : 'Compliance'}
               </span>
               <h1 className="text-3xl sm:text-5xl font-bold tracking-tight mb-4" style={{ fontFamily: 'Sora, Inter, sans-serif' }}>
-                {isAr ? 'سياسة اعرف عميلك ومكافحة غسيل الأموال' : 'KYC / AML Policy'}
+                {title}
               </h1>
               <p className="text-slate-400 text-base sm:text-lg max-w-xl">
                 {isAr
@@ -57,7 +62,13 @@ export default function KycAmlPage() {
       <main className="flex-1 max-w-4xl w-full mx-auto px-5 sm:px-8 lg:px-10 py-16">
         <div className="bg-white rounded-[24px] border border-slate-200/80 p-8 sm:p-12 shadow-[0_4px_24px_rgba(15,23,42,0.02)]">
           <article className={`prose max-w-none text-slate-600 leading-relaxed ${isRTL ? 'text-right' : 'text-left'}`}>
-            {isAr ? (
+            {page && page.active && ((isAr ? page.content_ar : page.content_en)) ? (
+              <div
+                className="space-y-6"
+                style={{ direction: isRTL ? 'rtl' : 'ltr' }}
+                dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize((isAr ? page.content_ar : page.content_en) || '') }}
+              />
+            ) : isAr ? (
               <div className="space-y-8" style={{ direction: 'rtl' }}>
                 <section className="space-y-3">
                   <h2 className="text-xl font-bold text-slate-800">1. الغرض والالتزام بالامتثال</h2>

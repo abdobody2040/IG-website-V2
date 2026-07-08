@@ -144,6 +144,83 @@ export default function AdminSettingsPage() {
     }
   }
 
+  // API Tokens Logic
+  const [apiTokens, setApiTokens] = useState<any[]>([])
+  const [newTokenName, setNewTokenName] = useState('')
+  const [newlyGeneratedToken, setNewlyGeneratedToken] = useState('')
+  const [savingTokens, setSavingTokens] = useState(false)
+
+  useEffect(() => {
+    if (!user) return
+    try {
+      const meta = typeof user.metadata === 'string' ? JSON.parse(user.metadata || '{}') : (user.metadata || {})
+      if (Array.isArray(meta.apiTokens)) {
+        setApiTokens(meta.apiTokens)
+      }
+    } catch (e) {
+      // ignore
+    }
+  }, [user])
+
+  const generateToken = async () => {
+    if (!user?.id || !newTokenName.trim()) return
+    setSavingTokens(true)
+    try {
+      // Generate a secure random token
+      const array = new Uint8Array(32)
+      crypto.getRandomValues(array)
+      const tokenString = 'ig_' + Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('')
+      
+      const newToken = {
+        id: Math.random().toString(36).substring(2, 11),
+        name: newTokenName.trim(),
+        token: tokenString,
+        createdAt: new Date().toISOString()
+      }
+
+      const updatedTokens = [...apiTokens, newToken]
+      
+      const currentMeta = typeof user.metadata === 'string' ? JSON.parse(user.metadata || '{}') : (user.metadata || {})
+      const newMeta = { ...currentMeta, apiTokens: updatedTokens }
+      
+      await pb.collection('users').update(user.id, { metadata: JSON.stringify(newMeta) })
+      
+      setApiTokens(updatedTokens)
+      setNewTokenName('')
+      setNewlyGeneratedToken(tokenString)
+      toast.success('API Token generated!')
+    } catch (err) {
+      console.error(err)
+      toast.error('Failed to generate token')
+    } finally {
+      setSavingTokens(false)
+    }
+  }
+
+  const revokeToken = async (tokenId: string) => {
+    if (!user?.id) return
+    if (!window.confirm('Are you sure you want to revoke this token? Any scripts using it will immediately fail.')) return
+    
+    setSavingTokens(true)
+    try {
+      const updatedTokens = apiTokens.filter(t => t.id !== tokenId)
+      
+      const currentMeta = typeof user.metadata === 'string' ? JSON.parse(user.metadata || '{}') : (user.metadata || {})
+      const newMeta = { ...currentMeta, apiTokens: updatedTokens }
+      
+      await pb.collection('users').update(user.id, { metadata: JSON.stringify(newMeta) })
+      
+      setApiTokens(updatedTokens)
+      setNewlyGeneratedToken('')
+      toast.success('Token revoked')
+    } catch (err) {
+      console.error(err)
+      toast.error('Failed to revoke token')
+    } finally {
+      setSavingTokens(false)
+    }
+  }
+
   if (loading) {
     return (
       <>
@@ -222,6 +299,77 @@ export default function AdminSettingsPage() {
           )}
         </SectionCard>
 
+        {/* API Tokens */}
+        <SectionCard title="API Tokens">
+          <div className="space-y-4">
+            <p className="text-sm text-slate-600 leading-relaxed mb-4">
+              Generate API tokens for third-party scripts to securely interact with the system via webhooks and external services.
+            </p>
+            
+            <div className="space-y-3 mb-6">
+              {apiTokens.length === 0 ? (
+                <div className="text-sm text-slate-500 italic py-2 border-b border-slate-100">No API tokens generated yet.</div>
+              ) : (
+                apiTokens.map(token => (
+                  <div key={token.id} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-200">
+                    <div>
+                      <p className="text-sm font-semibold text-slate-900">{token.name}</p>
+                      <p className="text-xs text-slate-500 font-mono mt-1">{token.token.substring(0, 10)}••••••••••••••••</p>
+                    </div>
+                    <button
+                      onClick={() => revokeToken(token.id)}
+                      className="text-red-500 hover:text-red-700 text-xs font-semibold px-3 py-1.5 rounded-lg hover:bg-red-50 transition-colors"
+                    >
+                      Revoke
+                    </button>
+                  </div>
+                ))
+              )}
+            </div>
+
+            <div className="flex gap-3">
+              <input
+                type="text"
+                placeholder="Token Name (e.g. Zapier Integration)"
+                value={newTokenName}
+                onChange={e => setNewTokenName(e.target.value)}
+                className="flex-1 border border-slate-300 rounded-lg px-3 py-2 text-sm bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#1a56ff] focus:border-transparent"
+              />
+              <button
+                onClick={generateToken}
+                disabled={!newTokenName.trim() || savingTokens}
+                className="px-4 py-2 bg-slate-900 text-white text-sm font-medium rounded-lg hover:bg-slate-800 transition-colors disabled:opacity-60 whitespace-nowrap"
+              >
+                {savingTokens ? 'Generating...' : 'Generate Token'}
+              </button>
+            </div>
+            
+            {newlyGeneratedToken && (
+              <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-lg">
+                <p className="text-sm font-semibold text-green-800 mb-2">Token Generated Successfully!</p>
+                <p className="text-xs text-green-700 mb-3">Please copy this token now. You will not be able to see it again.</p>
+                <div className="flex items-center gap-2">
+                  <input 
+                    type="text" 
+                    readOnly 
+                    value={newlyGeneratedToken} 
+                    className="flex-1 bg-white border border-green-200 rounded-lg px-3 py-2 text-sm font-mono text-slate-700"
+                  />
+                  <button 
+                    onClick={() => {
+                      navigator.clipboard.writeText(newlyGeneratedToken)
+                      toast.success('Copied to clipboard!')
+                    }}
+                    className="px-3 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition-colors"
+                  >
+                    Copy
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </SectionCard>
+
         {/* Database & System Administration */}
         <SectionCard title="Database & System Administration">
           <div className="space-y-4">
@@ -242,7 +390,7 @@ export default function AdminSettingsPage() {
           </div>
         </SectionCard>
 
-        <div className="flex justify-end">
+        <div className="flex justify-end pb-10">
           <button
             onClick={handleSave}
             disabled={saving}

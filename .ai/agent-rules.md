@@ -17,7 +17,7 @@ BEFORE making ANY changes to this repository, ALL AI agents MUST:
 
 1. **Never rewrite stable systems.** If a system works and follows the existing patterns, don't rewrite it.
 2. **Preserve architecture consistency.** New code must match the patterns in `architecture.md`.
-3. **Preserve data flow.** Supabase → custom hooks → components. No direct Supabase calls in components.
+3. **Preserve data flow.** PocketBase → custom hooks → components. No direct PocketBase calls in components.
 4. **Preserve routing patterns.** TanStack Router with defined route structure.
 5. **Preserve i18n pattern.** All user-facing strings through `useLang().t` translations.
 6. **Preserve RLS security model.** Never bypass Row-Level Security from client code.

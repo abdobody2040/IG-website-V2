@@ -2,6 +2,7 @@ import { useState } from 'react'
 import {
   ArrowRight, FileText, Mail,
 } from 'lucide-react'
+import * as Icons from 'lucide-react'
 import ClientLayout from './ClientLayout'
 import { useAuth } from '../../hooks/useAuth'
 import { useCompanies } from '../../hooks/useCompanies'
@@ -9,10 +10,13 @@ import { ADDON_SERVICES } from '../../data/addonServices'
 import { useLang } from '../../i18n/LanguageContext'
 import type { Service } from '../../data/addonServices'
 import { OrderModal } from './OrderModal'
+import { useServices } from '../../hooks/useServices'
 
 export default function ClientServicesPage() {
-  const { t } = useLang()
+  const { t, lang } = useLang()
+  const isAr = lang === 'ar'
   const sp = t.client.servicesPage
+  const { services: dbServices } = useServices()
   const { user } = useAuth()
   const { companies } = useCompanies(user?.id)
   const [selected, setSelected] = useState<Service | null>(null)
@@ -40,40 +44,59 @@ export default function ClientServicesPage() {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 mb-12">
-          {ADDON_SERVICES.map(svc => {
-            const Icon = svc.icon
-            return (
-              <div
-                key={svc.id}
-                className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 flex flex-col gap-4 hover:shadow-md hover:border-[#1a56ff]/20 transition-all duration-200 relative"
-              >
-                {svc.badge && (
-                  <span className="absolute top-4 right-4 bg-[#1a56ff] text-white text-xs font-semibold px-2.5 py-0.5 rounded-full">
-                    {svc.badge}
-                  </span>
-                )}
-                <div className="w-12 h-12 rounded-xl bg-[#e8efff] text-[#1a56ff] flex items-center justify-center flex-shrink-0">
-                  <Icon size={22} />
-                </div>
-                <div className="flex-1">
-                  <h3 className="font-semibold text-gray-900 text-base">{svc.title}</h3>
-                  <div className="flex items-baseline gap-1 mt-1 mb-3">
-                    <span className="text-2xl font-bold text-[#1a56ff]">${svc.price}</span>
-                    <span className="text-sm text-gray-400">{svc.period}</span>
-                  </div>
-                  <p className="text-sm text-gray-500 leading-relaxed">{svc.description}</p>
-                </div>
+          {(() => {
+            const activeAddons = dbServices.filter(s => s.active && s.type === 'addon')
+            const mappedAddons: Service[] = activeAddons.map(s => {
+              const IconComponent = (Icons as any)[s.icon] || Icons.HelpCircle
+              return {
+                id: s.id,
+                icon: IconComponent,
+                title: isAr ? s.title_ar : s.title_en,
+                price: s.price,
+                period: isAr ? s.period_ar : s.period_en,
+                description: isAr ? s.description_ar : s.description_en,
+                badge: isAr ? (s.badge_ar || null) : (s.badge_en || null),
+                detail: isAr ? (s.detail_ar || '') : (s.detail_en || ''),
+                requiresCompany: s.requires_company
+              }
+            })
+            const listToRender = mappedAddons.length > 0 ? mappedAddons : ADDON_SERVICES
 
-                <button
-                  onClick={() => setSelected(svc)}
-                  className="flex items-center justify-center gap-2 w-full py-2.5 px-4 rounded-xl border-2 border-[#1a56ff] text-[#1a56ff] text-sm font-semibold hover:bg-[#1a56ff] hover:text-white transition-all duration-200"
+            return listToRender.map(svc => {
+              const Icon = svc.icon
+              return (
+                <div
+                  key={svc.id}
+                  className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 flex flex-col gap-4 hover:shadow-md hover:border-[#1a56ff]/20 transition-all duration-200 relative"
                 >
-                  {sp.orderService}
-                  <ArrowRight size={14} />
-                </button>
-              </div>
-            )
-          })}
+                  {svc.badge && (
+                    <span className="absolute top-4 right-4 bg-[#1a56ff] text-white text-xs font-semibold px-2.5 py-0.5 rounded-full">
+                      {svc.badge}
+                    </span>
+                  )}
+                  <div className="w-12 h-12 rounded-xl bg-[#e8efff] text-[#1a56ff] flex items-center justify-center flex-shrink-0">
+                    <Icon size={22} />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="font-semibold text-gray-900 text-base">{svc.title}</h3>
+                    <div className="flex items-baseline gap-1 mt-1 mb-3">
+                      <span className="text-2xl font-bold text-[#1a56ff]">${svc.price}</span>
+                      <span className="text-sm text-gray-400">{svc.period}</span>
+                    </div>
+                    <p className="text-sm text-gray-500 leading-relaxed">{svc.description}</p>
+                  </div>
+
+                  <button
+                    onClick={() => setSelected(svc)}
+                    className="flex items-center justify-center gap-2 w-full py-2.5 px-4 rounded-xl border-2 border-[#1a56ff] text-[#1a56ff] text-sm font-semibold hover:bg-[#1a56ff] hover:text-white transition-all duration-200"
+                  >
+                    {sp.orderService}
+                    <ArrowRight size={14} />
+                  </button>
+                </div>
+              )
+            })
+          })()}
         </div>
 
         <div className="mb-6">

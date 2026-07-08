@@ -3,8 +3,9 @@ import { useLang } from '../../i18n/LanguageContext'
 import { ADD_ONS } from './data'
 
 export function StepAddOns({
-  selectedAddOns, setSelectedAddOns
+  category, selectedAddOns, setSelectedAddOns
 }: {
+  category: 'compliance' | 'tech'
   selectedAddOns: string[]
   setSelectedAddOns: (ids: string[]) => void
 }) {
@@ -17,15 +18,22 @@ export function StepAddOns({
     )
   }
 
+  const filteredAddOns = ADD_ONS.filter(addon => addon.category === category)
+  
+  // Custom casts to satisfy TS index signature checks for translations
+  const orderTranslations = t.order as any
+  const title = category === 'compliance' ? orderTranslations.complianceAddOnsTitle : orderTranslations.webBrandingAddOnsTitle
+  const desc = category === 'compliance' ? orderTranslations.complianceAddOnsDesc : orderTranslations.webBrandingAddOnsDesc
+
   return (
     <div>
-      <h2 className="text-2xl font-bold text-slate-900 mb-1">{t.order.addOnServicesTitle}</h2>
-      <p className="text-slate-500 text-sm mb-4">{t.order.addOnServicesDesc}</p>
+      <h2 className="text-2xl font-bold text-slate-900 mb-1">{title}</h2>
+      <p className="text-slate-500 text-sm mb-6">{desc}</p>
 
       <p className="text-xs font-bold text-[#1a56ff] mb-3">{t.order.premiumAddOns}</p>
 
       <div className="space-y-3">
-        {ADD_ONS.map(addon => {
+        {filteredAddOns.map(addon => {
           const checked = selectedAddOns.includes(addon.id)
           return (
             <label

@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { MessageSquare, X, Send, Bot, User } from 'lucide-react'
+import { X, Send, User } from 'lucide-react'
 import { useLang } from '../i18n/LanguageContext'
 import { usePricingConfig } from '../hooks/usePricingConfig'
 import { PRICING_DATA } from '../config/pricing'
@@ -172,7 +172,7 @@ export default function SupportWidget() {
 
   return (
     <div
-      className={`fixed bottom-6 z-[999] flex flex-col items-end gap-3 ${
+      className={`fixed bottom-24 md:bottom-6 z-[999] flex flex-col items-end gap-3 ${
         isRTL ? 'left-6' : 'right-6'
       }`}
       style={{ direction: isRTL ? 'rtl' : 'ltr' }}
@@ -191,9 +191,11 @@ export default function SupportWidget() {
             <div className="p-4 border-b border-slate-800 bg-slate-900/50 flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="relative">
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-[#1a56ff] to-[#6366f1] flex items-center justify-center text-white">
-                    <Bot size={20} />
-                  </div>
+                  <img
+                    src="/mascot-chat.png"
+                    alt="Instant Grow AI Mascot"
+                    className="w-10 h-10 rounded-full object-cover border border-slate-800"
+                  />
                   <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 border-2 border-slate-950 rounded-full animate-pulse" />
                 </div>
                 <div>
@@ -224,15 +226,17 @@ export default function SupportWidget() {
                       : 'me-auto'
                   }`}
                 >
-                  <div
-                    className={`w-7 h-7 rounded-full flex items-center justify-center text-[10px] flex-shrink-0 ${
-                      msg.sender === 'user'
-                        ? 'bg-slate-800 text-slate-300'
-                        : 'bg-[#1a56ff]/20 text-[#1a56ff]'
-                    }`}
-                  >
-                    {msg.sender === 'user' ? <User size={12} /> : <Bot size={12} />}
-                  </div>
+                  {msg.sender === 'user' ? (
+                    <div className="w-7 h-7 rounded-full flex items-center justify-center text-[10px] flex-shrink-0 bg-slate-800 text-slate-300">
+                      <User size={12} />
+                    </div>
+                  ) : (
+                    <img
+                      src="/mascot-chat.png"
+                      alt="Bot"
+                      className="w-7 h-7 rounded-full object-cover flex-shrink-0 border border-slate-800/80"
+                    />
+                  )}
                   <div
                     className={`p-3 rounded-2xl text-xs leading-relaxed whitespace-pre-line ${
                       msg.sender === 'user'
@@ -247,9 +251,11 @@ export default function SupportWidget() {
 
               {isTyping && (
                 <div className="flex gap-2.5 max-w-[85%] me-auto">
-                  <div className="w-7 h-7 rounded-full bg-[#1a56ff]/20 text-[#1a56ff] flex items-center justify-center">
-                    <Bot size={12} />
-                  </div>
+                  <img
+                    src="/mascot-chat.png"
+                    alt="Bot Typing"
+                    className="w-7 h-7 rounded-full object-cover flex-shrink-0 border border-slate-800/80"
+                  />
                   <div className="p-3 bg-slate-900 border border-slate-800/80 rounded-2xl rounded-tl-none flex items-center justify-center gap-1">
                     <span className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
                     <span className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
@@ -301,7 +307,7 @@ export default function SupportWidget() {
       </AnimatePresence>
 
       {/* Floating Bubbles Container */}
-      <div className={`flex items-center gap-3.5 ${isRTL ? 'flex-row' : 'flex-row-reverse'}`}>
+      <div className="flex flex-col items-center gap-3.5">
         {/* WhatsApp Bubble */}
         <motion.a
           href="https://wa.me/13072898149"
@@ -309,7 +315,7 @@ export default function SupportWidget() {
           rel="noopener noreferrer"
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.95 }}
-          className="w-16 h-16 bg-[#25D366] text-white rounded-full flex items-center justify-center shadow-[0_4px_20px_rgba(37,211,102,0.4)] hover:shadow-[0_4px_24px_rgba(37,211,102,0.6)] hover:bg-[#20ba59] transition-all duration-300 relative"
+          className="w-16 h-16 bg-[#25D366] text-white rounded-full hidden md:flex items-center justify-center shadow-[0_4px_20px_rgba(37,211,102,0.4)] hover:shadow-[0_4px_24px_rgba(37,211,102,0.6)] hover:bg-[#20ba59] transition-all duration-300 relative"
           title={isAr ? 'راسلنا على واتساب' : 'Chat on WhatsApp'}
         >
           <svg
@@ -317,20 +323,29 @@ export default function SupportWidget() {
             viewBox="0 0 24 24"
             xmlns="http://www.w3.org/2000/svg"
           >
-            <path d="M17.472 14.382c-.022-.079-.117-.117-.234-.176-.117-.058-.69-.34-7.97-.23-.117-.058-.2-.117-.255-.176-.058-.058-.058-.117-.058-.176v-.022c.022-.079.117-.117.234-.176.117-.058.2-.117.255-.176s.058-.117.058-.176v-.022c-.022-.079.117-.117.234-.176.117-.058-.69-.34-.797-.39-.118-.058-.2-.117-.255-.176s-.058-.117-.058-.176v-.022c.022-.079.117-.117.234-.176.117-.058.2-.117.255-.176.058-.058.058-.117.058-.176v-.022c-.022-.079.117-.117.234-.176.117-.058-.69-.34-.797-.39-.118-.058-.2-.117-.255-.176s-.058-.117-.058-.176v-.022c.022-.079.117-.117.234-.176.117-.058.2-.117.255-.176.058-.058.058-.117.058-.176v-.022" />
-            <path d="M12.004 2c-5.51 0-9.99 4.49-9.99 10 0 1.77.47 3.43 1.3 4.89L2 22l5.3-1.39c1.41.77 3 1.2 4.7 1.2 5.51 0 9.99-4.49 9.99-10s-4.48-10-9.99-10zm6.59 14.12c-.27.76-1.36 1.48-1.88 1.54-.51.07-1.16.1-3.39-.83-2.85-1.19-4.69-4.11-4.83-4.3-.14-.19-1.14-1.52-1.14-2.9 0-1.38.72-2.06 1-2.35.28-.29.62-.36.83-.36.21 0 .41.01.59.02.19.01.44-.07.69.53.25.6 1.01 2.45 1.1 2.63.09.18.15.39.03.62-.12.24-.18.39-.36.6-.18.21-.38.47-.54.63-.18.18-.37.38-.16.74.21.36.93 1.53 2 2.48 1.38 1.23 2.54 1.62 2.9 1.8.36.18.57.15.79-.1.21-.24.93-1.08 1.18-1.45.25-.37.49-.31.83-.18.33.13 2.13 1 2.5 1.19.37.19.61.28.7.44.09.16.09.92-.18 1.68z" />
+            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.888-.788-1.487-1.761-1.66-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a5.28 5.28 0 0 0-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.46 7.44c-1.81 0-3.58-.49-5.13-1.4l-.37-.22-3.81 1 .1-.3.9-.38.9-3.7-.24-.39c-1-1.61-1.53-3.48-1.53-5.42 0-5.51 4.49-10 10-10s10 4.49 10 10-4.49 10-10 10m8.49-18.49A11.95 11.95 0 0 0 12 0C5.38 0 0 5.38 0 12c0 2.12.55 4.19 1.59 6.02L0 24l6.15-1.61C7.94 23.44 9.94 24 12 24c6.62 0 12-5.38 12-12 0-3.21-1.25-6.22-3.51-8.49" />
           </svg>
         </motion.a>
-
+        
         {/* AI Chatbot Bubble */}
         <motion.button
           onClick={() => setIsOpen(!isOpen)}
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.95 }}
-          className="w-16 h-16 bg-gradient-to-tr from-[#1a56ff] to-[#6366f1] text-white rounded-full flex items-center justify-center shadow-[0_4px_20px_rgba(26,86,255,0.4)] hover:shadow-[0_4px_24px_rgba(26,86,255,0.6)] relative"
+          className="relative focus:outline-none"
           title={isAr ? 'المحادثة الذكية' : 'AI Chat Assistant'}
         >
-          {isOpen ? <X size={28} /> : <MessageSquare size={28} />}
+          {isOpen ? (
+            <div className="w-16 h-16 bg-gradient-to-tr from-[#1a56ff] to-[#6366f1] text-white rounded-full flex items-center justify-center shadow-[0_4px_20px_rgba(26,86,255,0.4)] hover:shadow-[0_4px_24px_rgba(26,86,255,0.6)]">
+              <X size={28} />
+            </div>
+          ) : (
+            <img
+              src="/mascot-chat.png"
+              alt="AI Chat Assistant"
+              className="w-16 h-16 rounded-full shadow-[0_4px_20px_rgba(26,86,255,0.3)] hover:shadow-[0_4px_24px_rgba(26,86,255,0.5)] transition-all duration-300 object-cover"
+            />
+          )}
           
           {hasNewBadge && !isOpen && (
             <span className="absolute -top-1 -right-1 flex h-4 w-4">

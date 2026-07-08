@@ -42,13 +42,13 @@ async function main() {
   console.log('✅ Authenticated.');
 
   // Parse 20260523000004_seed_blogs.sql to get titles, slugs, tags, etc.
-  const sql1Path = path.join(__dirname, '../supabase/migrations/20260523000004_seed_blogs.sql');
+  const sql1Path = path.join(__dirname, '../pocketbase/seed-sql/20260523000004_seed_blogs.sql');
   const sql1 = fs.readFileSync(sql1Path, 'utf8');
 
   // We will manually build the array to be safe, since parsing SQL perfectly with regex is tricky.
   // Actually, I can just use the exact titles/slugs and read the contents from rewrite_blogs.sql.
   
-  const sql2Path = path.join(__dirname, '../supabase/migrations/20260526000002_rewrite_blogs.sql');
+  const sql2Path = path.join(__dirname, '../pocketbase/seed-sql/20260526000002_rewrite_blogs.sql');
   const sql2 = fs.readFileSync(sql2Path, 'utf8');
 
   const blogs = [

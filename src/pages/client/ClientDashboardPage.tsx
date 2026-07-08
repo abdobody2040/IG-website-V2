@@ -1,4 +1,4 @@
-import { ArrowRight, ShoppingBag, Building2, FileText, Zap, CheckCircle, Clock, AlertCircle, CreditCard, Mail, ShieldCheck } from 'lucide-react'
+import { ArrowRight, ShoppingBag, Building2, FileText, Zap, CheckCircle, Clock, AlertCircle, CreditCard, Mail, ShieldCheck, MessageCircle } from 'lucide-react'
 import { Link } from '@tanstack/react-router'
 import ClientLayout from './ClientLayout'
 import { useRequireAuth } from '../../hooks/useRequireAuth'
@@ -15,6 +15,8 @@ const STEP_ORDER: Record<string, number> = {
 }
 
 const MAX_STEPS = 4
+
+import { Skeleton } from '../../components/ui/Skeleton'
 
 function CircularProgress({ pct, status }: { pct: number; status: string }) {
   const { t } = useLang()
@@ -47,9 +49,44 @@ function CircularProgress({ pct, status }: { pct: number; status: string }) {
 }
 
 function PaymentBanner({ order }: { order: Order }) {
-  const { t } = useLang()
+  const { t, lang } = useLang()
+  const isAr = lang === 'ar'
   const isPending = order.status === 'pending'
   if (!isPending) return null
+
+  const isInvoice = order.notes?.includes('Invoice')
+
+  if (isInvoice) {
+    return (
+      <div className="bg-blue-50 border border-blue-200 rounded-xl p-5 mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div className="flex items-start gap-4">
+          <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center flex-shrink-0">
+            <Clock size={20} className="text-[#1a56ff]" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <h4 className="font-semibold text-slate-900 text-sm">
+              {isAr ? 'في انتظار دفع الفاتورة' : 'Invoice Payment Pending'}
+            </h4>
+            <p className="text-slate-600 text-xs mt-0.5">
+              {isAr
+                ? 'سيرسل لك فريقنا الفاتورة وتعليمات الدفع قريبًا عبر البريد الإلكتروني أو واتساب.'
+                : 'Our team will send you the invoice and payment instructions via email or WhatsApp shortly.'}
+            </p>
+          </div>
+        </div>
+        <a
+          href="https://wa.me/13072898149"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex-shrink-0 flex items-center gap-1.5 bg-[#25D366] text-white text-xs font-semibold px-4 py-2 rounded-lg hover:bg-[#1fba58] transition-colors"
+        >
+          <MessageCircle size={13} />
+          {isAr ? 'تواصل معنا' : 'Contact Support'}
+        </a>
+      </div>
+    )
+  }
+
   return (
     <div className="bg-amber-50 border border-amber-200 rounded-xl p-5 mb-6 flex items-start gap-4">
       <div className="w-10 h-10 bg-amber-100 rounded-xl flex items-center justify-center flex-shrink-0">
@@ -99,8 +136,15 @@ function FormationProgressCard({ order, loading }: { order: Order | undefined; l
 
       <div className="p-5">
         {loading ? (
-          <div className="flex items-center justify-center py-8">
-            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#1a56ff]" />
+          <div className="flex items-center gap-8 py-4">
+            <Skeleton className="w-40 h-40 rounded-full flex-shrink-0" />
+            <div className="flex-1 space-y-4">
+              <Skeleton className="h-5 w-32" />
+              <Skeleton className="h-5 w-40" />
+              <Skeleton className="h-5 w-24" />
+              <Skeleton className="h-5 w-36" />
+              <Skeleton className="h-5 w-28" />
+            </div>
           </div>
         ) : order ? (
           <div className="flex items-center gap-8">
@@ -148,8 +192,19 @@ function CompanyInfoCard({ order, loading }: { order: Order | undefined; loading
       </div>
       <div className="p-5">
         {loading ? (
-          <div className="space-y-3">
-            {[1,2,3].map(i => <div key={i} className="h-10 bg-slate-100 rounded-lg animate-pulse" />)}
+          <div className="space-y-4">
+            <div>
+              <Skeleton className="h-3 w-20 mb-1.5" />
+              <Skeleton className="h-4 w-32" />
+            </div>
+            <div>
+              <Skeleton className="h-3 w-24 mb-1.5" />
+              <Skeleton className="h-4 w-28" />
+            </div>
+            <div>
+              <Skeleton className="h-3 w-16 mb-1.5" />
+              <Skeleton className="h-4 w-20" />
+            </div>
           </div>
         ) : order ? (
           <div className="space-y-4">
@@ -252,6 +307,24 @@ export default function ClientDashboardPage() {
             : t.client.welcomeBack.replace('{name}', displayName)}
         </p>
       </div>
+
+      {!user?.emailVerified && (
+        <div className="bg-blue-50 border border-blue-200 rounded-xl p-5 mb-6 flex items-start gap-4">
+          <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center flex-shrink-0">
+            <Mail size={20} className="text-[#1a56ff]" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <h4 className="font-semibold text-slate-900 text-sm">Please verify your email address</h4>
+            <p className="text-slate-600 text-xs mt-0.5">We sent a verification link to {user?.email}. Click the link to secure your account.</p>
+          </div>
+          <Link
+            to="/client/settings"
+            className="flex-shrink-0 flex items-center gap-1.5 bg-white text-[#1a56ff] border border-blue-200 text-xs font-semibold px-4 py-2 rounded-lg hover:bg-blue-50 transition-colors"
+          >
+            Verify Now
+          </Link>
+        </div>
+      )}
 
       {latestOrder && <PaymentBanner order={latestOrder} />}
 

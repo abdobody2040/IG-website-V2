@@ -4,7 +4,7 @@ import { act } from 'react'
 
 const mockAuthStore = {
   isValid: false,
-  model: null,
+  model: null as any,
   onChange: vi.fn().mockReturnValue(vi.fn()),
   clear: vi.fn(),
 }

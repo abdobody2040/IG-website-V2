@@ -1,0 +1,24 @@
+# fly.toml app configuration file generated for instantgrow-pocketbase
+# Refer to https://fly.io/docs/reference/configuration/ for details.
+
+app = "instantgrow-pocketbase"
+primary_region = "cdg"
+
+[build]
+  dockerfile = "Dockerfile"
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = false
+  auto_start_machines = true
+  min_machines_running = 1
+  processes = ["app"]
+
+[mounts]
+  source = "pb_data"
+  destination = "/pb/pb_data"
+
+[env]
+  # Configured via fly secrets:
+  # STRIPE_SECRET_KEY

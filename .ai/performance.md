@@ -19,12 +19,12 @@ The build currently produces a warning about large JavaScript chunks. No perform
 
 ### Current
 - TanStack Query caches server data with automatic garbage collection
-- Supabase SDK caches auth session in localStorage
+- PocketBase SDK caches auth session in AuthStore (localStorage fallback)
 - Static assets cached by CDN (Vite hashed filenames)
 
 ### Recommended
 - **Service Worker:** Add Workbox for precaching and runtime caching
-- **Supabase Real-time:** Replace polling with real-time subscriptions for live updates
+- **Real-time subscriptions:** Real-time order subscriptions have been added (`useOrderRealtime`). Real-time can be extended to other resources.
 - **Local Storage:** Cache frequently accessed reference data (states, pricing)
 
 ## Rendering Optimization

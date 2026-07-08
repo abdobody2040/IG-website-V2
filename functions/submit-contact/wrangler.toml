@@ -1,0 +1,10 @@
+name = "instantgrow-submit-contact"
+main = "index.ts"
+compatibility_date = "2024-03-01"
+
+[vars]
+ALLOWED_ORIGIN = "https://instantgrow.net"
+PB_URL = "https://pb.instantgrow.net"
+
+# Secret variables should be configured via Wrangler CLI:
+# wrangler secret put TURNSTILE_SECRET_KEY

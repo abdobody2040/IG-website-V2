@@ -26,6 +26,29 @@ function jsonResponse(req: Request, env: Env, body: unknown, status = 200): Resp
   });
 }
 
+/**
+ * Attempt to resolve the authenticated user ID from the Bearer token.
+ * Returns null if the token is absent, invalid, or the PocketBase call fails.
+ * Never throws — contact submission must always succeed.
+ */
+async function resolveUserId(req: Request, pbUrl: string): Promise<string | null> {
+  const authHeader = req.headers.get("Authorization");
+  const token = authHeader?.startsWith("Bearer ") ? authHeader.slice(7).trim() : null;
+  if (!token) return null;
+
+  try {
+    const res = await fetch(`${pbUrl}/api/collections/users/auth-refresh`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!res.ok) return null;
+    const data = await res.json() as { record?: { id?: string } };
+    return data?.record?.id ?? null;
+  } catch {
+    return null;
+  }
+}
+
 export default {
   async fetch(req: Request, env: Env): Promise<Response> {
     if (req.method === "OPTIONS") {
@@ -59,6 +82,8 @@ export default {
     }
 
     // Verify Turnstile token server-side (if secret key is configured)
+    // SECURITY NOTE: If TURNSTILE_SECRET_KEY is not set, CAPTCHA checks are bypassed entirely.
+    // Ensure this key is set in production to protect the contact endpoint from spam.
     if (turnstileSecret) {
       if (!captchaToken) {
         return jsonResponse(req, env, { error: "CAPTCHA verification required" }, 400);
@@ -83,19 +108,27 @@ export default {
       }
     }
 
+    // Resolve authenticated user (B-009) — best-effort, never blocks submission
+    const userId = await resolveUserId(req, pbUrl);
+
     try {
-      // Insert into contact_messages. Since createRule is empty (public), anyone can create contact messages!
+      // Insert into contact_messages, linking to authenticated user when available
+      const payload: Record<string, unknown> = {
+        name,
+        email,
+        subject: subject || null,
+        message,
+      };
+      if (userId) {
+        payload.user = userId;
+      }
+
       const insertRes = await fetch(`${pbUrl}/api/collections/contact_messages/records`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          name,
-          email,
-          subject: subject || null,
-          message,
-        }),
+        body: JSON.stringify(payload),
       });
 
       if (!insertRes.ok) {
@@ -110,3 +143,4 @@ export default {
     }
   },
 };
+

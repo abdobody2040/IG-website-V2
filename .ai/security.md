@@ -8,22 +8,22 @@ A comprehensive security audit was completed with 14 findings (3 Critical, 5 Hig
 
 | Aspect | Implementation |
 |--------|---------------|
-| Provider | Supabase Auth |
+| Provider | PocketBase Auth |
 | Methods | Email/password + Google OAuth |
-| Session Storage | localStorage (Supabase JS SDK) |
-| Token Type | JWT (managed by Supabase) |
+| Session Storage | PocketBase AuthStore (cookie/localStorage fallback) |
+| Token Type | JWT (managed by PocketBase) |
 | Password Policy | Min 8 chars, uppercase, lowercase, number, special char |
 | Login Error Handling | Generic "Invalid email or password." |
-| Session Refresh | Automatic via Supabase SDK |
+| Session Refresh | Automatic via PocketBase SDK |
 
 ## Authorization (RBAC)
 
 Two roles: `client` and `admin`
 
 ### Enforcement Layers:
-1. **Database (RLS):** All 8 tables have RLS policies
+1. **Database (Access Rules):** All collections have PocketBase API access rules (RLS-equivalent)
 2. **Frontend:** Route guards (`useRequireAuth`, `useRequireAdmin`)
-3. **Edge Functions:** Manual role verification via Supabase Admin API
+3. **Edge Functions:** Manual role verification via PocketBase Token verification / Admin API check in Cloudflare Workers
 
 ### RLS Policy Summary:
 | Table | User Access | Admin Access |
@@ -59,15 +59,15 @@ This is **SECURITY DEFINER** to avoid infinite recursion in RLS policies.
 
 ## CSRF Protection
 
-- Supabase Auth tokens stored in `localStorage` (not cookies)
+- PocketBase Auth tokens stored in AuthStore/localStorage (not cookies)
 - SPA architecture with API calls (not form submissions)
 - CSP headers include `form-action 'self'`
 
 ## SQL Injection Prevention
 
-- All database queries use Supabase client's parameterized queries
+- All database queries use PocketBase SDK (which parameterizes SQLite queries)
 - No raw SQL construction from user input
-- Edge Functions use Supabase client (parameterized)
+- Cloudflare Workers use PocketBase SDK / HTTP API (parameterized)
 
 ## Security Headers
 
@@ -85,7 +85,7 @@ script-src 'self' https://challenges.cloudflare.com
 style-src 'self' 'unsafe-inline' https://fonts.googleapis.com
 font-src 'self' https://fonts.gstatic.com
 img-src 'self' data: https: blob:
-connect-src 'self' https://*.supabase.co https://challenges.cloudflare.com https://*.workers.dev
+connect-src 'self' http://localhost:8090 http://127.0.0.1:8090 https://challenges.cloudflare.com https://*.workers.dev
 frame-src https://challenges.cloudflare.com
 object-src 'none'
 base-uri 'self'
@@ -107,23 +107,24 @@ Content-Security-Policy: ...
 
 | Check | Implementation | Location |
 |-------|---------------|----------|
-| Max File Size | 10 MB | useDocumentUpload.ts |
-| MIME Type Allowlist | PDF, PNG, JPEG, WEBP, DOC, DOCX | useDocumentUpload.ts |
-| Server-Side Validation | TODO: Not yet implemented | R2 Worker / Supabase Storage |
+| Max File Size | 10 MB | useDocumentUpload.ts / upload-validator Worker |
+| MIME Type Allowlist | PDF, PNG, JPEG, WEBP, DOC, DOCX | useDocumentUpload.ts / upload-validator Worker |
+| Server-Side Validation | Implemented | upload-validator Worker / PocketBase collection rules |
 
 ## Secrets Management
 
 - `.env`, `.env.local`, `.env.*` in `.gitignore`
 - Only `.env.example` committed (with placeholder values)
-- Service role key never used in frontend code
-- Edge Functions use `Deno.env.get()` for server-side secrets
-- Stripe webhook secret used only in webhook function
+- **Sanitized scripts and test suites:** Hardcoded emails (`instantgrow.net@gmail.com`) and default admin passwords (`Admin@2025!`) are removed from all E2E test suites (`tests/e2e/auth.spec.ts`, `tests/e2e/admin-panel.spec.ts`) and utility scripts (`scripts/ensure-admin-user.mjs`, `expand_arabic_blogs.js`), replacing them with environment variables (`process.env.PB_ADMIN_EMAIL` / `process.env.PB_ADMIN_PASSWORD`) and safe generic test values (`admin@example.local` / `AdminTestPassword123!`) for local setup.
+- Admin credentials/keys never used in frontend code
+- Cloudflare Workers use environment variables/secrets bound via Wrangler/Cloudflare Dashboard
+- Stripe webhook secret used only in webhook Worker
 
 ## Rate Limiting
 
 - **Contact form:** Optional Cloudflare Turnstile CAPTCHA
-- **Supabase:** Rate limiting can be configured in Authentication → Rate Limits
-- **Edge Functions:** No application-level rate limiting yet
+- **PocketBase:** Rate limiting can be configured via PocketBase settings, reverse proxy (e.g. Nginx), or Cloudflare
+- **Cloudflare Workers:** Rate limiting can be configured via Cloudflare WAF/rate limiting rules
 
 ## Webhook Security
 
@@ -133,23 +134,22 @@ Content-Security-Policy: ...
 
 ## Token Strategy
 
-- **Supabase Auth:** JWT tokens managed by Supabase SDK
-- **Edge Function Auth:** Bearer token passed in Authorization header
-- **Service Role Key:** Used only in server-side Edge Functions
-- **No API tokens:** External API access not yet implemented
+- **PocketBase Auth:** JWT tokens managed by PocketBase SDK
+- **Worker Auth:** Bearer token passed in Authorization header and validated using PocketBase token verification
 
 ## Audit Logging
 
 - **Order status changes:** Tracked in `order_updates` table with `created_by`
-- **Webhook events:** Logged via `console.log` in Edge Functions
-- **Admin actions:** No audit log (recommend adding for compliance)
+- **Webhook events:** Logged via `console.log` in Cloudflare Workers
+- **Admin actions:** Logged in the `audit_logs` PocketBase collection (useAdminAuditLog hook)
 
 ## Recommended Security Improvements
 
-1. **Server-side upload validation** — Add MIME/size checks in R2 Worker/Supabase Storage
-2. **Rate limiting on Edge Functions** — Add rate limiting for contact form and auth endpoints
-3. **Audit log for admin actions** — Create `admin_audit_log` table
-4. **HTTPS-only enforcement** — Ensure production deployment forces HTTPS
-5. **Remove SetupPage** — Or restrict with IP allowlist before production
-6. **Supabase MFA** — Enable multi-factor authentication for admin accounts
-7. **Dependency scanning** — Add Dependabot or Snyk to CI/CD
+1. **Rate limiting on Workers** — Add rate limiting for contact form and auth endpoints
+2. **HTTPS-only enforcement** — Ensure production deployment forces HTTPS
+3. **PocketBase Admin Restriction** — Ensure PocketBase admin panel (`/_/`) is restricted to localhost or VPN in production
+4. **Dependency scanning** — Add Dependabot or Snyk to CI/CD
+
+---
+
+*Manual RLS Policy Review completed on 2026-07-07. All 10 active collections confirmed locked down to owners (`user = @request.auth.id`) or admins (`@request.auth.role = 'admin'`). SetupPage has been permanently deleted.*

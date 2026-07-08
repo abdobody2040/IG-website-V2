@@ -276,12 +276,11 @@ export default function Pricing() {
         {/* Header */}
         <div className="text-center mb-12">
           <h2
-            className="text-4xl sm:text-[54px] font-bold text-[#0F172A] leading-tight tracking-tight mb-4"
-            style={{ fontFamily: 'Sora, Inter, sans-serif' }}
+            className="ig-heading text-[#0F172A] mb-4"
           >
             {p.heading}
           </h2>
-          <p className="text-base sm:text-lg lg:text-xl text-slate-500 max-w-2xl mx-auto mb-10">
+          <p className="ig-body text-slate-500 max-w-2xl mx-auto mb-10">
             {p.subheading}
           </p>
 
@@ -342,7 +341,7 @@ export default function Pricing() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.05 }}
             onMouseMove={handleMouseMove}
-            className="spotlight-card bg-white rounded-[24px] border border-gray-200 p-9 flex flex-col relative"
+            className="spotlight-card bg-white rounded-[24px] border border-gray-200 p-6 sm:p-9 flex flex-col relative"
             style={{ boxShadow: '0 4px 24px rgba(15,23,42,0.06)' }}
           >
             <div className="text-xs text-slate-400 font-medium mb-2">{regionSubLabel}</div>
@@ -403,7 +402,7 @@ export default function Pricing() {
               </motion.span>
             </div>
 
-            <div className="px-9 pb-9 pt-7 flex flex-col flex-1">
+            <div className="px-6 pb-6 pt-5 sm:px-9 sm:pb-9 sm:pt-7 flex flex-col flex-1">
               <div className="text-xs text-white/40 font-medium mb-2">{regionSubLabel}</div>
               <h3 className="text-xl font-bold text-white mb-4" style={{ fontFamily: 'Sora, Inter, sans-serif' }}>
                 {premiumTitle}
@@ -458,7 +457,7 @@ export default function Pricing() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.15 }}
             onMouseMove={handleMouseMove}
-            className="spotlight-card bg-white rounded-[24px] border border-gray-200 p-9 flex flex-col relative"
+            className="spotlight-card bg-white rounded-[24px] border border-gray-200 p-6 sm:p-9 flex flex-col relative"
             style={{ boxShadow: '0 4px 24px rgba(15,23,42,0.06)' }}
           >
             <div className="text-xs text-slate-400 font-medium mb-2">{isAr ? '💬 استشارة مجانية' : '💬 Free Consultation'}</div>
