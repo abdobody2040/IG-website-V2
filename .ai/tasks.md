@@ -85,7 +85,7 @@
 - [x] Auth tokens on external API calls
 - [x] Password strength policy
 - [x] Login error sanitization
-- [ ] Enable HTTPS-only deployment
+- [x] Enable HTTPS-only deployment (enforced via fly.toml force_https and CSP upgrade-insecure-requests)
 - [x] Review RLS policies manually (confirmed secure, all collections owner-locked or admin-restricted)
 - [x] Remove SetupPage before production (confirmed deleted, B-006 closed)
 

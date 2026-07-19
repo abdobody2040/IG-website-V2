@@ -61,10 +61,12 @@ PocketBase holds all data (users, orders, companies, documents, payments). It re
    fly launch
    ```
    *Note:* Follow the prompts to create the app. Fly.io will automatically parse [fly.toml](file:///g:/Vibe%20coding/IG%20website%20V2/pocketbase/fly.toml), build the [Dockerfile](file:///g:/Vibe%20coding/IG%20website%20V2/pocketbase/Dockerfile), allocate a persistent volume (`pb_data`), and attach it to `/pb/pb_data`.
-4. Add your production Stripe Secret Key to PocketBase (required for database-level event synchronization):
+4. Add your secrets to PocketBase (Stripe Sync Key + Database Encryption Key at rest):
    ```bash
    fly secrets set STRIPE_SECRET_KEY="sk_live_your_key"
+   fly secrets set PB_ENCRYPTION_KEY="$(openssl rand -hex 32)"
    ```
+   *Note:* Ensure you save the generated encryption key somewhere secure (e.g. your password manager).
 
 ### Option B: Deploying on a VPS (Docker)
 
@@ -73,21 +75,58 @@ PocketBase holds all data (users, orders, companies, documents, payments). It re
    ```bash
    docker build -t pocketbase-prod -f pocketbase/Dockerfile pocketbase
    ```
-3. Run the container with a persistent volume:
+3. Run the container with a persistent volume and encryption key:
    ```bash
    docker run -d \
      -p 80:8080 \
      -v pb_data:/pb/pb_data \
      -e STRIPE_SECRET_KEY="sk_live_your_key" \
+     -e PB_ENCRYPTION_KEY="your-32-character-random-hex-key" \
      --name pocketbase-prod \
      pocketbase-prod
    ```
 
+### 🔒 Securely Accessing the Admin Panel (Zero-Trust)
+To prevent unauthorized access, the admin panel (`/_/`) is restricted by a backend hook and **blocked on the public domain**. You must tunnel to it locally to access it:
+
+- **For Fly.io:**
+  Run the proxy command in your terminal:
+  ```bash
+  fly proxy 8090:8080 -a instantgrow-pocketbase
+  ```
+- **For VPS (SSH Tunnel):**
+  Establish a tunnel from your local machine:
+  ```bash
+  ssh -L 8090:127.0.0.1:8080 user@your-vps-ip
+  ```
+
 ### ⚠️ Critical First-Boot Task
-Immediately after PocketBase is online (e.g. at `https://your-pb-domain.com/_/`):
-1. Navigate to `https://your-pb-domain.com/_/` in your browser.
-2. Create your **first admin superuser account** with a secure email and password.
-3. Save these credentials, as they are needed for serverless Workers and database seeding scripts.
+Immediately after establishing your secure tunnel:
+1. Open your browser and navigate to **`http://127.0.0.1:8090/_/`**.
+2. Create your **first admin superuser account** with a secure email and strong password.
+3. Save these credentials securely; they are needed for serverless Workers and seeding scripts.
+
+---
+
+## Step 1B: Automated Daily Backups
+
+The database is bundled with an online backup script `backup.sh` that takes safe snapshots while SQLite is running.
+
+- **Manual Backup Trigger:**
+  ```bash
+  # Fly.io
+  fly ssh console -a instantgrow-pocketbase -C "/pb/backup.sh"
+  
+  # VPS (Docker)
+  docker exec -it pocketbase-prod /pb/backup.sh
+  ```
+
+- **Automated Cron Scheduling (VPS/Host):**
+  Add a cron job to run the script daily at 2:00 AM:
+  ```bash
+  0 2 * * * docker exec pocketbase-prod /pb/backup.sh >> /var/log/pb-backup.log 2>&1
+  ```
+
 
 ---
 

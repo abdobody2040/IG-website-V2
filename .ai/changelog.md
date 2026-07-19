@@ -3,6 +3,10 @@
 ## 2026-07-19 — Production Security Hardening, Zero-Trust Architecture & HttpOnly Cookies
 
 ### Added
+- **Zero-Trust Admin Panel Restriction** — Created `pocketbase/pb_hooks/restrict_admin.pb.js` to block public access to the PocketBase Admin UI (`/_/`) on the production domain. Access is now only allowed when tunneling to `localhost`/`127.0.0.1`.
+- **SQLite Database Encryption at Rest** — Created a secure startup wrapper script `pocketbase/start.sh` and updated the `Dockerfile` and `fly.toml` configurations to feed `PB_ENCRYPTION_KEY` into the server startup parameters.
+- **Automated Container Database Backups** — Added a container-safe backup script `pocketbase/backup.sh` (and `scripts/backup-db.sh` for host/local environments) utilizing SQLite's online `.backup` API, retaining backups for 30 days.
+- **Production CSP Headers & HTTPS Enforcement** — Injected `upgrade-insecure-requests` to `public/_headers` and `index.html` CSP definitions, and updated the `connect-src` list to point to `https://pb.instantgrow.net`. Enforced HTTPS-only redirects in Fly.io config.
 - **HttpOnly Cookie Authentication** — Created `pb_hooks/auth_http_only.pb.js` to handle `/api/auth/login` and `/api/auth/logout`. Removed localStorage token storage in favor of secure, HttpOnly, SameSite=Lax cookies to prevent token exfiltration via XSS.
 - **CSRF Protection** — Implemented an `X-CSRF-Token` requirement for all state-mutating requests (POST, PUT, PATCH, DELETE) via PB hooks. The PocketBase SDK interceptor automatically reads the `csrf-token` cookie and injects it into headers.
 - **Strict Role-Level Security (RLS)** — Locked down `pb_schema.json` to prevent self-role escalation in the `users` table, and enforced strict `WITH CHECK` constraints on `orders`, `companies`, and `documents` so users can only access their own records.
@@ -10,6 +14,7 @@
 - **Rate Limiting** — Implemented `pb_hooks/rate_limiter.pb.js` backed by a new `rate_limits` collection to restrict login attempts to 5 per minute per IP.
 - **Audit Logging** — Added `pb_hooks/audit_logger.pb.js` to automatically log all CREATE/UPDATE/DELETE mutations in the `admin_audit_log` collection, tracking action types, tables, record IDs, and user IPs.
 - **Security Headers Hook** — Added `pb_hooks/security_headers.pb.js` to enforce strict CSP, `X-Frame-Options: DENY`, and `nosniff` headers directly at the API level.
+
 
 ### Changed
 - **Frontend Authentication Refactoring** — Updated `LoginPage.tsx`, `SignupPage.tsx`, and `OrderWizard.tsx` to use the new `/api/auth/login` endpoint instead of the default PocketBase JS SDK `authWithPassword` method.

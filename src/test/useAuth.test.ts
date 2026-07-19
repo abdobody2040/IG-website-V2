@@ -13,7 +13,8 @@ const mockPb = {
   authStore: mockAuthStore,
   files: {
     getURL: vi.fn((_model, filename) => `https://example.com/files/${filename}`),
-  }
+  },
+  send: vi.fn().mockResolvedValue({}),
 }
 
 vi.mock('../lib/pocketbase', () => ({

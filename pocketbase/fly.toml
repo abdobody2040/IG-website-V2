@@ -9,7 +9,7 @@ primary_region = "cdg"
 
 [http_service]
   internal_port = 8080
-  force_https = true
+  force_https = true       # ✅ HTTPS-only enforcement — Fly.io redirects all HTTP→HTTPS
   auto_stop_machines = false
   auto_start_machines = true
   min_machines_running = 1
@@ -20,5 +20,11 @@ primary_region = "cdg"
   destination = "/pb/pb_data"
 
 [env]
-  # Configured via fly secrets:
-  # STRIPE_SECRET_KEY
+  # ── Set all secrets via `fly secrets set` — NEVER hardcode values here ──────
+  # Required secrets:
+  #   fly secrets set PB_ENCRYPTION_KEY="$(openssl rand -hex 32)"
+  #   fly secrets set STRIPE_SECRET_KEY="sk_live_..."
+  #
+  # PB_ENCRYPTION_KEY is read by start.sh and passed to --encryptionEnv flag.
+  # MUST be set BEFORE first boot. Cannot be rotated after data exists.
+

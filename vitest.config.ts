@@ -13,6 +13,7 @@ export default defineConfig({
     globals: true,
     environment: 'jsdom',
     setupFiles: './src/test/setup.ts',
+    exclude: ['**/node_modules/**', '**/dist/**', 'tests/**'],
     css: false,
     env: {
       VITE_EMAIL_ENDPOINT: 'https://api.example.com/send-email',

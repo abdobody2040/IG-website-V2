@@ -149,8 +149,8 @@ Content-Security-Policy: ...
 ## Recommended Security Improvements
 
 1. **Rate limiting on Workers** — Add rate limiting for contact form and auth endpoints
-2. **HTTPS-only enforcement** — Ensure production deployment forces HTTPS
-3. **PocketBase Admin Restriction** — Ensure PocketBase admin panel (`/_/`) is restricted to localhost or VPN in production
+2. **HTTPS-only enforcement** — ✅ Enforced via fly.toml force_https and CSP upgrade-insecure-requests
+3. **PocketBase Admin Restriction** — ✅ Enforced via pb_hooks/restrict_admin.pb.js (restricts /_/ to localhost/SSH tunnels only)
 4. **Dependency scanning** — Add Dependabot or Snyk to CI/CD
 
 ---

@@ -6,6 +6,7 @@ import type { ReactNode } from 'react'
 const mockInvitationsCollection = {
   getList: vi.fn(),
   create: vi.fn(),
+  getOne: vi.fn(),
 }
 
 const mockPb = {
@@ -85,24 +86,20 @@ describe('useInvitationByToken', () => {
   })
 
   it('fetches invitation by token', async () => {
-    ;(mockInvitationsCollection.getList as Mock).mockResolvedValue({
-      items: [
-        { id: 'validtoken', email: 'invited@test.com', company_name: 'Biz Inc', role: 'client', status: 'pending', created: '2024', updated: '2024' }
-      ]
+    ;(mockInvitationsCollection.getOne as Mock).mockResolvedValue({
+      id: 'validtoken', email: 'invited@test.com', company_name: 'Biz Inc', role: 'client', status: 'pending', created: '2024', updated: '2024'
     })
 
     const { result } = renderHook(() => useInvitationByToken('validtoken'), { wrapper: createWrapper() })
     
     await waitFor(() => expect(result.current.data).not.toBeUndefined())
-    expect(mockInvitationsCollection.getList).toHaveBeenCalledWith(1, 1, {
-      filter: 'id = "validtoken" && status = "pending"'
-    })
+    expect(mockInvitationsCollection.getOne).toHaveBeenCalledWith('validtoken')
     expect(result.current.data!.email).toBe('invited@test.com')
     expect(result.current.data!.companyName).toBe('Biz Inc')
   })
 
   it('returns null when token is invalid or not found', async () => {
-    ;(mockInvitationsCollection.getList as Mock).mockResolvedValue({ items: [] })
+    ;(mockInvitationsCollection.getOne as Mock).mockRejectedValue(new Error('not found'))
 
     const { result } = renderHook(() => useInvitationByToken('bad-token'), { wrapper: createWrapper() })
     
