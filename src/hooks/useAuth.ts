@@ -92,6 +92,11 @@ export function useAuth(): AuthState {
   }, [])
 
   const signOut = async (): Promise<void> => {
+    try {
+      await pb.send('/api/auth/logout', { method: 'POST' })
+    } catch (e) {
+      console.error('Logout error:', e)
+    }
     pb.authStore.clear()
     setUser(null)
   }

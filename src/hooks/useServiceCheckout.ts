@@ -36,6 +36,7 @@ export function useServiceCheckout() {
         headers,
         body: JSON.stringify({
           mode: 'addon',
+          serviceId: service.id,
           serviceName: service.name,
           serviceDescription: service.description,
           amount: service.amount,

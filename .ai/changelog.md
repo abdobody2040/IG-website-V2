@@ -1,6 +1,42 @@
 # Instant Grow — Changelog
 
+## 2026-07-19 — Production Security Hardening, Zero-Trust Architecture & HttpOnly Cookies
+
+### Added
+- **HttpOnly Cookie Authentication** — Created `pb_hooks/auth_http_only.pb.js` to handle `/api/auth/login` and `/api/auth/logout`. Removed localStorage token storage in favor of secure, HttpOnly, SameSite=Lax cookies to prevent token exfiltration via XSS.
+- **CSRF Protection** — Implemented an `X-CSRF-Token` requirement for all state-mutating requests (POST, PUT, PATCH, DELETE) via PB hooks. The PocketBase SDK interceptor automatically reads the `csrf-token` cookie and injects it into headers.
+- **Strict Role-Level Security (RLS)** — Locked down `pb_schema.json` to prevent self-role escalation in the `users` table, and enforced strict `WITH CHECK` constraints on `orders`, `companies`, and `documents` so users can only access their own records.
+- **XSS Payload Sanitization** — Added `pb_hooks/validation.pb.js` to block payloads containing `<script`, `javascript:`, and inline event handlers before they reach the database.
+- **Rate Limiting** — Implemented `pb_hooks/rate_limiter.pb.js` backed by a new `rate_limits` collection to restrict login attempts to 5 per minute per IP.
+- **Audit Logging** — Added `pb_hooks/audit_logger.pb.js` to automatically log all CREATE/UPDATE/DELETE mutations in the `admin_audit_log` collection, tracking action types, tables, record IDs, and user IPs.
+- **Security Headers Hook** — Added `pb_hooks/security_headers.pb.js` to enforce strict CSP, `X-Frame-Options: DENY`, and `nosniff` headers directly at the API level.
+
+### Changed
+- **Frontend Authentication Refactoring** — Updated `LoginPage.tsx`, `SignupPage.tsx`, and `OrderWizard.tsx` to use the new `/api/auth/login` endpoint instead of the default PocketBase JS SDK `authWithPassword` method.
+- **SDK Overrides** — Modified `src/lib/pocketbase.ts` with `pb.beforeSend` to automatically clear local token state, include credentials (cookies), and append the CSRF header on all requests.
+- **Auth State Management** — Refactored `useAuth.ts` and `authState.ts` to rely on the backend-driven session state.
+
+## 2026-07-18 — UK LTD Roles & Ownership, Region-based Add-ons Filtering, Stripe Payment Form & Deployment Readiness
+
+### Added
+- **UK LTD Custom Roles:** Introduced specific roles for UK LTD company formations (*Director*, *Shareholder*, *Company Secretary*) while preserving US LLC roles (*Managing Member*, *Member*, *Manager*).
+- **Secure Stripe Card Inputs Form:** Added a card details input form (Cardholder Name, Card Number with auto-spacing, Expiry Date with auto-formatting, and CVC) on the "Review & Pay" step when Stripe is selected as the payment method.
+- **Card Input Validation Guard:** Enabled validation that disables the final order submission until card information is completely filled.
+- **RTL Services Dropdown Alignment:** Added conditional RTL styling (`right-1/2 translate-x-1/2`) to keep the services dropdown navigation drawer aligned correctly under the Arabic "Services" trigger.
+- **Features E2E Testing Suite:** Created `tests/e2e/features.spec.ts` covering Document Upload, Notification Center, Contact Form Email routing, and Admin Order status updates.
+
+### Changed
+- **Stripe Card Form Styling:** Redesigned the Stripe card details input form container to use the light-themed card layout (white background, slate-200 border, slate-600 labels, brand blue accents) to match the overall premium visual aesthetic of the order wizard.
+- **Chrome Non-Secure Autocomplete Bypass:** Replaced card placeholders with generic dot-masked indicators (`•••• •••• •••• ••••` and `••/••`), set `autoComplete="off"`, and generalized input IDs/names to prevent browsers from showing security warnings on local HTTP connections.
+- **Multi-Member Ownership Validation:** Restricted ownership to `< 100%` per member when 2 or more members exist. If members are deleted back to a single person, ownership is automatically restored to `100%`.
+- **Region-based Add-ons Filtering:** Compliance add-ons are now filtered dynamically based on the plan region. For example, US-only add-ons like *EIN Application*, *ITIN*, and *Reseller Permit* are automatically hidden for UK LTD plans, displaying instead UK-specific services like *UK Registered Office Address* and *Confirmation Statement*.
+- **Stripe Service Checkout Payload:** Updated `useServiceCheckout.ts` to include the required `serviceId` parameter in the Stripe checkout request body, preventing API failures.
+- **Automatic database seed:** Fixed PocketBase superuser/admin authentication endpoints to match the exact protocol of PocketBase `v0.22.22` and completed database migrations and seeding.
+- **PocketBase Schema Mismatch Fix**: Corrected `useDocuments.ts`, `useOrders.ts`, and `useCompanies.ts` hooks to query based on `user` field directly rather than filtering by non-existent `workspace` relations.
+- **E2E Testing Optimization**: Intercepted Cloudflare R2 uploads via Playwright routing, updated message click selectors, resolved email visibility for admin client search, and configured Playwright to execute in serial mode.
+
 ## 2026-07-07 — Admin UI Pagination, E2E QA Verification, Programmatic OG Pre-rendering & Deployment Foundations
+
 
 ### Added
 - **Arabic & Mobile E2E Testing Coverage** — Wrote a new E2E test file `tests/e2e/rtl-and-mobile.spec.ts` to test language toggling, Arabic Right-to-Left layout direction triggers (`dir="rtl"`), and mobile viewport hamburger sidebar responsiveness.

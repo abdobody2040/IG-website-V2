@@ -325,4 +325,43 @@
 - Increases database model save latency slightly due to blocking Stripe API calls (mitigated by fast HTTP request handlers).
 - Relies on isolated Goja context execution where global functions must be scoped locally inside each event callback.
 
+---
+
+## ADR-014: Stripe Payment Form & Validation in Order Wizard
+
+**Title:** Implement secure, interactive card validation inputs on final wizard steps in lieu of direct checkout redirects in dev/test flows.
+
+**Status:** Approved
+
+**Why Chosen:**
+- Prevents orders from immediately completing and skipping payment logic during dev/testing phases.
+- Enhances visual verification and UX by simulating production payment requirements before routing customers.
+- Secures the payment step by ensuring that in production, the checkout session payload is fully authenticated and correctly validated prior to redirect.
+
+**Pros:**
+- Complete end-to-end checkout flow simulation.
+- Guarantees payment fields (cardholder name, card number, expiration, CVC) are fully populated.
+- Retains compatibility with wrangler/cloudflare environment secrets.
+
+**Cons:**
+- Relies on a mock form wrapper for local testing (can be easily replaced with Stripe Elements in production if direct card collection is desired instead of Stripe Hosted Checkout).
+
+---
+
+## ADR-015: Plan Region Customization and Dynamic Filtering
+
+**Title:** Filter compliance add-ons and member roles dynamically in the wizard depending on selected company region (US LLC vs UK LTD).
+
+**Status:** Approved
+
+**Why Chosen:**
+- Users select formation plans in different legal jurisdictions (US vs UK).
+- Specific roles (Managing Member/Member/Manager vs Director/Shareholder/Secretary) and government services (EIN/ITIN vs Registered Office/VAT) are strictly tied to the company region.
+- Dynamically showing only relevant options prevents customer confusion and invalid database entries.
+
+**Pros:**
+- Clean, tailored UX for each region.
+- Built-in verification logic preventing 100% single-member ownership when multiple members are active.
+
+
 

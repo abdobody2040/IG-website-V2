@@ -21,19 +21,30 @@ graph TD
 
 ## Pre-requisites
 
-Make sure you have the following accounts and CLI tools installed before proceeding:
-- **Cloudflare Account**: For hosting serverless Workers (and optionally frontend via Cloudflare Pages).
-  - Install Wrangler CLI: `npm install -g wrangler`
-- **Stripe Account**: For processing payments.
-- **Resend Account**: For sending transactional emails.
-- **Hosting Provider (for PocketBase)**: Fly.io, Railway, DigitalOcean, or Hetzner.
-  - Install Fly CLI (if using Fly.io): [Fly CLI Installation Guide](https://fly.io/docs/hands-on/install-cli/)
+Gather the following accounts, credentials, and CLI tools before starting:
+
+### 1. External Service Accounts & Keys
+- **Stripe Account**: For payment processing. You will need:
+  - Live Secret Key (`sk_live_...`) or Test Secret Key (`sk_test_...`).
+- **Resend Account**: For sending transactional emails. You will need:
+  - Resend API Key (`re_...`).
+  - A verified domain in Resend to send emails from (e.g., `instantgrow.net`).
+- **Cloudflare Account**: For hosting serverless Workers and optionally the frontend.
+
+### 2. Required CLI Tools
+- **Node.js** (v18 or higher)
+- **Wrangler CLI** (for Cloudflare Workers):
+  ```bash
+  npm install -g wrangler
+  ```
+- **Fly CLI** (if hosting PocketBase on Fly.io):
+  - [Fly CLI Installation Guide](https://fly.io/docs/hands-on/install-cli/)
 
 ---
 
 ## Step 1: Deploy PocketBase Database
 
-PocketBase holds your operational data (users, orders, companies, documents, payments). It requires a persistent disk mount since it uses SQLite.
+PocketBase holds all data (users, orders, companies, documents, payments). It requires a persistent disk mount since it uses SQLite.
 
 ### Option A: Deploying on Fly.io (Recommended)
 
@@ -49,123 +60,126 @@ PocketBase holds your operational data (users, orders, companies, documents, pay
    ```bash
    fly launch
    ```
-   - *Note:* Follow the prompts to create the app. Fly.io will automatically parse [fly.toml](file:///g:/Vibe%20coding/IG%20website%20V2/pocketbase/fly.toml), build the [Dockerfile](file:///g:/Vibe%20coding/IG%20website%20V2/pocketbase/Dockerfile), allocate a persistent volume (`pb_data`), and attach it to `/pb/pb_data`.
-4. Add your production `STRIPE_SECRET_KEY` secret to PocketBase (needed for hook execution):
+   *Note:* Follow the prompts to create the app. Fly.io will automatically parse [fly.toml](file:///g:/Vibe%20coding/IG%20website%20V2/pocketbase/fly.toml), build the [Dockerfile](file:///g:/Vibe%20coding/IG%20website%20V2/pocketbase/Dockerfile), allocate a persistent volume (`pb_data`), and attach it to `/pb/pb_data`.
+4. Add your production Stripe Secret Key to PocketBase (required for database-level event synchronization):
    ```bash
-   fly secrets set STRIPE_SECRET_KEY="sk_live_..."
+   fly secrets set STRIPE_SECRET_KEY="sk_live_your_key"
    ```
 
-### Option B: Deploying on a VPS (Docker Engine)
+### Option B: Deploying on a VPS (Docker)
 
 1. Copy the `pocketbase/` folder to your server.
-2. Build the Docker image on your server:
+2. Build the Docker image:
    ```bash
    docker build -t pocketbase-prod -f pocketbase/Dockerfile pocketbase
    ```
-3. Run the container, ensuring you mount a persistent volume for the data directory:
+3. Run the container with a persistent volume:
    ```bash
    docker run -d \
      -p 80:8080 \
      -v pb_data:/pb/pb_data \
-     -e STRIPE_SECRET_KEY="sk_live_..." \
+     -e STRIPE_SECRET_KEY="sk_live_your_key" \
      --name pocketbase-prod \
      pocketbase-prod
    ```
+
+### ⚠️ Critical First-Boot Task
+Immediately after PocketBase is online (e.g. at `https://your-pb-domain.com/_/`):
+1. Navigate to `https://your-pb-domain.com/_/` in your browser.
+2. Create your **first admin superuser account** with a secure email and password.
+3. Save these credentials, as they are needed for serverless Workers and database seeding scripts.
 
 ---
 
 ## Step 2: Configure and Deploy Cloudflare Workers
 
-We have 5 core workers in the `functions/` directory. Each needs to be configured and deployed.
+We have core edge functions in the `functions/` directory. Each needs to be configured with Wrangler.
 
 ### 1. Send Email Worker (`functions/send-email`)
-Sends transactional emails (compliance alerts, receipts) via Resend.
+Proxies transactional emails to the Resend API.
 ```bash
 cd functions/send-email
-# Configure secrets
-npx wrangler secret put RESEND_API_KEY
-# Deploy
+# 1. Bind secrets
+npx wrangler secret put RESEND_API_KEY      # Your Resend Key (re_...)
+# 2. Deploy
 npx wrangler deploy
 ```
 
 ### 2. Create Checkout Worker (`functions/create-checkout`)
-Creates Stripe Checkout sessions for package orders and add-on services.
+Creates Stripe Checkout sessions.
 ```bash
 cd ../create-checkout
-# Configure secrets
-npx wrangler secret put STRIPE_SECRET_KEY
-npx wrangler secret put PB_ADMIN_EMAIL
-npx wrangler secret put PB_ADMIN_PASSWORD
-# Deploy
+# 1. Bind secrets
+npx wrangler secret put STRIPE_SECRET_KEY   # Your Stripe Secret Key (sk_live_...)
+npx wrangler secret put PB_ADMIN_EMAIL       # PocketBase Admin Email
+npx wrangler secret put PB_ADMIN_PASSWORD    # PocketBase Admin Password
+# 2. Deploy
 npx wrangler deploy
 ```
 
 ### 3. Stripe Webhook Worker (`functions/stripe-webhook`)
-Processes Stripe webhook events and updates PocketBase order records.
+Listens to Stripe events to update PocketBase order states.
 ```bash
 cd ../stripe-webhook
-# Configure secrets
-npx wrangler secret put STRIPE_SECRET_KEY
+# 1. Bind secrets
+npx wrangler secret put STRIPE_SECRET_KEY   # Your Stripe Secret Key
+npx wrangler secret put PB_ADMIN_EMAIL       # PocketBase Admin Email
+npx wrangler secret put PB_ADMIN_PASSWORD    # PocketBase Admin Password
+npx wrangler secret put RESEND_API_KEY      # Your Resend Key (for payment success emails)
+```
+*(Wait to deploy this worker until you get the webhook signing secret in Step 3!)*
+
+---
+
+## Step 3: Configure Stripe Webhook & Seeding
+
+### 1. Add Webhook to Stripe
+1. Log in to your **Stripe Dashboard** ➔ **Developers** ➔ **Webhooks**.
+2. Click **Add Endpoint**.
+3. In **Endpoint URL**, enter your deployed `stripe-webhook` worker URL (e.g. `https://stripe-webhook.your-subdomain.workers.dev`).
+4. Select the event to listen to: `checkout.session.completed`.
+5. Click **Add Endpoint**, then copy the **Signing Secret** (`whsec_...`).
+
+### 2. Save Signing Secret and Deploy Webhook Worker
+Go back to your terminal:
+```bash
+cd functions/stripe-webhook
+# Save the secret you just copied
 npx wrangler secret put STRIPE_WEBHOOK_SECRET
-npx wrangler secret put PB_ADMIN_EMAIL
-npx wrangler secret put PB_ADMIN_PASSWORD
-npx wrangler secret put RESEND_API_KEY
 # Deploy
 npx wrangler deploy
 ```
 
-### 4. Delete User Worker (`functions/delete-user`)
-Ensures clean, cascading database deletions for clients and admins.
-```bash
-cd ../delete-user
-npx wrangler deploy
-```
-
-### 5. Submit Contact Worker (`functions/submit-contact`)
-Receives customer contact forms and validates Turnstile CAPTCHAs.
-```bash
-cd ../submit-contact
-# Configure secrets
-npx wrangler secret put TURNSTILE_SECRET_KEY
-npx wrangler deploy
-```
-
-*Note:* You can change the `ALLOWED_ORIGIN` and `PB_URL` default environment variables inside the `wrangler.toml` files in each folder to match your production domains before running `deploy`.
-
----
-
-## Step 3: Seed Live Stripe Products and Prices
-
-Once PocketBase is up and running in production, you must synchronize your product definitions and pricing options.
-
-1. Ensure the database admin account exists on your production PocketBase instance (it will have run migrations automatically upon startup).
-2. Set the Stripe live or test environment variables on your local machine:
+### 3. Sync Database Pricing with Stripe
+Synchronize your packages and 50+ services into Stripe so they have matching live API pricing IDs:
+1. Set environment variables on your local machine:
    ```powershell
    # Windows PowerShell
-   $env:STRIPE_SECRET_KEY="sk_live_..."
+   $env:STRIPE_SECRET_KEY="sk_live_your_key"
    $env:PB_URL="https://your-pocketbase-domain.com"
    $env:PB_ADMIN_EMAIL="admin@yourdomain.com"
    $env:PB_ADMIN_PASSWORD="YourAdminPassword123!"
    
    # Linux / macOS Bash
-   export STRIPE_SECRET_KEY="sk_live_..."
+   export STRIPE_SECRET_KEY="sk_live_your_key"
    export PB_URL="https://your-pocketbase-domain.com"
    export PB_ADMIN_EMAIL="admin@yourdomain.com"
    export PB_ADMIN_PASSWORD="YourAdminPassword123!"
    ```
-3. Run the synchronization script to create products on Stripe and save the pricing identifiers back to PocketBase:
+2. Run the synchronization script:
    ```bash
    npm run db:sync-stripe
    ```
+   *This creates products in Stripe and records their Stripe Price IDs back into PocketBase.*
 
 ---
 
 ## Step 4: Deploy Frontend Client
 
-The frontend can be built and deployed to any static hosting provider (e.g. Netlify, Vercel, or Cloudflare Pages).
+The frontend can be built and deployed to Netlify, Vercel, or Cloudflare Pages.
 
 ### 1. Configure Production Environment Variables
-Set the following environment variables in your hosting provider's admin dashboard:
+Set the following environment variables in your hosting provider's dashboard:
 
 | Variable | Description | Example Value |
 | :--- | :--- | :--- |
@@ -175,7 +189,7 @@ Set the following environment variables in your hosting provider's admin dashboa
 | `VITE_DELETE_USER_ENDPOINT` | URL of deployed delete-user Worker | `https://instantgrow-delete-user.username.workers.dev` |
 | `VITE_R2_UPLOAD_ENDPOINT` | URL of deployed upload-validator Worker | `https://instantgrow-upload-validator.username.workers.dev` |
 | `VITE_EMAIL_ENDPOINT` | URL of deployed send-email Worker | `https://instantgrow-send-email.username.workers.dev` |
-| `VITE_TURNSTILE_SITE_KEY` | Production Cloudflare Turnstile key | `0x4AAAAAA...` |
+| `VITE_TURNSTILE_SITE_KEY` | Production Cloudflare Turnstile key (optional) | `0x4AAAAAA...` |
 
 ### 2. Run the Production Build Command
 Configure the build settings in your provider's dashboard:

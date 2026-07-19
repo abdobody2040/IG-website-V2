@@ -272,7 +272,7 @@ export default function ComparisonTable() {
   }
 
   return (
-    <section id="comparison" className="ig-section bg-[#F8FAFC]">
+    <section id="comparison" className="ig-section bg-[#F8FAFC] !pt-8 lg:!pt-12">
       <div className="max-w-[1280px] mx-auto">
         
         {/* Top Badges & Heading */}

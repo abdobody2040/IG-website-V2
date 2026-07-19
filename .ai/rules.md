@@ -97,3 +97,12 @@
 2. **No Relative Imports:** Prefer `@/` alias over `../../`
 3. **Group Imports:** React/external first, then internal, then styles
 4. **No Barrel Cycles:** Avoid circular dependencies in barrel files
+
+## Development Workflow
+
+1. **Branching Strategy:** Use feature branches (`feature/`, `bugfix/`, `hotfix/`). Main branch is protected and always deployable.
+2. **Commit Conventions:** Follow Conventional Commits (`feat:`, `fix:`, `docs:`, `chore:`).
+3. **PR Conventions:** All PRs must pass CI (lint, build, test) before merge. Review required.
+4. **Linting & Formatting:** Pre-commit hooks enforce Prettier and ESLint. No warnings allowed in production build.
+5. **CI/CD Pipeline:** GitHub Actions automatically tests all PRs. Merges to `main` auto-deploy via Cloudflare Pages.
+6. **Rollback Strategy:** Cloudflare Pages atomic deployments allow instant 1-click rollbacks from the Cloudflare Dashboard. Database backups are taken daily.

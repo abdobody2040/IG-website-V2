@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate, Link } from '@tanstack/react-router'
 import { useForm } from 'react-hook-form'
 import { pb } from '../../lib/pocketbase'
+import type { RecordModel } from 'pocketbase'
 import { AuthPanel } from './AuthPanel'
 import { AuthInput } from './AuthInput'
 import { useLang } from '../../i18n/LanguageContext'
@@ -25,8 +26,12 @@ export default function LoginPage() {
   const onSubmit = async ({ email, password }: LoginForm) => {
     setServerError('')
     try {
-      const authData = await pb.collection('users').authWithPassword(email, password)
-      const role = (authData.record['role'] as string) ?? 'client'
+      const res = await pb.send('/api/auth/login', {
+        method: 'POST',
+        body: { email, password }
+      })
+      pb.authStore.save('dummy_token_for_sdk', res.record as RecordModel)
+      const role = (res.record['role'] as string) ?? 'client'
       if (role === 'admin') {
         navigate({ to: '/admin' })
       } else {

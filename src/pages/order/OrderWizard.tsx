@@ -32,6 +32,7 @@ export default function OrderWizard() {
   const [selectedAddOns, setSelectedAddOns] = useState<string[]>([])
   const [submitting, setSubmitting] = useState(false)
   const [paymentMethod, setPaymentMethod] = useState<'stripe' | 'invoice'>('stripe')
+  const [cardDetails, setCardDetails] = useState({ number: '', expiry: '', cvc: '', name: '' })
   const [members, setMembers] = useState<Member[]>([{
     id: crypto.randomUUID(),
     fullName: '',
@@ -59,6 +60,7 @@ export default function OrderWizard() {
   }
 
   const plan = PLANS.find(p => p.id === planId)
+  const planRegion: 'us' | 'uk' = planId.startsWith('uk') ? 'uk' : 'us'
   const addOnObjects = ADD_ONS.filter(a => selectedAddOns.includes(a.id))
 
   const next = async () => {
@@ -87,8 +89,12 @@ export default function OrderWizard() {
           display_name: data.fullName,
           role: 'client',
         })
-        const authData = await pb.collection('users').authWithPassword(data.email, tempPassword)
-        uid = authData.record.id
+        const res = await pb.send('/api/auth/login', {
+          method: 'POST',
+          body: { email: data.email, password: tempPassword }
+        })
+        pb.authStore.save('dummy_token_for_sdk', res.record as any)
+        uid = res.record.id
       }
 
       if (!uid) throw new Error('Authentication failed')
@@ -97,7 +103,7 @@ export default function OrderWizard() {
       const totalAmount = selectedPlan.price + stateFee + addOnTotal
       const checkoutEndpoint = import.meta.env.VITE_CHECKOUT_ENDPOINT as string | undefined
 
-      if (paymentMethod === 'stripe' && checkoutEndpoint && !import.meta.env.DEV) {
+      if (paymentMethod === 'stripe' && checkoutEndpoint) {
         // ── Production Stripe: redirect to Stripe Checkout ──
         const headers: Record<string, string> = { 'Content-Type': 'application/json' }
         if (pb.authStore.token) headers.Authorization = `Bearer ${pb.authStore.token}`
@@ -234,16 +240,16 @@ export default function OrderWizard() {
                 />
               )}
               {step === 1 && (
-                <StepMemberInfo members={members} setMembers={setMembers} />
+                <StepMemberInfo members={members} setMembers={setMembers} planRegion={planRegion} />
               )}
               {step === 2 && (
                 <StepServicePackage planId={planId} setPlanId={handleSetPlanId} />
               )}
               {step === 3 && (
-                <StepAddOns category="compliance" selectedAddOns={selectedAddOns} setSelectedAddOns={setSelectedAddOns} />
+                <StepAddOns category="compliance" selectedAddOns={selectedAddOns} setSelectedAddOns={setSelectedAddOns} planRegion={planRegion} />
               )}
               {step === 4 && (
-                <StepAddOns category="tech" selectedAddOns={selectedAddOns} setSelectedAddOns={setSelectedAddOns} />
+                <StepAddOns category="tech" selectedAddOns={selectedAddOns} setSelectedAddOns={setSelectedAddOns} planRegion={planRegion} />
               )}
               {step === 5 && (
                 <StepAccount user={user} register={register} errors={errors} />
@@ -257,6 +263,8 @@ export default function OrderWizard() {
                   members={members}
                   paymentMethod={paymentMethod}
                   setPaymentMethod={setPaymentMethod}
+                  cardDetails={cardDetails}
+                  setCardDetails={setCardDetails}
                 />
               )}
 
@@ -287,8 +295,11 @@ export default function OrderWizard() {
                   <button
                     type="button"
                     onClick={onSubmit}
-                    disabled={submitting}
-                    className="flex items-center gap-2 bg-[#1a56ff] text-white font-semibold text-sm px-8 py-3 rounded-xl hover:bg-[#3a76ff] transition-colors disabled:opacity-60 shadow-sm"
+                    disabled={submitting || (
+                      paymentMethod === 'stripe' &&
+                      (!cardDetails.number || !cardDetails.expiry || !cardDetails.cvc || !cardDetails.name)
+                    )}
+                    className="flex items-center gap-2 bg-[#1a56ff] text-white font-semibold text-sm px-8 py-3 rounded-xl hover:bg-[#3a76ff] transition-colors disabled:opacity-60 disabled:cursor-not-allowed shadow-sm"
                   >
                     {submitting ? (
                       <><span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> {t.order.placingOrder}</>

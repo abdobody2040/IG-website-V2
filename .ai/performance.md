@@ -153,3 +153,11 @@ CREATE INDEX idx_payments_user_id ON public.payments(user_id);
 - [ ] Run Lighthouse audit
 - [ ] Add Service Worker for caching
 - [ ] Implement virtual scrolling for large tables
+
+## Strict Performance Budgets
+
+To maintain production-grade performance, all future PRs and code changes MUST adhere to these budgets:
+1. **No bundle regressions:** Core application bundle must remain < 250KB gzipped.
+2. **Strict Lazy Loading:** Heavy dependencies (Three.js, Recharts, Framer Motion) MUST be lazy-loaded. They are strictly forbidden from the core vendor chunk.
+3. **Image Budgets:** No image > 200KB. All images must use modern formats (WebP/AVIF).
+4. **Lighthouse:** Any regression dropping the Performance score below 90 is a blocking failure.

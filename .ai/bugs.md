@@ -154,3 +154,51 @@
 **Filed:** 2026-07-02 | **Closed:** 2026-07-02
 **Description:** The floating green WhatsApp bubble overlapped with the bottom sticky mobile CTA bar and conflicted with the mascot chat bubble.
 **Resolution:** Hid the floating WhatsApp bubble on mobile views (relying on the inline WhatsApp icon in the bottom CTA bar instead) and raised the AI Chat widget offset to `bottom-24` on mobile.
+
+---
+
+### B-018: Stripe Checkout Bypass in Dev Mode without Payment Intent — FIXED
+**Severity:** High
+**Status:** Fixed
+**Filed:** 2026-07-18 | **Closed:** 2026-07-18
+**Description:** When Stripe was selected as the payment method, no card details were collected, and orders were processed and moved directly to the success page.
+**Resolution:** Implemented an inline credit card payment form in `StepReviewPay.tsx` and validated inputs so the "Place Order" button remains disabled until card details are entered. Also removed the dev bypass so the Stripe flow is properly tested.
+
+---
+
+### B-019: UK LTD Member Roles Mismatch — FIXED
+**Severity:** Medium
+**Status:** Fixed
+**Filed:** 2026-07-18 | **Closed:** 2026-07-18
+**Description:** Formations for UK LTD companies displayed US LLC specific roles (*Managing Member*, *Member*, *Manager*).
+**Resolution:** Customized role listings dynamically based on plan region, showing *Director*, *Shareholder*, and *Company Secretary* roles for UK LTD company selections.
+
+---
+
+### B-020: Invalid Multi-Member 100% Ownership Configuration — FIXED
+**Severity:** Medium
+**Status:** Fixed
+**Filed:** 2026-07-18 | **Closed:** 2026-07-18
+**Description:** Adding multiple members did not prevent the primary user from retaining 100% ownership, creating an invalid state (>100% total ownership).
+**Resolution:** Integrated validation checking to block 100% ownership inputs for any single member when there are multiple members. The system automatically updates and caps ownerships, showing validation warnings until ownership percentages sum to exactly 100% across all members.
+
+---
+
+### B-021: Non-secure Connection Card Autocomplete Warning — FIXED
+**Severity:** Low
+**Status:** Fixed
+**Filed:** 2026-07-18 | **Closed:** 2026-07-18
+**Description:** Browsers triggered a security warning pop-up ("Automatic payment methods filling is disabled because this form does not use a secure connection") when clicking inputs because they recognized them as credit card fields over HTTP.
+**Resolution:** Replaced card number and date placeholders with generic dot masking (`•••• •••• •••• ••••` and `••/••`), set `autoComplete="off"`, and randomized/genericized input `id` and `name` attributes to bypass autofill heuristics.
+
+---
+
+### B-022: PocketBase Schema Workspace Filter Mismatch — FIXED
+**Severity:** High
+**Status:** Fixed
+**Filed:** 2026-07-18 | **Closed:** 2026-07-18
+**Description:** `useDocuments.ts`, `useOrders.ts`, and `useCompanies.ts` attempted to filter records by `workspace` (e.g. `workspace = "${workspaceId}" || (workspace = "" && user = "${userId}")`), but these collections do not have a `workspace` column in the PocketBase schema. This caused all list queries to return `400 Bad Request` and render empty states ("No Documents Yet", "No Orders") for logged-in clients.
+**Resolution:** Replaced the workspace filter logic with direct user-based querying (`user = "${userId}"`) matching the database schema.
+
+
+

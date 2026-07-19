@@ -30,6 +30,12 @@ BEFORE making ANY changes to this repository, ALL AI agents MUST:
 4. **Update context.md** if project state significantly changes.
 5. **Minimize diffs.** Make surgical changes, not bulk rewrites.
 
+## Authentication & Security Protocols
+
+1. **HttpOnly Cookies:** We use a strict HttpOnly cookie architecture. NEVER use the default PocketBase SDK `authWithPassword()` in frontend components. ALWAYS use `pb.send('/api/auth/login', { method: 'POST', body: ... })`.
+2. **CSRF Tokens:** All `POST`, `PUT`, `PATCH`, and `DELETE` requests are intercepted by `pb_hooks` to require an `X-CSRF-Token` header. The frontend SDK is already configured to inject this, but be aware if making raw `fetch` calls.
+3. **RLS Constraints:** `WITH CHECK` rules ensure users only modify their own data. Do NOT add roles or bypass these checks from client-side code.
+
 ## Code Quality Rules
 
 1. **No duplicate logic.** If a pattern exists, reuse it. Extract shared logic into reusable utilities.

@@ -11,9 +11,7 @@ export function useCompanies(userId: string | undefined | null) {
   const { data, isLoading, error } = useQuery({
     queryKey: ['companies', workspaceId, userId],
     queryFn: async () => {
-      const filterStr = workspaceId
-        ? `workspace = "${workspaceId}" || (workspace = "" && user = "${userId}")`
-        : `user = "${userId}"`
+      const filterStr = `user = "${userId}"`
 
       const result = await pb.collection('companies').getList(1, 200, {
         filter: filterStr,

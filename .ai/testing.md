@@ -9,8 +9,9 @@ We have implemented a comprehensive unit/integration test suite using **Vitest**
   - `order-flow.spec.ts`: End-to-end order wizard completion (6 distinct steps).
   - `admin-panel.spec.ts`: Admin logging, navigation, payment lists, and CSV/PDF downloads.
   - `rtl-and-mobile.spec.ts`: Specialized layout tests validating `dir="rtl"` toggling, bilingual Arabic translations, and mobile viewport hamburger sidebar overlay visibility.
+  - `features.spec.ts`: Client document uploads, client notification center, contact form email mock routing, and admin order adjustments.
 - **Database Test Scripts**: Programmatic seed sync tests (`scripts/ensure-admin-user.mjs`, etc.) updated to construct the admin account dynamically using safe environment-driven parameters.
-- **Validation**: Full E2E verification successfully ran on July 7, 2026, with all 6 specs passing cleanly against a clean PocketBase test instance.
+- **Validation**: Full E2E verification successfully ran on July 18, 2026, with all 5 specs passing cleanly against a clean PocketBase test instance.
 
 
 ### Unit Testing
@@ -87,6 +88,14 @@ describe('useOrders', () => {
 2. Admin: login → manage orders → upload documents → view analytics
 3. Mobile responsiveness
 4. RTL/Arabic layout
+5. Core features: document uploads (with wait-for-upload synchronization), client notification updates, contact form submissions, and admin order detail edits.
+
+**Mocking & Interception Strategy:**
+- Outgoing Resend emails and Cloudflare R2 uploads are mocked using Playwright's `page.route` to intercept network requests. This ensures tests run quickly, predictably, and completely offline.
+
+**Single-Worker Serial Mode:**
+- E2E tests are configured to run in serial mode with a single worker (`mode: 'serial'`) to prevent sqlite database locks during parallel test execution.
+
 
 ### API Testing
 
@@ -147,3 +156,11 @@ npm test          # Run all tests
 npm run test:watch  # Watch mode
 npm run test:coverage # With coverage report
 ```
+
+## Strict Testing Conventions
+
+To maintain production-grade stability, all code changes MUST adhere to:
+1. **Core Business Logic:** Any logic concerning pricing, auth tokens, or permission validation must have 100% unit test coverage.
+2. **E2E Golden Paths:** The checkout flow, signup flow, and admin actions must be covered by Playwright E2E tests.
+3. **No Flaky Tests:** E2E tests must use deterministic selectors (e.g., `data-testid`) or exact ARIA roles, avoiding brittle CSS selectors.
+4. **Mocking Boundaries:** Unit tests must completely mock out network and database boundaries (PocketBase). Never execute live DB queries in a unit test.

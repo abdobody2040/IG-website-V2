@@ -265,7 +265,7 @@ export default function Navbar() {
         <div className="flex items-center justify-between h-[80px]">
           {/* Logo */}
           <a href="/" className="flex items-center">
-            <img src="/logo.png" alt="Instant Grow" className="h-9 sm:h-11 w-auto object-contain" />
+            <img src="/logo.png" alt="Instant Grow" className="h-11 sm:h-14 w-auto object-contain" />
           </a>
 
           {/* Desktop Nav */}
@@ -291,6 +291,82 @@ export default function Navbar() {
                       {item.label}
                       <ChevronDown size={14} className={`transition-transform duration-200 ${isServicesHovered ? 'rotate-180 text-[#2563EB]' : 'text-slate-400'}`} />
                     </a>
+
+                    {/* Desktop Services Mega Dropdown */}
+                    <AnimatePresence>
+                      {isServicesHovered && (
+                        <motion.div
+                          initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                          animate={{ opacity: 1, y: 0, scale: 1 }}
+                          exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                          transition={{ duration: 0.2, ease: 'easeOut' }}
+                          className={`absolute top-[70px] ${isAr ? 'right-1/2 translate-x-1/2' : 'left-1/2 -translate-x-1/2'} w-[680px] bg-white border border-slate-200/60 rounded-[24px] shadow-[0_20px_50px_rgba(0,0,0,0.12)] p-5 flex text-slate-800 z-50`}
+                          onMouseEnter={() => setIsServicesHovered(true)}
+                          onMouseLeave={() => setIsServicesHovered(false)}
+                        >
+                          {/* Categories Column */}
+                          <div className={`w-[260px] ${isAr ? 'border-l pl-3' : 'border-r pr-3'} border-slate-100 flex flex-col gap-1 flex-shrink-0`}>
+                            {CATEGORIES.map(cat => {
+                              const isActive = hoveredCategory === cat.id
+                              const label = isAr ? cat.label_ar : cat.label_en
+                              return (
+                                <div
+                                  key={cat.id}
+                                  onMouseEnter={() => setHoveredCategory(cat.id)}
+                                  className={`flex items-center justify-between px-4 py-3 rounded-xl cursor-pointer transition-all duration-200 ${
+                                    isActive
+                                      ? 'bg-blue-50 text-blue-600 font-bold shadow-[0_2px_8px_rgba(37,99,235,0.04)]'
+                                      : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900 font-semibold'
+                                  }`}
+                                >
+                                  <span className="text-[13px]">{label}</span>
+                                  {isActive && (
+                                    isAr ? <ChevronLeft size={14} className="text-blue-600" /> : <ChevronRight size={14} className="text-blue-600" />
+                                  )}
+                                </div>
+                              )
+                            })}
+                          </div>
+
+                          {/* Services Column */}
+                          <div className={`flex-1 ${isAr ? 'pr-3' : 'pl-3'} flex flex-col gap-1 max-h-[380px] overflow-y-auto custom-scrollbar`}>
+                            {activeServices.filter(s => s.category === hoveredCategory).map(svc => {
+                              const IconComponent = (Icons as any)[svc.icon] || Icons.HelpCircle
+                              const title = isAr ? svc.title_ar : svc.title_en
+                              const period = isAr ? svc.period_ar : svc.period_en
+                              const priceStr = svc.price > 0 ? `$${svc.price}` : (isAr ? 'مشمول' : 'Included')
+                              
+                              const categorySlug = getCategorySlug(svc.category)
+                              return (
+                                <a
+                                  key={svc.id}
+                                  href={`/services/${categorySlug}/${svc.id}`}
+                                  onClick={() => setIsServicesHovered(false)}
+                                  className="flex items-center gap-3.5 p-3 rounded-2xl hover:bg-slate-50 group transition-all duration-200"
+                                >
+                                  <div className="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform duration-200">
+                                    <IconComponent size={18} />
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <h4 className="text-slate-800 text-[13.5px] font-bold group-hover:text-blue-600 transition-colors truncate">
+                                      {title}
+                                    </h4>
+                                    <span className="text-slate-400 text-[11px] font-medium block">
+                                      {priceStr} {svc.price > 0 && `/ ${period}`}
+                                    </span>
+                                  </div>
+                                </a>
+                              )
+                            })}
+                            {activeServices.filter(s => s.category === hoveredCategory).length === 0 && (
+                              <div className="flex flex-col items-center justify-center py-20 text-slate-400 text-xs">
+                                <span>{isAr ? 'لا توجد خدمات في هذا القسم حالياً' : 'No services in this category yet'}</span>
+                              </div>
+                            )}
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
                   </div>
                 )
               }
@@ -308,82 +384,6 @@ export default function Navbar() {
               )
             })}
           </nav>
-
-          {/* Desktop Services Mega Dropdown */}
-          <AnimatePresence>
-            {isServicesHovered && (
-              <motion.div
-                initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                transition={{ duration: 0.2, ease: 'easeOut' }}
-                className={`absolute top-[70px] ${isAr ? 'left-6' : 'right-6'} w-[680px] bg-white border border-slate-200/60 rounded-[24px] shadow-[0_20px_50px_rgba(0,0,0,0.12)] p-5 flex ${isAr ? 'flex-row-reverse' : ''} text-slate-800 z-50`}
-                onMouseEnter={() => setIsServicesHovered(true)}
-                onMouseLeave={() => setIsServicesHovered(false)}
-              >
-                {/* Categories Column */}
-                <div className={`w-[260px] ${isAr ? 'border-l pl-3' : 'border-r pr-3'} border-slate-100 flex flex-col gap-1 flex-shrink-0`}>
-                  {CATEGORIES.map(cat => {
-                    const isActive = hoveredCategory === cat.id
-                    const label = isAr ? cat.label_ar : cat.label_en
-                    return (
-                      <div
-                        key={cat.id}
-                        onMouseEnter={() => setHoveredCategory(cat.id)}
-                        className={`flex items-center justify-between px-4 py-3 rounded-xl cursor-pointer transition-all duration-200 ${
-                          isActive
-                            ? 'bg-blue-50 text-blue-600 font-bold shadow-[0_2px_8px_rgba(37,99,235,0.04)]'
-                            : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900 font-semibold'
-                        }`}
-                      >
-                        <span className="text-[13px]">{label}</span>
-                        {isActive && (
-                          isAr ? <ChevronLeft size={14} className="text-blue-600" /> : <ChevronRight size={14} className="text-blue-600" />
-                        )}
-                      </div>
-                    )
-                  })}
-                </div>
-
-                {/* Services Column */}
-                <div className={`flex-1 ${isAr ? 'pr-3' : 'pl-3'} flex flex-col gap-1 max-h-[380px] overflow-y-auto custom-scrollbar`}>
-                  {activeServices.filter(s => s.category === hoveredCategory).map(svc => {
-                    const IconComponent = (Icons as any)[svc.icon] || Icons.HelpCircle
-                    const title = isAr ? svc.title_ar : svc.title_en
-                    const period = isAr ? svc.period_ar : svc.period_en
-                    const priceStr = svc.price > 0 ? `$${svc.price}` : (isAr ? 'مشمول' : 'Included')
-                    
-                    const categorySlug = getCategorySlug(svc.category)
-                    return (
-                      <a
-                        key={svc.id}
-                        href={`/services/${categorySlug}/${svc.id}`}
-                        onClick={() => setIsServicesHovered(false)}
-                        className="flex items-center gap-3.5 p-3 rounded-2xl hover:bg-slate-50 group transition-all duration-200"
-                      >
-                        <div className="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform duration-200">
-                          <IconComponent size={18} />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <h4 className="text-slate-800 text-[13.5px] font-bold group-hover:text-blue-600 transition-colors truncate">
-                            {title}
-                          </h4>
-                          <span className="text-slate-400 text-[11px] font-medium block">
-                            {priceStr} {svc.price > 0 && `/ ${period}`}
-                          </span>
-                        </div>
-                      </a>
-                    )
-                  })}
-                  {activeServices.filter(s => s.category === hoveredCategory).length === 0 && (
-                    <div className="flex flex-col items-center justify-center py-20 text-slate-400 text-xs">
-                      <span>{isAr ? 'لا توجد خدمات في هذا القسم حالياً' : 'No services in this category yet'}</span>
-                    </div>
-                  )}
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
 
           {/* Desktop Actions */}
           <div className="hidden md:flex items-center gap-5">
@@ -446,17 +446,24 @@ export default function Navbar() {
           </div>
 
           {/* Mobile Actions (CTA on right, Hamburger next to it) */}
-          <div className="flex md:hidden items-center gap-3 z-50">
+          <div className="flex md:hidden items-center gap-2 z-50">
+            <a
+              href={`${CAL_BASE}/15min`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-center gap-1.5 text-slate-600 hover:text-slate-900 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl px-2.5 h-[40px] transition-colors"
+              aria-label={n.bookCall}
+            >
+              <Calendar size={15} />
+            </a>
             <a
               href="/order"
-              className="bg-[#2563EB] text-white text-xs font-bold px-4 py-2 rounded-xl hover:bg-[#1d4ed8] transition-all shadow-sm flex items-center justify-center"
-              style={{ minHeight: '40px' }}
+              className="bg-[#2563EB] text-white text-[13px] font-bold px-4 rounded-xl hover:bg-[#1d4ed8] transition-all shadow-sm flex items-center justify-center h-[40px]"
             >
               {n.cta}
             </a>
             <button
-              className="text-slate-500 hover:text-slate-900 focus:outline-none flex items-center justify-center"
-              style={{ width: '48px', height: '48px' }}
+              className="text-slate-500 hover:text-slate-900 focus:outline-none flex items-center justify-center w-10 h-10 -mr-1"
               onClick={() => setMobileOpen(!mobileOpen)}
               aria-expanded={mobileOpen}
               aria-label="Toggle menu"

@@ -84,26 +84,39 @@ export interface AddOn {
   price: number
   icon: ReactNode
   category: 'compliance' | 'tech'
+  /** Which company region this add-on applies to. Default 'both'. */
+  applicableRegion?: 'us' | 'uk' | 'both'
 }
 
 export const ADD_ONS: AddOn[] = [
-  { id: 'website', name: 'Professional Website Design', description: 'Custom business website to establish your online presence', price: 99, icon: <Globe size={16} />, category: 'tech' },
-  { id: 'logo', name: 'Custom Logo Design', description: 'Professional logo design for your brand', price: 49, icon: <ShieldCheck size={16} />, category: 'tech' },
-  { id: 'express', name: 'Express Filing', description: 'Rush processing (2–3 business days)', price: 50, icon: <Zap size={16} />, category: 'compliance' },
-  { id: 'address', name: 'Virtual US Address', description: 'Premium business address with mail scanning and forwarding', price: 99, icon: <MapPin size={16} />, category: 'compliance' },
-  { id: 'itin', name: 'ITIN Application Support', description: 'Obtain a US Tax ID (W-7 filing) for non-US residents without SSN', price: 199, icon: <Fingerprint size={16} />, category: 'compliance' },
-  { id: 'phone', name: 'US Phone Number', description: 'Dedicated business phone line for SMS verification & support', price: 49, icon: <Phone size={16} />, category: 'compliance' },
-  { id: 'reseller', name: 'Reseller Permit', description: 'Sales tax registration for tax-free wholesale purchases', price: 129, icon: <Receipt size={16} />, category: 'compliance' },
-  { id: 'compliance', name: 'Compliance Guard', description: 'Annual report filing and franchise tax renewal service', price: 149, icon: <Shield size={16} />, category: 'compliance' },
-  { id: 'ein_expedited', name: 'Expedited EIN Application', description: 'Priority IRS processing in 5-10 business days for non-US residents', price: 79, icon: <FileText size={16} />, category: 'compliance' },
+  // Tech add-ons (both regions)
+  { id: 'website', name: 'Professional Website Design', description: 'Custom business website to establish your online presence', price: 99, icon: <Globe size={16} />, category: 'tech', applicableRegion: 'both' },
+  { id: 'logo', name: 'Custom Logo Design', description: 'Professional logo design for your brand', price: 49, icon: <ShieldCheck size={16} />, category: 'tech', applicableRegion: 'both' },
+  // Compliance add-ons — both regions
+  { id: 'express', name: 'Express Filing', description: 'Rush processing (2–3 business days)', price: 50, icon: <Zap size={16} />, category: 'compliance', applicableRegion: 'both' },
+  { id: 'compliance', name: 'Compliance Guard', description: 'Annual report filing and tax renewal service', price: 149, icon: <Shield size={16} />, category: 'compliance', applicableRegion: 'both' },
+  // Compliance add-ons — US only
+  { id: 'address', name: 'Virtual US Address', description: 'Premium US business address with mail scanning and forwarding', price: 99, icon: <MapPin size={16} />, category: 'compliance', applicableRegion: 'us' },
+  { id: 'itin', name: 'ITIN Application Support', description: 'Obtain a US Tax ID (W-7 filing) for non-US residents without SSN', price: 199, icon: <Fingerprint size={16} />, category: 'compliance', applicableRegion: 'us' },
+  { id: 'phone', name: 'US Phone Number', description: 'Dedicated US business phone line for SMS verification & support', price: 49, icon: <Phone size={16} />, category: 'compliance', applicableRegion: 'us' },
+  { id: 'reseller', name: 'Reseller Permit', description: 'US sales tax registration for tax-free wholesale purchases', price: 129, icon: <Receipt size={16} />, category: 'compliance', applicableRegion: 'us' },
+  { id: 'ein_expedited', name: 'Expedited EIN Application', description: 'Priority IRS processing in 5-10 business days for non-US residents', price: 79, icon: <FileText size={16} />, category: 'compliance', applicableRegion: 'us' },
+  // Compliance add-ons — UK only
+  { id: 'uk_address', name: 'UK Registered Office Address', description: 'Professional UK business address for Companies House registration', price: 79, icon: <MapPin size={16} />, category: 'compliance', applicableRegion: 'uk' },
+  { id: 'uk_confirmation', name: 'Confirmation Statement', description: 'Annual Confirmation Statement filing with Companies House', price: 49, icon: <FileText size={16} />, category: 'compliance', applicableRegion: 'uk' },
+  { id: 'uk_vat', name: 'VAT Registration', description: 'UK VAT number registration with HMRC', price: 99, icon: <Receipt size={16} />, category: 'compliance', applicableRegion: 'uk' },
 ]
 
-export type MemberRole = 'managing_member' | 'member' | 'manager'
+/** US LLC roles */
+export type USMemberRole = 'managing_member' | 'member' | 'manager'
+/** UK LTD roles */
+export type UKMemberRole = 'director' | 'shareholder' | 'company_secretary'
+export type MemberRole = USMemberRole | UKMemberRole
 
 export interface Member {
   id: string
   fullName: string
-  role: MemberRole
+  role: MemberRole | string
   ownership: number
   address: string
   email: string

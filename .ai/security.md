@@ -8,13 +8,13 @@ A comprehensive security audit was completed with 14 findings (3 Critical, 5 Hig
 
 | Aspect | Implementation |
 |--------|---------------|
-| Provider | PocketBase Auth |
+| Provider | PocketBase Auth (Custom Endpoint) |
 | Methods | Email/password + Google OAuth |
-| Session Storage | PocketBase AuthStore (cookie/localStorage fallback) |
-| Token Type | JWT (managed by PocketBase) |
+| Session Storage | HttpOnly `pb_auth` Cookie (No localStorage) |
+| Token Type | JWT (managed by PocketBase, issued via cookie) |
 | Password Policy | Min 8 chars, uppercase, lowercase, number, special char |
 | Login Error Handling | Generic "Invalid email or password." |
-| Session Refresh | Automatic via PocketBase SDK |
+| Session Refresh | Automatic via PocketBase SDK + Hook interceptors |
 
 ## Authorization (RBAC)
 
@@ -55,11 +55,13 @@ This is **SECURITY DEFINER** to avoid infinite recursion in RLS policies.
 - React escapes all rendered content by default
 - No `dangerouslySetInnerHTML` in codebase
 - No `eval()` or `new Function()` usage
+- **Backend Sanitization:** `pb_hooks/validation.pb.js` blocks payloads containing `<script`, `javascript:`, or inline event handlers before they are stored in the database.
 - CSP headers restrict script sources
 
 ## CSRF Protection
 
-- PocketBase Auth tokens stored in AuthStore/localStorage (not cookies)
+- **Anti-CSRF Tokens:** All state-mutating requests (POST, PUT, PATCH, DELETE) require a matching `X-CSRF-Token` header.
+- The `pb_hooks/auth_http_only.pb.js` hook issues a `csrf-token` cookie which the frontend reads and injects via `pb.beforeSend`.
 - SPA architecture with API calls (not form submissions)
 - CSP headers include `form-action 'self'`
 
@@ -122,8 +124,8 @@ Content-Security-Policy: ...
 
 ## Rate Limiting
 
+- **Global Auth Limiting:** Implemented via `pb_hooks/rate_limiter.pb.js`. Backed by the `rate_limits` collection. Login attempts are restricted to 5 attempts per minute per IP to mitigate brute-force and credential stuffing attacks.
 - **Contact form:** Optional Cloudflare Turnstile CAPTCHA
-- **PocketBase:** Rate limiting can be configured via PocketBase settings, reverse proxy (e.g. Nginx), or Cloudflare
 - **Cloudflare Workers:** Rate limiting can be configured via Cloudflare WAF/rate limiting rules
 
 ## Webhook Security
@@ -139,9 +141,10 @@ Content-Security-Policy: ...
 
 ## Audit Logging
 
+- **Action Tracking:** Every CREATE/UPDATE/DELETE mutation is securely logged into the `admin_audit_log` collection by `pb_hooks/audit_logger.pb.js`.
+- **Details Logged:** Action type, collection name, record ID, and user IP.
 - **Order status changes:** Tracked in `order_updates` table with `created_by`
 - **Webhook events:** Logged via `console.log` in Cloudflare Workers
-- **Admin actions:** Logged in the `audit_logs` PocketBase collection (useAdminAuditLog hook)
 
 ## Recommended Security Improvements
 

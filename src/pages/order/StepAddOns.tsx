@@ -3,13 +3,16 @@ import { useLang } from '../../i18n/LanguageContext'
 import { ADD_ONS } from './data'
 
 export function StepAddOns({
-  category, selectedAddOns, setSelectedAddOns
+  category, selectedAddOns, setSelectedAddOns, planRegion
 }: {
   category: 'compliance' | 'tech'
   selectedAddOns: string[]
   setSelectedAddOns: (ids: string[]) => void
+  /** Filter add-ons by company region so US-only/UK-only items are hidden when not applicable */
+  planRegion: 'us' | 'uk'
 }) {
   const { t } = useLang()
+
   const toggle = (id: string) => {
     setSelectedAddOns(
       selectedAddOns.includes(id)
@@ -18,8 +21,12 @@ export function StepAddOns({
     )
   }
 
-  const filteredAddOns = ADD_ONS.filter(addon => addon.category === category)
-  
+  // Filter by category AND by region (show 'both' and the matching region)
+  const filteredAddOns = ADD_ONS.filter(addon =>
+    addon.category === category &&
+    (addon.applicableRegion === 'both' || addon.applicableRegion === planRegion || addon.applicableRegion === undefined)
+  )
+
   // Custom casts to satisfy TS index signature checks for translations
   const orderTranslations = t.order as any
   const title = category === 'compliance' ? orderTranslations.complianceAddOnsTitle : orderTranslations.webBrandingAddOnsTitle
@@ -28,11 +35,23 @@ export function StepAddOns({
   return (
     <div>
       <h2 className="text-2xl font-bold text-slate-900 mb-1">{title}</h2>
-      <p className="text-slate-500 text-sm mb-6">{desc}</p>
+      <p className="text-slate-500 text-sm mb-4">{desc}</p>
+
+      {/* Region badge */}
+      {category === 'compliance' && (
+        <div className="inline-flex items-center gap-1.5 mb-4 px-3 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-600">
+          {planRegion === 'uk' ? '🇬🇧 Showing UK-relevant add-ons' : '🇺🇸 Showing US-relevant add-ons'}
+        </div>
+      )}
 
       <p className="text-xs font-bold text-[#1a56ff] mb-3">{t.order.premiumAddOns}</p>
 
       <div className="space-y-3">
+        {filteredAddOns.length === 0 && (
+          <div className="text-center py-10 text-slate-400 text-sm">
+            No add-ons available for this category
+          </div>
+        )}
         {filteredAddOns.map(addon => {
           const checked = selectedAddOns.includes(addon.id)
           return (

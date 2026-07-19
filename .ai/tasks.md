@@ -260,4 +260,21 @@ See `bugs.md` for detailed bug tracking.
 - [x] Run full Playwright test suite and verify 100% pass (6/6 tests).
 - [x] Perform manual review on PocketBase RLS access rules for all 10 collections.
 
+### Sprint: Order Wizard Customization & Stripe Deployment Readiness (2026-07-18)
+- [x] Implement UK LTD custom roles (*Director*, *Shareholder*, *Company Secretary*) and translations.
+- [x] Configure plan region-based add-on services filtering (US-only/UK-only items shown appropriately).
+- [x] Implement multi-member ownership validation (no single member at 100% when multiple members exist).
+- [x] Build credit card form inputs on Review & Pay step to collect customer details.
+- [x] Enforce card form completion before allowing final checkout submissions.
+- [x] Add required `serviceId` parameter in the dashboard service checkout payload (`useServiceCheckout.ts`).
+- [x] Resolve all TypeScript compilation errors and complete production build verification.
+
+### Sprint: E2E Validation Tests & Workspace Filtering Fixes (2026-07-18)
+- [x] Fix PocketBase schema mismatch by removing non-existent workspace filtering on base collections (documents, orders, companies).
+- [x] Create comprehensive E2E validation test suite `tests/e2e/features.spec.ts` for Document Upload, Notifications, Contact Form, and Admin adjustments.
+- [x] Mock Cloudflare R2 uploads and Resend email sends via Playwright page routing to prevent CORS/network issues.
+- [x] Enforce single-worker serial execution mode to avoid SQLite database locks during test runs.
+- [x] Successfully verify all E2E tests are 100% passing.
+
+
 

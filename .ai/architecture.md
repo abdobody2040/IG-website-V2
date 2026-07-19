@@ -207,10 +207,12 @@ Stripe → Cloudflare Worker (webhook)
 ### Auth Flow
 ```
 Email/Password:
-  1. User submits credentials to PocketBase Auth
-  2. PocketBase validates → returns session/token
-  3. useAuth hooks read authState → fetch/store user details
-  4. useRequireAuth/useRequireAdmin guards redirect
+  1. User submits credentials to custom endpoint `/api/auth/login`
+  2. PocketBase `pb_hooks/auth_http_only.pb.js` validates credentials via internal PB API
+  3. Hook sets `pb_auth` HttpOnly cookie and `csrf-token` cookie.
+  4. Frontend uses `pb.beforeSend` to attach `X-CSRF-Token` to all future mutations.
+  5. `useAuth` hook tracks authenticated state.
+  6. `useRequireAuth`/`useRequireAdmin` guards redirect
 - **Admin Layout Route:** Admin pages are now nested under `adminLayoutRoute` which persists the sidebar layout component via `<Outlet />`, ensuring navigation between admin pages does not trigger full-page reloads.
 
 ### Data & Scripts

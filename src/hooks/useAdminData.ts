@@ -109,15 +109,18 @@ export function useUsers({ page = 1, perPage = 20, search = '', role = 'all' }: 
         filters.push(`(email ~ "${search}" || display_name ~ "${search}")`);
       }
 
-      const result = await pb.collection('users').getList(page, perPage, {
-        sort: '-created',
-        filter: filters.join(' && '),
-      })
-      
-      return {
-        items: result.items.map(mapUser),
-        totalPages: result.totalPages,
-        totalItems: result.totalItems,
+      try {
+        const result = await pb.collection('users').getList(page, perPage, {
+          sort: '-created',
+          filter: filters.join(' && '),
+        })
+        return {
+          items: result.items.map(mapUser),
+          totalPages: result.totalPages,
+          totalItems: result.totalItems,
+        }
+      } catch (err) {
+        throw err;
       }
     },
   })

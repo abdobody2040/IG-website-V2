@@ -223,3 +223,10 @@ Hooks in `src/hooks/`:
 - useAdminAuditLog (audit trail)
 - useOrderRealtime (real-time order subscriptions)
 - useComplianceReminders (upcoming/overdue compliance dates)
+
+## Strict UI Architectural Guidelines
+
+1. **No Inline Styles:** Use Tailwind classes exclusively. If a dynamic value is needed, use `style` props ONLY for math-calculated layout variables, never colors or typography.
+2. **Accessibility-First:** All custom interactive elements MUST be keyboard navigable (Tab-index) and have appropriate `aria-` labels.
+3. **Component Reusability:** Do not create duplicate cards or buttons. If a button looks like `PrimaryButton`, use the existing component or Tailwind utility class.
+4. **Mobile-First Enforcement:** Every new screen must be designed at 375px viewport first, scaling up via `md:` and `lg:` Tailwind prefixes.

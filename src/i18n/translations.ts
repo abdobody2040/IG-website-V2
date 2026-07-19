@@ -284,11 +284,11 @@ export const translations = {
         { label: 'Contact Us', href: '/contact' },
       ],
       services: [
-        { label: 'LLC Formation', href: '/order?plan=us-basic' },
-        { label: 'LTD Formation', href: '/order?plan=uk-basic' },
-        { label: 'Business Banking', href: '#features' },
-        { label: 'Payment Solutions', href: '#features' },
-        { label: 'Compliance & EIN', href: '#features' },
+        { label: 'US LLC Formation', href: '/services/compliance-and-legal/s1' },
+        { label: 'UK LTD Formation', href: '/services/compliance-and-legal/s2' },
+        { label: 'EIN Application', href: '/services/compliance-and-legal/s3' },
+        { label: 'Registered Agent', href: '/services/compliance-and-legal/s4' },
+        { label: 'US ITIN Application', href: '/services/international-documents/s5' },
       ],
       resources: [
         { label: 'Guides', href: '/blog' },
@@ -339,9 +339,14 @@ export const translations = {
       fullNamePlaceholder: 'John Doe',
       roleLabel: 'Role',
       roles: {
+        // US LLC roles
         managing_member: { label: 'Managing Member', desc: 'Owns the company and runs daily operations' },
         member: { label: 'Member', desc: "Owns a share but doesn't manage operations" },
         manager: { label: 'Manager', desc: 'Runs operations but may not have ownership' },
+        // UK LTD roles
+        director: { label: 'Director', desc: 'Manages the company and has legal responsibilities' },
+        shareholder: { label: 'Shareholder', desc: 'Owns shares but may not manage the company' },
+        company_secretary: { label: 'Company Secretary', desc: 'Handles compliance and administrative duties' },
       } as Record<string, { label: string; desc: string }>,
       ownershipLabel: 'Ownership (%)',
       addressLabel: 'Address',
@@ -1035,11 +1040,11 @@ export const translations = {
         { label: 'اتصل بنا', href: '/contact' },
       ],
       services: [
-        { label: 'تأسيس شركة LLC', href: '/order?plan=us-basic' },
-        { label: 'تأسيس شركة LTD', href: '/order?plan=uk-basic' },
-        { label: 'الحساب البنكي التجاري', href: '#features' },
-        { label: 'حلول الدفع الإلكتروني', href: '#features' },
-        { label: 'الامتثال والرقم الضريبي EIN', href: '#features' },
+        { label: 'تأسيس شركة LLC أمريكية', href: '/services/compliance-and-legal/s1' },
+        { label: 'تأسيس شركة LTD بريطانية', href: '/services/compliance-and-legal/s2' },
+        { label: 'الرقم الضريبي الفيدرالي EIN', href: '/services/compliance-and-legal/s3' },
+        { label: 'الوكيل المسجل', href: '/services/compliance-and-legal/s4' },
+        { label: 'رقم تعريف دافع الضرائب ITIN', href: '/services/international-documents/s5' },
       ],
       resources: [
         { label: 'الأدلة والمقالات', href: '/blog' },
@@ -1090,9 +1095,14 @@ export const translations = {
       fullNamePlaceholder: 'محمد أحمد',
       roleLabel: 'الدور',
       roles: {
+        // US LLC roles
         managing_member: { label: 'عضو مدير', desc: 'يملك الشركة ويدير العمليات اليومية' },
         member: { label: 'عضو', desc: 'يملك حصة لكن لا يدير العمليات' },
         manager: { label: 'مدير', desc: 'يدير العمليات وقد لا يملك حصة' },
+        // UK LTD roles
+        director: { label: 'مدير تنفيذي', desc: 'يدير الشركة وله مسؤوليات قانونية' },
+        shareholder: { label: 'مساهم', desc: 'يملك أسهماً ولكنه قد لا يدير الشركة' },
+        company_secretary: { label: 'سكرتير الشركة', desc: 'يتولى الامتثال والمهام الإدارية' },
       } as Record<string, { label: string; desc: string }>,
       ownershipLabel: 'نسبة الملكية (%)',
       addressLabel: 'العنوان',

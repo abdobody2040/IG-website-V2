@@ -164,3 +164,10 @@ async function sendTelegramAlert(message: string) {
 - `alerts.md` — Alert rules and configuration
 - `dashboards.md` — Dashboard configurations
 - `runbooks.md` — Incident response procedures
+
+## Tracing & Telemetry Rules
+
+To ensure autonomous maintainability, all backend changes must adhere to:
+1. **Never Swallow Errors:** Avoid empty `catch` blocks. All caught errors must either be logged to the observability pipeline or re-thrown.
+2. **Contextual Logs:** Error logs must include the `userId`, `action`, and `resourceId` where applicable. Never log plain strings without context.
+3. **No PII:** Never log passwords, tokens, full credit card numbers, or explicit unmasked PII (Personally Identifiable Information).

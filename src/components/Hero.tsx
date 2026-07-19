@@ -466,7 +466,7 @@ export default function Hero() {
             {/* H1 — Mobile: 40px, Tablet: 56px, Desktop: 72px */}
             <motion.h1
               variants={childV}
-              className="ig-hero-title text-[#0F172A] mb-5 sm:mb-6"
+              className={`ig-hero-title text-[#0F172A] mb-5 sm:mb-6 ${isAr ? '!leading-[1.5] sm:!leading-[1.5]' : ''}`}
             >
               {val('hero_headline') || (
                 <>
@@ -483,7 +483,7 @@ export default function Hero() {
             {/* Sub */}
             <motion.p
               variants={childV}
-              className="ig-body text-slate-500 max-w-[540px] mb-7 sm:mb-8"
+              className={`ig-body text-slate-500 max-w-[540px] mb-7 sm:mb-8 ${isAr ? '!leading-relaxed' : ''}`}
             >
               {val('hero_subheadline') || h.subheadline}
             </motion.p>
