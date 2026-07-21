@@ -1,246 +1,302 @@
-# Instant Grow — Production Deployment Guide
+# 🚀 Complete "Baby Steps" Deployment Guide for Non-Technical Users
 
-This guide outlines all the necessary steps to deploy the **Instant Grow** platform (frontend, serverless functions, database, and payment synchronization) to a production environment.
+> 💡 **Who is this guide for?** This guide is written in plain, step-by-step language so **anyone**—even without a programming or DevOps background—can deploy the **Instant Grow** platform to production using **Hostinger**, **Cloudflare**, and **PocketBase**.
 
 ---
 
-## Architecture Overview
+## 🧩 Understand the 3 Main Parts of Your App
 
-```mermaid
-graph TD
-    Client[Browser LTR/RTL Client] -->|Static Hosting| Frontend[Vite Frontend]
-    Client -->|HTTP Calls| Workers[Cloudflare Workers Edge API]
-    Workers -->|DB Queries| PocketBase[PocketBase Database Service]
-    PocketBase -->|SQLite| Data[(Persistent Disk /pb/pb_data)]
-    Workers -->|Transactional Email| Resend[Resend API]
-    Workers -->|Payments| Stripe[Stripe API]
-    PocketBase -->|Webhooks & Sync| Stripe
+Before clicking anything, understand how your website works behind the scenes:
+
+```
+┌─────────────────────────┐       ┌──────────────────────────┐       ┌────────────────────────┐
+│  1. THE WEBSITE         │       │  2. HELPER FUNCTIONS     │       │  3. THE DATABASE       │
+│  (React Frontend)       │ ────► │  (Cloudflare Workers)    │ ────► │  (PocketBase Backend)  │
+│  Hosted on: Hostinger   │       │  Handles Payments/Emails │       │  Stores Users & Orders │
+└─────────────────────────┘       └──────────────────────────┘       └────────────────────────┘
+```
+
+1. **The Website (Frontend):** What visitors see when they open your domain (`https://instantgrow.net`). Hosted on **Hostinger** (Shared Web Hosting or VPS).
+2. **The Database (Backend):** Holds user accounts, LLC/LTD company documents, and orders. Powered by **PocketBase**.
+3. **The Helper Functions (Edge Workers):** Handles Stripe payments, Resend emails, and secure file uploads using **Cloudflare Workers**.
+
+---
+
+## 📋 Phase 1: Create Required Free Accounts & Gather Keys
+
+Before deployment, create the following 4 accounts and save your keys in a secure text file:
+
+### 1. Hostinger Account
+- Sign up at [hostinger.com](https://hostinger.com).
+- You will need a **Web Hosting Plan** (Premium/Business) OR a **VPS Plan** (for PocketBase).
+
+### 2. Stripe Account (For Payments)
+- Sign up at [stripe.com](https://stripe.com).
+- Go to **Developers** ➔ **API Keys**.
+- Copy your **Secret Key**: `sk_live_...` (or `sk_test_...` for testing).
+
+### 3. Resend Account (For Sending Transactional Emails)
+- Sign up at [resend.com](https://resend.com).
+- Go to **API Keys** ➔ Click **Create API Key**.
+- Copy your key: `re_...`
+
+### 4. Cloudflare Account (For Free Workers & Domain Security)
+- Sign up at [cloudflare.com](https://cloudflare.com).
+
+---
+
+## 🌐 Phase 2: Deploying the Website Frontend on Hostinger (hPanel)
+
+This section shows you how to upload the website files to Hostinger's **hPanel** web hosting.
+
+### Step 2.1: Build the Website Files on Your Machine
+1. Open **Command Prompt** (Windows) or **Terminal** (Mac) in your project folder.
+2. Run this command:
+   ```bash
+   npm run build
+   ```
+3. After 10-20 seconds, a folder named **`dist`** will be generated inside your project folder. This contains all your website's ready-to-use HTML, JS, and CSS files.
+
+---
+
+### Step 2.2: Upload Files to Hostinger File Manager
+
+1. Log in to **Hostinger hPanel** ([hpanel.hostinger.com](https://hpanel.hostinger.com)).
+2. Under **Websites**, click **Manage** next to your domain name.
+3. In the left menu, search for **File Manager** and click **Access Files of your domain**.
+
+4. Double-click the **`public_html`** folder to open it.
+5. **Delete default files:** If there is a `default.php` or `index.html` file created by Hostinger, delete it.
+6. **Upload your `dist` files:**
+   - Open the **`dist`** folder on your computer.
+   - Select **ALL files and subfolders** inside `dist` (e.g. `index.html`, `assets/`, `_headers`, etc.).
+   - Drag and drop them directly into `public_html` in Hostinger File Manager.
+
+---
+
+### Step 2.3: Fix Page Refresh (Create `.htaccess` for React Routing)
+
+Because React handles routing inside the browser, refreshing pages like `/order` or `/admin` on Hostinger will cause a "404 Not Found" error unless you add a `.htaccess` file.
+
+1. In Hostinger File Manager inside **`public_html`**, click the **New File** icon (+).
+2. Name the file: **`.htaccess`** (include the dot at the beginning).
+3. Paste the following exact lines into `.htaccess`:
+
+```apache
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /
+  RewriteRule ^index\.html$ - [L]
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule . /index.html [L]
+</IfModule>
+```
+
+4. Click **Save & Close**.
+
+---
+
+## 🗄️ Phase 3: Deploying PocketBase Backend
+
+PocketBase manages your database and user logins.
+
+---
+
+### Option A: Deploy PocketBase on Hostinger VPS (Recommended for Hostinger Users)
+
+If you have a Hostinger VPS plan (KVM 1 or KVM 2 running Ubuntu 22.04/24.04):
+
+#### 1. Connect to your Hostinger VPS Terminal
+- In Hostinger hPanel, go to **VPS** ➔ Click **Web Terminal** (or SSH using PuTTY/Terminal).
+
+#### 2. Download and Run PocketBase
+Paste these commands one by one into the terminal:
+
+```bash
+# Create directory
+mkdir -p /opt/pocketbase && cd /opt/pocketbase
+
+# Download PocketBase Linux binary
+wget https://github.com/pocketbase/pocketbase/releases/download/v0.22.20/pocketbase_0.22.20_linux_amd64.zip
+
+# Unzip binary
+unzip pocketbase_0.22.20_linux_amd64.zip
+rm pocketbase_0.22.20_linux_amd64.zip
+
+# Start PocketBase server in background
+./pocketbase serve --http="0.0.0.0:8090"
 ```
 
 ---
 
-## Pre-requisites
+### Option B: Deploy PocketBase on Fly.io (Zero VPS Management Option)
 
-Gather the following accounts, credentials, and CLI tools before starting:
+If you don't want to manage a VPS server manually, use **Fly.io** (free/cheap managed container host):
 
-### 1. External Service Accounts & Keys
-- **Stripe Account**: For payment processing. You will need:
-  - Live Secret Key (`sk_live_...`) or Test Secret Key (`sk_test_...`).
-- **Resend Account**: For sending transactional emails. You will need:
-  - Resend API Key (`re_...`).
-  - A verified domain in Resend to send emails from (e.g., `instantgrow.net`).
-- **Cloudflare Account**: For hosting serverless Workers and optionally the frontend.
-
-### 2. Required CLI Tools
-- **Node.js** (v18 or higher)
-- **Wrangler CLI** (for Cloudflare Workers):
-  ```bash
-  npm install -g wrangler
-  ```
-- **Fly CLI** (if hosting PocketBase on Fly.io):
-  - [Fly CLI Installation Guide](https://fly.io/docs/hands-on/install-cli/)
-
----
-
-## Step 1: Deploy PocketBase Database
-
-PocketBase holds all data (users, orders, companies, documents, payments). It requires a persistent disk mount since it uses SQLite.
-
-### Option A: Deploying on Fly.io (Recommended)
-
-1. Open your terminal and navigate to the `pocketbase/` directory:
+1. Open your local terminal in the project directory:
    ```bash
    cd pocketbase
    ```
-2. Log in to your Fly.io account:
+2. Install Fly CLI and log in:
    ```bash
    fly auth login
    ```
-3. Launch the deployment configuration:
+3. Run launch command:
    ```bash
    fly launch
    ```
-   *Note:* Follow the prompts to create the app. Fly.io will automatically parse [fly.toml](file:///g:/Vibe%20coding/IG%20website%20V2/pocketbase/fly.toml), build the [Dockerfile](file:///g:/Vibe%20coding/IG%20website%20V2/pocketbase/Dockerfile), allocate a persistent volume (`pb_data`), and attach it to `/pb/pb_data`.
-4. Add your secrets to PocketBase (Stripe Sync Key + Database Encryption Key at rest):
-   ```bash
-   fly secrets set STRIPE_SECRET_KEY="sk_live_your_key"
-   fly secrets set PB_ENCRYPTION_KEY="$(openssl rand -hex 32)"
-   ```
-   *Note:* Ensure you save the generated encryption key somewhere secure (e.g. your password manager).
-
-### Option B: Deploying on a VPS (Docker)
-
-1. Copy the `pocketbase/` folder to your server.
-2. Build the Docker image:
-   ```bash
-   docker build -t pocketbase-prod -f pocketbase/Dockerfile pocketbase
-   ```
-3. Run the container with a persistent volume and encryption key:
-   ```bash
-   docker run -d \
-     -p 80:8080 \
-     -v pb_data:/pb/pb_data \
-     -e STRIPE_SECRET_KEY="sk_live_your_key" \
-     -e PB_ENCRYPTION_KEY="your-32-character-random-hex-key" \
-     --name pocketbase-prod \
-     pocketbase-prod
-   ```
-
-### 🔒 Securely Accessing the Admin Panel (Zero-Trust)
-To prevent unauthorized access, the admin panel (`/_/`) is restricted by a backend hook and **blocked on the public domain**. You must tunnel to it locally to access it:
-
-- **For Fly.io:**
-  Run the proxy command in your terminal:
-  ```bash
-  fly proxy 8090:8080 -a instantgrow-pocketbase
-  ```
-- **For VPS (SSH Tunnel):**
-  Establish a tunnel from your local machine:
-  ```bash
-  ssh -L 8090:127.0.0.1:8080 user@your-vps-ip
-  ```
-
-### ⚠️ Critical First-Boot Task
-Immediately after establishing your secure tunnel:
-1. Open your browser and navigate to **`http://127.0.0.1:8090/_/`**.
-2. Create your **first admin superuser account** with a secure email and strong password.
-3. Save these credentials securely; they are needed for serverless Workers and seeding scripts.
+4. Follow the automatic prompts. Fly.io will configure the database and start PocketBase automatically.
 
 ---
 
-## Step 1B: Automated Daily Backups
-
-The database is bundled with an online backup script `backup.sh` that takes safe snapshots while SQLite is running.
-
-- **Manual Backup Trigger:**
-  ```bash
-  # Fly.io
-  fly ssh console -a instantgrow-pocketbase -C "/pb/backup.sh"
-  
-  # VPS (Docker)
-  docker exec -it pocketbase-prod /pb/backup.sh
-  ```
-
-- **Automated Cron Scheduling (VPS/Host):**
-  Add a cron job to run the script daily at 2:00 AM:
-  ```bash
-  0 2 * * * docker exec pocketbase-prod /pb/backup.sh >> /var/log/pb-backup.log 2>&1
-  ```
-
+### 🔑 Critical First-Boot Step: Create Superuser Admin
+Once PocketBase is running:
+1. Open your browser and go to your PocketBase URL (e.g. `http://YOUR-VPS-IP:8090/_/` or `https://your-pocketbase-app.fly.dev/_/`).
+2. You will be greeted by the **Initial Admin Creation Screen**.
+3. Set your **Admin Email** and **Strong Admin Password**.
+4. Save these credentials securely in your password manager!
 
 ---
 
-## Step 2: Configure and Deploy Cloudflare Workers
+## ⚡ Phase 4: Deploying Cloudflare Workers (Edge Functions)
 
-We have core edge functions in the `functions/` directory. Each needs to be configured with Wrangler.
+Cloudflare Workers handle payments, webhook verification, and email dispatch securely without exposing API keys to the browser.
 
-### 1. Send Email Worker (`functions/send-email`)
-Proxies transactional emails to the Resend API.
+### Step 4.1: Install Wrangler CLI
+Open Command Prompt / Terminal on your computer and run:
+
 ```bash
-cd functions/send-email
-# 1. Bind secrets
-npx wrangler secret put RESEND_API_KEY      # Your Resend Key (re_...)
-# 2. Deploy
-npx wrangler deploy
+npm install -g wrangler
+npx wrangler login
 ```
-
-### 2. Create Checkout Worker (`functions/create-checkout`)
-Creates Stripe Checkout sessions.
-```bash
-cd ../create-checkout
-# 1. Bind secrets
-npx wrangler secret put STRIPE_SECRET_KEY   # Your Stripe Secret Key (sk_live_...)
-npx wrangler secret put PB_ADMIN_EMAIL       # PocketBase Admin Email
-npx wrangler secret put PB_ADMIN_PASSWORD    # PocketBase Admin Password
-# 2. Deploy
-npx wrangler deploy
-```
-
-### 3. Stripe Webhook Worker (`functions/stripe-webhook`)
-Listens to Stripe events to update PocketBase order states.
-```bash
-cd ../stripe-webhook
-# 1. Bind secrets
-npx wrangler secret put STRIPE_SECRET_KEY   # Your Stripe Secret Key
-npx wrangler secret put PB_ADMIN_EMAIL       # PocketBase Admin Email
-npx wrangler secret put PB_ADMIN_PASSWORD    # PocketBase Admin Password
-npx wrangler secret put RESEND_API_KEY      # Your Resend Key (for payment success emails)
-```
-*(Wait to deploy this worker until you get the webhook signing secret in Step 3!)*
+*(A browser window will open — click **Authorize** to connect Wrangler to your free Cloudflare account).*
 
 ---
 
-## Step 3: Configure Stripe Webhook & Seeding
-
-### 1. Add Webhook to Stripe
-1. Log in to your **Stripe Dashboard** ➔ **Developers** ➔ **Webhooks**.
-2. Click **Add Endpoint**.
-3. In **Endpoint URL**, enter your deployed `stripe-webhook` worker URL (e.g. `https://stripe-webhook.your-subdomain.workers.dev`).
-4. Select the event to listen to: `checkout.session.completed`.
-5. Click **Add Endpoint**, then copy the **Signing Secret** (`whsec_...`).
-
-### 2. Save Signing Secret and Deploy Webhook Worker
-Go back to your terminal:
-```bash
-cd functions/stripe-webhook
-# Save the secret you just copied
-npx wrangler secret put STRIPE_WEBHOOK_SECRET
-# Deploy
-npx wrangler deploy
-```
-
-### 3. Sync Database Pricing with Stripe
-Synchronize your packages and 50+ services into Stripe so they have matching live API pricing IDs:
-1. Set environment variables on your local machine:
-   ```powershell
-   # Windows PowerShell
-   $env:STRIPE_SECRET_KEY="sk_live_your_key"
-   $env:PB_URL="https://your-pocketbase-domain.com"
-   $env:PB_ADMIN_EMAIL="admin@yourdomain.com"
-   $env:PB_ADMIN_PASSWORD="YourAdminPassword123!"
-   
-   # Linux / macOS Bash
-   export STRIPE_SECRET_KEY="sk_live_your_key"
-   export PB_URL="https://your-pocketbase-domain.com"
-   export PB_ADMIN_EMAIL="admin@yourdomain.com"
-   export PB_ADMIN_PASSWORD="YourAdminPassword123!"
+### Step 4.2: Deploy `send-email` Worker
+1. In your terminal, navigate to:
+   ```bash
+   cd functions/send-email
    ```
-2. Run the synchronization script:
+2. Add your Resend secret key:
+   ```bash
+   npx wrangler secret put RESEND_API_KEY
+   ```
+   *(Paste your `re_...` key when prompted).*
+3. Deploy the worker:
+   ```bash
+   npx wrangler deploy
+   ```
+4. Copy the output URL (e.g., `https://send-email.yourdomain.workers.dev`).
+
+---
+
+### Step 4.3: Deploy `create-checkout` Worker
+1. Navigate to:
+   ```bash
+   cd ../create-checkout
+   ```
+2. Add your secret keys:
+   ```bash
+   npx wrangler secret put STRIPE_SECRET_KEY
+   npx wrangler secret put PB_ADMIN_EMAIL
+   npx wrangler secret put PB_ADMIN_PASSWORD
+   ```
+3. Deploy:
+   ```bash
+   npx wrangler deploy
+   ```
+4. Copy the output URL (e.g., `https://create-checkout.yourdomain.workers.dev`).
+
+---
+
+### Step 4.4: Deploy `stripe-webhook` Worker
+1. Navigate to:
+   ```bash
+   cd ../stripe-webhook
+   ```
+2. Add your secret keys:
+   ```bash
+   npx wrangler secret put STRIPE_SECRET_KEY
+   npx wrangler secret put PB_ADMIN_EMAIL
+   npx wrangler secret put PB_ADMIN_PASSWORD
+   npx wrangler secret put RESEND_API_KEY
+   ```
+*(We will add `STRIPE_WEBHOOK_SECRET` in Phase 5 right after creating the Stripe endpoint).*
+
+---
+
+## 💳 Phase 5: Connecting Stripe Live Payments
+
+### Step 5.1: Create Webhook Endpoint in Stripe
+1. Log in to your **Stripe Dashboard** ([dashboard.stripe.com](https://dashboard.stripe.com)).
+2. Toggle the top-right switch from **Test Mode** to **Live Mode** (or stay in Test Mode if testing).
+3. In the left menu, click **Developers** ➔ **Webhooks**.
+4. Click **+ Add Endpoint**.
+5. Set **Endpoint URL**: Enter your deployed `stripe-webhook` Cloudflare worker URL:
+   `https://stripe-webhook.yourdomain.workers.dev`
+6. Under **Select events**, click **+ Select Events**, search for:
+   `checkout.session.completed`
+7. Click **Add events**, then click **Add Endpoint**.
+
+---
+
+### Step 5.2: Copy Webhook Signing Secret to Cloudflare
+1. On the new Webhook page in Stripe, locate the section **Signing secret**.
+2. Click **Reveal** and copy the key starting with `whsec_...`.
+3. In your computer terminal (inside `functions/stripe-webhook`), run:
+   ```bash
+   npx wrangler secret put STRIPE_WEBHOOK_SECRET
+   ```
+4. Paste the `whsec_...` key when prompted.
+5. Deploy the final worker:
+   ```bash
+   npx wrangler deploy
+   ```
+
+---
+
+### Step 5.3: Sync Database Pricing with Stripe Products
+Run the automated sync script to populate 50+ formation services and plans into Stripe:
+
+1. In your project root folder, create/update `.env.local`:
+   ```env
+   STRIPE_SECRET_KEY=sk_live_your_stripe_secret_key
+   PB_URL=https://your-pocketbase-domain.com
+   PB_ADMIN_EMAIL=your-admin-email@example.com
+   PB_ADMIN_PASSWORD=your-admin-password
+   ```
+2. Run the sync command:
    ```bash
    npm run db:sync-stripe
    ```
-   *This creates products in Stripe and records their Stripe Price IDs back into PocketBase.*
+3. You will see a green confirmation: `✅ Successfully synced all packages & services with Stripe!`
 
 ---
 
-## Step 4: Deploy Frontend Client
+## 🧪 Phase 6: Final Verification ("Baby Steps" Checklist)
 
-The frontend can be built and deployed to Netlify, Vercel, or Cloudflare Pages.
+Follow this quick checklist to ensure your live website is 100% operational:
 
-### 1. Configure Production Environment Variables
-Set the following environment variables in your hosting provider's dashboard:
+- [ ] **Website Loading:** Visit your domain `https://yourdomain.com` — the landing page should render instantly.
+- [ ] **Language Toggle:** Click **العربية / English** in the top navbar — verify text alignment switches smoothly (LTR ↔ RTL).
+- [ ] **Direct URL Navigation:** Refresh the page on `https://yourdomain.com/order` — verify it loads cleanly without a 404 error (proves `.htaccess` works).
+- [ ] **Order Formation Wizard:** Go through Step 1 to Step 7 in the Formation Wizard, select a package, and click **Proceed to Checkout**. Verify you are redirected to Stripe Checkout cleanly.
+- [ ] **Contact Form Submission:** Fill out the contact form on `https://yourdomain.com/contact`. Check your PocketBase Admin panel (`/_/`) under `contact_messages` collection to confirm the message arrived.
+- [ ] **Admin Dashboard:** Sign in with an admin user account — verify real-time revenue charts and order lists load without errors.
 
-| Variable | Description | Example Value |
+---
+
+## 🆘 Troubleshooting Common Issues
+
+| Issue | Cause | Solution |
 | :--- | :--- | :--- |
-| `VITE_PB_URL` | Your production PocketBase domain | `https://pb.instantgrow.net` |
-| `VITE_CHECKOUT_ENDPOINT` | URL of deployed create-checkout Worker | `https://instantgrow-create-checkout.username.workers.dev` |
-| `VITE_CONTACT_ENDPOINT` | URL of deployed submit-contact Worker | `https://instantgrow-submit-contact.username.workers.dev` |
-| `VITE_DELETE_USER_ENDPOINT` | URL of deployed delete-user Worker | `https://instantgrow-delete-user.username.workers.dev` |
-| `VITE_R2_UPLOAD_ENDPOINT` | URL of deployed upload-validator Worker | `https://instantgrow-upload-validator.username.workers.dev` |
-| `VITE_EMAIL_ENDPOINT` | URL of deployed send-email Worker | `https://instantgrow-send-email.username.workers.dev` |
-| `VITE_TURNSTILE_SITE_KEY` | Production Cloudflare Turnstile key (optional) | `0x4AAAAAA...` |
-
-### 2. Run the Production Build Command
-Configure the build settings in your provider's dashboard:
-- **Build Command**: `npm run build`
-- **Output Directory**: `dist`
+| **404 Not Found when refreshing subpages on Hostinger** | Missing `.htaccess` file | Create `.htaccess` inside Hostinger `public_html` with the rewrite rules from Step 2.3. |
+| **Stripe Checkout redirects to an error page** | `VITE_CHECKOUT_ENDPOINT` missing or wrong worker URL | Ensure your `.env.local` contains the correct Cloudflare Worker URL and rebuild with `npm run build`. |
+| **Emails are not received** | Unverified domain in Resend | Go to Resend Dashboard ➔ **Domains** ➔ Add DNS records to Hostinger DNS manager. |
+| **PocketBase CORS Error** | CORS origin restricted | In PocketBase Admin ➔ **Settings** ➔ **Application**, set your production domain `https://yourdomain.com`. |
 
 ---
 
-## Step 5: Post-Deployment Smoke Test
-
-Perform a quick sanity check to ensure the production pipelines are working correctly:
-1. Load the landing page and switch languages LTR ↔ RTL.
-2. Navigate to `/order`, choose a formation plan, fill out details, and verify redirect to Stripe Checkout works.
-3. Submit the Contact Form and verify the message appears under "Messages" in the Admin Dashboard.
-4. Log in as an administrator to `https://your-pocketbase-domain.com/_/` and verify that all tables are migrated, seed data exists, and security rules are active.
+🎉 **Congratulations!** Your **Instant Grow** automated company formation platform is now live in production!
