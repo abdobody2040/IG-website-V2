@@ -9,13 +9,18 @@ import { getCategorySlug } from '../pages/ServicesPage'
 const CAL_BASE = 'https://cal.com/instant-grow-llc'
 
 const CATEGORIES = [
-  { id: 'Compliance & Legal', label_en: 'Compliance & Legal', label_ar: 'الامتثال والشؤون القانونية' },
-  { id: 'International Documents', label_en: 'International Documents', label_ar: 'الوثائق الدولية' },
-  { id: 'Digital Services', label_en: 'Digital Services', label_ar: 'الخدمات الرقمية' },
-  { id: 'Marketing & Growth', label_en: 'Marketing & Growth', label_ar: 'التسويق والنمو' },
-  { id: 'Creative Services', label_en: 'Creative Services', label_ar: 'الخدمات الإبداعية' },
-  { id: 'Business Consulting', label_en: 'Business Consulting', label_ar: 'الاستشارات التجارية' },
-  { id: 'Digital Products', label_en: 'Digital Products', label_ar: 'المنتجات الرقمية' },
+  { id: 'Business Formation', label_en: 'Business Formation', label_ar: 'تأسيس الشركات' },
+  { id: 'Government & Compliance', label_en: 'Government & Compliance', label_ar: 'الامتثال والشؤون الحكومية' },
+  { id: 'Banking & Payments', label_en: 'Banking & Payments', label_ar: 'الحسابات البنكية والدفع' },
+  { id: 'Legal Documents', label_en: 'Legal Documents', label_ar: 'المستندات القانونية' },
+  { id: 'Branding', label_en: 'Branding & Design', label_ar: 'الهوية البصرية والتصميم' },
+  { id: 'Websites', label_en: 'Websites & E-Commerce', label_ar: 'المواقع والمتاجر الإلكترونية' },
+  { id: 'Marketing', label_en: 'Marketing & Ads', label_ar: 'التسويق والإعلانات' },
+  { id: 'Content', label_en: 'Content & Copywriting', label_ar: 'صناعة المحتوى والكتابة' },
+  { id: 'AI Automation', label_en: 'AI Automation & Agents', label_ar: 'أتمتة الذكاء الاصطناعي' },
+  { id: 'Software', label_en: 'Software & Integrations', label_ar: 'البرمجيات والربط التقني' },
+  { id: 'Business Consulting', label_en: 'Business Consulting', label_ar: 'الاستشارات وإستراتيجيات الأعمال' },
+  { id: 'Education', label_en: 'Education & Templates', label_ar: 'التعليم والملفات الجاهزة' },
 ]
 
 const staticServicesData = [
@@ -143,7 +148,7 @@ export default function Navbar() {
   const [scrolled, setScrolled] = useState(false)
   const [activeHash, setActiveHash] = useState('')
   const [isServicesHovered, setIsServicesHovered] = useState(false)
-  const [hoveredCategory, setHoveredCategory] = useState('Compliance & Legal')
+  const [hoveredCategory, setHoveredCategory] = useState('Business Formation')
   const [mobileServicesOpen, setMobileServicesOpen] = useState(false)
   const [mobileExpandedCategory, setMobileExpandedCategory] = useState<string | null>(null)
   
@@ -329,7 +334,7 @@ export default function Navbar() {
                           </div>
 
                           {/* Services Column */}
-                          <div className={`flex-1 ${isAr ? 'pr-3' : 'pl-3'} flex flex-col gap-1 max-h-[380px] overflow-y-auto custom-scrollbar`}>
+                          <div className={`flex-1 ${isAr ? 'pr-3' : 'pl-3'} flex flex-col gap-1 max-h-[500px] overflow-y-auto custom-scrollbar`}>
                             {activeServices.filter(s => s.category === hoveredCategory).map(svc => {
                               const IconComponent = (Icons as any)[svc.icon] || Icons.HelpCircle
                               const title = isAr ? svc.title_ar : svc.title_en

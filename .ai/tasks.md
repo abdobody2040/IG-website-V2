@@ -275,6 +275,9 @@ See `bugs.md` for detailed bug tracking.
 - [x] Mock Cloudflare R2 uploads and Resend email sends via Playwright page routing to prevent CORS/network issues.
 - [x] Enforce single-worker serial execution mode to avoid SQLite database locks during test runs.
 - [x] Successfully verify all E2E tests are 100% passing.
-
-
-
+### Sprint: PocketBase v0.22 JS-Bridge Fixes, Admin Auth & 8-Plan Price Editor (2026-07-21)
+- [x] Fix PocketBase v0.22 JS-bridge header casing errors (`req.header.get` and `req.header.set`).
+- [x] Exclude Admin UI (`/_/`) and admin API routes from user cookie injection to enable seamless PocketBase admin login.
+- [x] Inline audit logger hook logic per callback to solve Goja isolated context execution errors.
+- [x] Fix frontend authentication token persistence (`pb.authStore.save(res.token, res.record)`) to prevent redirect loop back to login.
+- [x] Expand Admin Price Editor (`AdminPriceEditorPage.tsx`) to support full 8-plan CRUD (US LLC, UK LTD, UAE Freezone, Oman SPC — Basic & Premium).

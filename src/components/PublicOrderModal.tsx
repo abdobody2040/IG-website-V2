@@ -7,9 +7,11 @@ interface PublicOrderModalProps {
   service: ServiceRecord
   isAr: boolean
   onClose: () => void
+  planName?: string
+  planPrice?: number | string
 }
 
-export default function PublicOrderModal({ service, isAr, onClose }: PublicOrderModalProps) {
+export default function PublicOrderModal({ service, isAr, onClose, planName, planPrice }: PublicOrderModalProps) {
   const IconComponent = (Icons as any)[service.icon] || Icons.HelpCircle
   const [form, setForm] = useState({
     name: '',
@@ -21,20 +23,26 @@ export default function PublicOrderModal({ service, isAr, onClose }: PublicOrder
   const [submitting, setSubmitting] = useState(false)
   const [submitted, setSubmitted] = useState(false)
 
-  const title = isAr ? service.title_ar : service.title_en
+  const baseTitle = isAr ? service.title_ar : service.title_en
+  const title = planName ? `${baseTitle} (${planName})` : baseTitle
   const period = isAr ? service.period_ar : service.period_en
   const detail = isAr ? (service.detail_ar || service.description_ar) : (service.detail_en || service.description_en)
+
+  // Determine actual display price
+  const displayPrice = planPrice !== undefined 
+    ? (typeof planPrice === 'number' ? `$${planPrice}` : planPrice)
+    : (service.price > 0 ? `$${service.price}` : (isAr ? 'مشمول' : 'Included'))
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setSubmitting(true)
 
-    const subject = encodeURIComponent(`Public Service Order: ${service.title_en} — $${service.price}`)
+    const subject = encodeURIComponent(`Public Service Order: ${service.title_en} ${planName ? `(${planName})` : ''} — ${displayPrice}`)
     const body = encodeURIComponent(
       `Dear Instant Grow Support,\n\n` +
       `I would like to order the following service:\n\n` +
-      `Service: ${service.title_en}\n` +
-      `Price: $${service.price} ${service.period_en}\n\n` +
+      `Service: ${service.title_en} ${planName ? `(${planName})` : ''}\n` +
+      `Price: ${displayPrice} ${service.price > 0 ? service.period_en : ''}\n\n` +
       `My contact information:\n` +
       `Name: ${form.name}\n` +
       `Email: ${form.email}\n` +
@@ -71,7 +79,7 @@ export default function PublicOrderModal({ service, isAr, onClose }: PublicOrder
           </p>
           <button
             onClick={onClose}
-            className="w-full py-2.5 rounded-xl bg-blue-650 text-white text-sm font-semibold hover:bg-blue-700 transition-colors shadow-lg shadow-blue-500/10"
+            className="w-full py-2.5 rounded-xl bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 transition-colors shadow-lg shadow-blue-500/10"
           >
             {isAr ? 'تم' : 'Done'}
           </button>
@@ -102,7 +110,7 @@ export default function PublicOrderModal({ service, isAr, onClose }: PublicOrder
         <div className="flex items-center justify-between px-6 py-3.5 bg-slate-50 border-b border-slate-100 flex-shrink-0">
           <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">{isAr ? 'رسوم الخدمة' : 'Service Fee'}</span>
           <span className="text-lg font-extrabold text-blue-600">
-            {service.price > 0 ? `$${service.price}` : (isAr ? 'مشمول' : 'Included')} {service.price > 0 && <span className="text-xs font-medium text-slate-400">/ {period}</span>}
+            {displayPrice} {service.price > 0 && typeof planPrice === 'number' && <span className="text-xs font-medium text-slate-400">/ {period}</span>}
           </span>
         </div>
 

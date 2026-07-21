@@ -1,5 +1,26 @@
 # Instant Grow — Changelog
 
+## 2026-07-21 — PocketBase Admin Login, JS-Bridge Header Fixing, & Expanded Price Editor
+
+### Added
+- **Expanded Admin Price Editor (8 Plans)** — Updated `AdminPriceEditorPage.tsx` (`/admin/price-editor`) to provide full CRUD capabilities over all 8 package plans across all 4 target regions: US LLC (Basic & Premium), UK LTD (Basic & Premium), UAE Freezone (Basic & Premium), and Oman SPC (Basic & Premium). Admins can now edit prices, English features, and Arabic features for any plan with instant live updates on the landing page and order wizard.
+
+### Fixed
+- **Goja JS-Bridge Casing Error (`req.header.get` / `req.header.set`)** — Resolved `TypeError: Object has no member 'Get'` in `auth_http_only.pb.js` by using lowercase `get` and `set` methods provided by PocketBase v0.22's Goja bridge for `net/http` Header maps.
+- **Admin UI Login Exclusion Guard** — Added request path exclusion logic (`/_/`, `/api/admins/*`) in `auth_http_only.pb.js` to prevent stale user `pb_auth` cookies from being injected into admin authentication requests.
+- **Audit Logger Scope Isolation** — Fixed `ReferenceError: writeAuditLog is not defined` in `audit_logger.pb.js` by inlining the audit log logic directly into each `onRecordAfter...` callback (PocketBase v0.22 hook callbacks run in isolated Goja contexts). Superuser/admin contexts are safely ignored via `httpContext.get("admin")`.
+- **Frontend AuthStore JWT Token Persistence** — Updated `LoginPage.tsx`, `SignupPage.tsx`, and `OrderWizard.tsx` to save the actual JWT token (`res.token`) into `pb.authStore.save(res.token, res.record)` instead of string literal dummy placeholders, allowing `pb.authStore.isValid` to evaluate to `true` and preventing immediate redirects back to `/auth/login`.
+
+## 2026-07-20 — PocketBase v0.22 Hooks Migration & Footer Links Repair
+
+### Added
+- **PocketBase v0.22 Hook Compatibility** — Migrated PocketBase JS hooks (`auth_http_only.pb.js`, `rate_limiter.pb.js`, `restrict_admin.pb.js`, `security_headers.pb.js`) to use PocketBase v0.22 `routerUse(...)` middleware instead of deprecated legacy global hook declarations (`onBeforeApiRequest`, `onBeforeRequest`, `onAfterApiRequest`).
+- **Whitelisted Admin Auth Routes** — Updated `auth_http_only.pb.js` CSRF bypass logic to explicitly whitelist `/_/`, `/api/admins/*`, `/api/auth/*`, and `/api/oauth2/*` endpoints, enabling seamless admin and client login without CSRF header rejection.
+
+### Fixed
+- **Footer Service Links Resolution** — Resolved "Service Not Found" page crashes when clicking footer service links by updating `translations.ts` (LTR and RTL Arabic) to point directly to valid category paths (`/services/business-formation`, `/services/government-compliance`) instead of invalid static string IDs.
+- **Localhost HttpOnly Cookie Delivery** — Adjusted `pb_auth` and `csrf-token` cookie flags to remove the mandatory `Secure` flag in local development environments, ensuring authentication cookies are accepted when running on local HTTP (`localhost:3000` / `127.0.0.1:8090`).
+
 ## 2026-07-19 — Production Security Hardening, Zero-Trust Architecture & HttpOnly Cookies
 
 ### Added

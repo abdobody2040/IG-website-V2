@@ -1,9 +1,10 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { Check, Phone } from 'lucide-react'
 import { useLang } from '../i18n/LanguageContext'
 import { useMagneticButton } from '../hooks/useMagneticButton'
 import { usePricingConfig, resolvePrice } from '../hooks/usePricingConfig'
+import { injectJsonLd, generateProductSchema } from '../lib/seo'
 
 /* ─── US LLC features ──────────────────────────────────────────────────────── */
 const usBasicFeatures = [
@@ -183,6 +184,34 @@ export default function Pricing() {
   const premiumPriceNum = resolvePrice(premiumRecord, region, 'premium')
   const basicPrice = `$${basicPriceNum}`
   const premiumPrice = `$${premiumPriceNum}`
+
+  useEffect(() => {
+    const regionNames: Record<string, string> = {
+      us: 'US LLC Formation',
+      uk: 'UK LTD Formation',
+      uae: 'UAE Freezone Formation',
+      oman: 'Oman SPC Formation',
+    }
+    const name = regionNames[region] || 'Company Formation'
+    const schema = {
+      '@context': 'https://schema.org',
+      '@graph': [
+        generateProductSchema({
+          name: `${name} — Basic Plan`,
+          description: `Form your company with our Basic ${name} package.`,
+          price: basicPriceNum,
+          currency: 'USD',
+        }),
+        generateProductSchema({
+          name: `${name} — Premium Plan`,
+          description: `Priority ${name} package with full banking & compliance setup.`,
+          price: premiumPriceNum,
+          currency: 'USD',
+        }),
+      ],
+    }
+    injectJsonLd(schema)
+  }, [region, basicPriceNum, premiumPriceNum])
 
   const staticBasicFeatures =
     region === 'us'

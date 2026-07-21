@@ -1,11 +1,34 @@
+# Allow all standard search engine crawlers
 User-agent: *
 Allow: /
 Allow: /blog
 Allow: /blog/*
 Allow: /us-company
 Allow: /us-company/*
+Allow: /services
+Allow: /services/*
 Allow: /contact
 
+# Allow AI Answer Engine Crawlers (AEO / GEO Optimization)
+User-agent: GPTBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: Bytespider
+Allow: /
+
+# Disallow private user & administrative portals from indexing
 Disallow: /admin/
 Disallow: /admin/*
 Disallow: /client/

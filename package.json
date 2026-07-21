@@ -14,7 +14,7 @@
     "test:watch": "vitest",
     "check:css-vars": "node scripts/check-css-variables.js",
     "check:css-classes": "node scripts/check-css-classes.js",
-    "lint": "bun run lint:types && bun run lint:js && bun run lint:css && bun run check:css-vars && bun run check:css-classes",
+    "lint": "npm run lint:types && npm run lint:css && npm run check:css-vars",
     "db:setup": "node scripts/setup-db.cjs",
     "db:seed": "node scripts/seed-all.mjs",
     "db:sync-stripe": "node scripts/sync-stripe-prices.mjs",

@@ -27,7 +27,7 @@ import StickyCTABar from './components/StickyCTABar'
 import { MouseGlow, AmbientBackground } from './components/effects'
 import Lenis from 'lenis'
 import { useLang } from './i18n/LanguageContext'
-import { setPageMeta, injectJsonLd, generateOrganizationSchema, generateWebSiteSchema, generateProfessionalServiceSchema, generateFaqSchema, getCanonical } from './lib/seo'
+import { setPageMeta, injectJsonLd, generateOrganizationSchema, generateWebSiteSchema, generateProfessionalServiceSchema, generateFaqSchema, generateHowToSchema, getCanonical } from './lib/seo'
 
 import SupportWidget from './components/SupportWidget'
 
@@ -65,6 +65,16 @@ function LandingPage() {
             answer: item.answer,
           }))
         ),
+        generateHowToSchema({
+          name: 'How to Form a US LLC or UK LTD Company Online',
+          description: 'Step-by-step guide to establishing your business entity remotely with Instant Grow.',
+          steps: [
+            { name: 'Choose Jurisdiction & Plan', text: 'Select US LLC (Wyoming/Delaware), UK LTD, UAE, or Oman formation plan.' },
+            { name: 'Submit Company Details', text: 'Provide company name choices and owner/member identification documents.' },
+            { name: 'Formation & EIN Tax ID Filing', text: 'Instant Grow files incorporation papers with government authorities and IRS.' },
+            { name: 'Open Business Bank Account & Stripe', text: 'Receive official company documents, US/UK business bank account, and payment gateway.' },
+          ],
+        }),
         // ItemList of core services for rich search results
         {
           '@context': 'https://schema.org',

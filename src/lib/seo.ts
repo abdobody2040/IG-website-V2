@@ -1,23 +1,34 @@
-// ── Dynamic meta tag injection for SPA ──
+// ── Dynamic meta tag & SEO schema injection for SPA ──
+
+export interface PageMetaOptions {
+  title: string
+  description: string
+  keywords?: readonly string[] | string[]
+  ogImage?: string
+  canonical?: string
+  lang?: 'en' | 'ar'
+}
+
 export function setPageMeta({
   title,
   description,
   keywords,
   ogImage,
   canonical,
-}: {
-  title: string
-  description: string
-  keywords?: readonly string[] | string[]
-  ogImage?: string
-  canonical?: string
-}) {
+  lang = 'en',
+}: PageMetaOptions) {
   document.title = title
+
+  // Update html lang attribute dynamically
+  document.documentElement.lang = lang
+  document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr'
 
   setMeta('description', description)
   setMeta('keywords', keywords?.join(', ') ?? '')
   setMeta('og:title', title)
   setMeta('og:description', description)
+  setMeta('og:locale', lang === 'ar' ? 'ar_AR' : 'en_US')
+  setMeta('og:locale:alternate', lang === 'ar' ? 'en_US' : 'ar_AR')
 
   const origin = window.location.origin
   const absoluteOgImage = ogImage
@@ -32,6 +43,28 @@ export function setPageMeta({
   setMeta('twitter:image', absoluteOgImage)
 
   setCanonical(canonical)
+  setHreflangLinks()
+}
+
+export function setHreflangLinks() {
+  const origin = window.location.origin
+  const pathname = window.location.pathname
+
+  // Ensurehreflang alternate tags for multilingual indexing (EN, AR, and x-default)
+  setHreflangTag('en', `${origin}${pathname}`)
+  setHreflangTag('ar', `${origin}${pathname}`)
+  setHreflangTag('x-default', `${origin}${pathname}`)
+}
+
+function setHreflangTag(lang: string, href: string) {
+  let el = document.querySelector(`link[rel="alternate"][hreflang="${lang}"]`)
+  if (!el) {
+    el = document.createElement('link')
+    el.setAttribute('rel', 'alternate')
+    el.setAttribute('hreflang', lang)
+    document.head.appendChild(el)
+  }
+  el.setAttribute('href', href)
 }
 
 export function injectJsonLd(schema: Record<string, unknown>) {
@@ -75,6 +108,27 @@ export function generateFaqSchema(faqs: { question: string; answer: string }[]) 
   }
 }
 
+export function generateHowToSchema(options: {
+  name: string
+  description: string
+  steps: { name: string; text: string; url?: string }[]
+}) {
+  const origin = window.location.origin
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'HowTo',
+    name: options.name,
+    description: options.description,
+    step: options.steps.map((s, i) => ({
+      '@type': 'HowToStep',
+      position: i + 1,
+      name: s.name,
+      text: s.text,
+      url: s.url || origin,
+    })),
+  }
+}
+
 export function generateOrganizationSchema() {
   return {
     '@context': 'https://schema.org',
@@ -95,11 +149,11 @@ export function generateWebSiteSchema() {
   return {
     '@context': 'https://schema.org',
     '@type': 'WebSite',
-    'name': 'Instant Grow',
-    'url': origin,
-    'potentialAction': {
+    name: 'Instant Grow',
+    url: origin,
+    potentialAction: {
       '@type': 'SearchAction',
-      'target': `${origin}/blog?search={search_term_string}`,
+      target: `${origin}/blog?search={search_term_string}`,
       'query-input': 'required name=search_term_string',
     },
   }
@@ -126,6 +180,35 @@ export function generateProfessionalServiceSchema() {
   }
 }
 
+export function generateProductSchema(options: {
+  name: string
+  description: string
+  price: number
+  currency?: string
+  image?: string
+  url?: string
+}) {
+  const origin = window.location.origin
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'Product',
+    name: options.name,
+    description: options.description,
+    image: options.image ? [options.image] : [`${origin}/logo.png`],
+    offers: {
+      '@type': 'Offer',
+      price: options.price,
+      priceCurrency: options.currency || 'USD',
+      availability: 'https://schema.org/InStock',
+      url: options.url || origin,
+      seller: {
+        '@type': 'Organization',
+        name: 'Instant Grow',
+      },
+    },
+  }
+}
+
 export function generateArticleSchema(post: {
   title: string
   titleAr?: string | null
@@ -145,25 +228,25 @@ export function generateArticleSchema(post: {
   return {
     '@context': 'https://schema.org',
     '@type': 'Article',
-    'headline': title,
-    'description': excerpt || '',
-    'image': post.coverImage ? [post.coverImage] : [],
-    'datePublished': post.createdAt,
-    'dateModified': post.updatedAt || post.createdAt,
-    'author': [{
+    headline: title,
+    description: excerpt || '',
+    image: post.coverImage ? [post.coverImage] : [],
+    datePublished: post.createdAt,
+    dateModified: post.updatedAt || post.createdAt,
+    author: [{
       '@type': 'Person',
-      'name': post.author || 'Instant Grow Team',
-      'url': origin,
+      name: post.author || 'Instant Grow Team',
+      url: origin,
     }],
-    'publisher': {
+    publisher: {
       '@type': 'Organization',
-      'name': 'Instant Grow',
-      'logo': {
+      name: 'Instant Grow',
+      logo: {
         '@type': 'ImageObject',
-        'url': `${origin}/logo.png`,
+        url: `${origin}/logo.png`,
       },
     },
-    'mainEntityOfPage': {
+    mainEntityOfPage: {
       '@type': 'WebPage',
       '@id': url,
     },
@@ -195,4 +278,3 @@ function setCanonical(url?: string) {
   }
   el.setAttribute('href', href)
 }
-

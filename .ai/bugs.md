@@ -2,6 +2,60 @@
 
 ## Known Bugs
 
+### B-010: Goja JS-Bridge Casing Error on Header Access
+**Severity:** Critical
+**Status:** Fixed
+**Filed:** 2026-07-21 | **Closed:** 2026-07-21
+**Description:** `auth_http_only.pb.js` called `req.header.Get(...)` and `req.header.Set(...)`, causing `TypeError: Object has no member 'Get'` on PocketBase v0.22.
+**Resolution:** Updated `auth_http_only.pb.js` to use lowercase `get` and `set` methods on `c.request().header`.
+
+---
+
+### B-011: Stale User Cookie Blocking Admin UI Login
+**Severity:** High
+**Status:** Fixed
+**Filed:** 2026-07-21 | **Closed:** 2026-07-21
+**Description:** The cookie-to-header authorization injection middleware injected user `pb_auth` tokens into `/api/admins/auth-with-password` requests, causing Admin UI logins to fail.
+**Resolution:** Added `isAdminEndpoint` check in `auth_http_only.pb.js` to skip cookie injection on `/_/` and `/api/admins/*`.
+
+---
+
+### B-012: Audit Logger File-Scope Function Isolation Error
+**Severity:** High
+**Status:** Fixed
+**Filed:** 2026-07-21 | **Closed:** 2026-07-21
+**Description:** `audit_logger.pb.js` called a file-scope `writeAuditLog` function, resulting in `ReferenceError: writeAuditLog is not defined` inside Goja callbacks.
+**Resolution:** Inlined audit logging directly into each callback and safely guarded against superuser actions using `httpContext.get("admin")`.
+
+---
+
+### B-013: Dummy Token Storage Causing Immediate Redirect to Login
+**Severity:** High
+**Status:** Fixed
+**Filed:** 2026-07-21 | **Closed:** 2026-07-21
+**Description:** `LoginPage.tsx` stored literal string `'dummy_token_for_sdk'` into `pb.authStore`, causing `pb.authStore.isValid` to evaluate to `false` and redirecting users back to login upon navigation.
+**Resolution:** Updated `LoginPage.tsx`, `SignupPage.tsx`, and `OrderWizard.tsx` to store `res.token` into `pb.authStore.save(res.token, res.record)`.
+
+---
+
+### B-008: PocketBase v0.22 Hook Syntax Errors Blocked Login
+**Severity:** High
+**Status:** Fixed
+**Filed:** 2026-07-20 | **Closed:** 2026-07-20
+**Description:** `auth_http_only.pb.js`, `rate_limiter.pb.js`, `restrict_admin.pb.js`, and `security_headers.pb.js` were using deprecated hook function declarations (`onBeforeApiRequest`, `onBeforeRequest`, `onAfterApiRequest`), which threw `ReferenceError` crashes on PocketBase v0.22 startup and prevented custom auth routes from initializing.
+**Resolution:** Converted all PB request hooks to standard PocketBase v0.22 `routerUse(...)` middleware syntax, whitelisted admin & oauth endpoints from CSRF verification, and removed `Secure` cookie flag in non-HTTPS local environments.
+
+---
+
+### B-009: Footer Service Links Pointing to Static Invalid Service Slugs
+**Severity:** Medium
+**Status:** Fixed
+**Filed:** 2026-07-20 | **Closed:** 2026-07-20
+**Description:** Footer service links in English and Arabic translations pointed to static placeholder URLs (such as `/services/compliance-and-legal/s1`), causing "Service Not Found" errors when users clicked footer links.
+**Resolution:** Updated `translations.ts` footer link definitions to point to active category URLs (`/services/business-formation`, `/services/government-compliance`).
+
+---
+
 ### B-001: emailVerified Reads From Auth Session Only
 **Severity:** Low
 **Status:** Fixed

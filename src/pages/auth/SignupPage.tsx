@@ -57,7 +57,7 @@ export default function SignupPage() {
         method: 'POST',
         body: { email, password }
       })
-      pb.authStore.save('dummy_token_for_sdk', res.record as RecordModel)
+      pb.authStore.save(res.token, res.record as RecordModel)
 
       // Request email verification (PocketBase sends verification email)
       await pb.collection('users').requestVerification(email)

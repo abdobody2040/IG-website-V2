@@ -1,15 +1,16 @@
 import { useState, useEffect } from 'react'
 import { useParams, Link } from '@tanstack/react-router'
 import * as Icons from 'lucide-react'
-import { ChevronRight, ChevronLeft, Loader2, ArrowRight, Check, Calendar, HelpCircle, Shield, Clock, AlertTriangle } from 'lucide-react'
+import { ChevronRight, ChevronLeft, Loader2, ArrowRight, Check, Calendar, HelpCircle, Shield, Clock, AlertTriangle, Star, Sparkles } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
 import { useLang } from '../i18n/LanguageContext'
 import { setPageMeta, injectJsonLd, generateFaqSchema, getCanonical, injectBreadcrumb } from '../lib/seo'
 import { useServices, ServiceRecord } from '../hooks/useServices'
-import { CATEGORY_MAP } from './ServicesPage'
+import { CATEGORY_MAP, getCategorySlug } from './ServicesPage'
 import { getServiceTimeline } from './ServiceCategoryPage'
 import PublicOrderModal from '../components/PublicOrderModal'
+import { SERVICES_EXTENDED_DATA } from '../data/servicesExtendedData'
 
 interface ServiceDetailContent {
   overview_en: string
@@ -125,7 +126,6 @@ const SERVICE_DETAILS_LOOKUP: Record<string, ServiceDetailContent> = {
   }
 }
 
-// Fallback content generator if service is not in lookup map
 const getServiceDetailFallback = (svc: ServiceRecord, isAr: boolean): ServiceDetailContent => {
   const title = isAr ? svc.title_ar : svc.title_en
   const desc = isAr ? svc.description_ar : svc.description_en
@@ -186,7 +186,11 @@ export default function ServiceDetailPage() {
   const { lang } = useLang()
   const isAr = lang === 'ar'
   const { services, loading } = useServices()
+  
+  // Modal State
   const [selectedService, setSelectedService] = useState<ServiceRecord | null>(null)
+  const [selectedPlanName, setSelectedPlanName] = useState<string | undefined>(undefined)
+  const [selectedPlanPrice, setSelectedPlanPrice] = useState<number | string | undefined>(undefined)
 
   // Scroll to top on load/change
   useEffect(() => {
@@ -195,6 +199,7 @@ export default function ServiceDetailPage() {
 
   const category = CATEGORY_MAP[categorySlug]
   const service = services.find(s => s.id === serviceSlug && s.active)
+  const extendedInfo = service ? SERVICES_EXTENDED_DATA[service.id] : undefined
 
   useEffect(() => {
     if (!service || !category) return
@@ -253,7 +258,7 @@ export default function ServiceDetailPage() {
         <Navbar />
         <div className="flex-1 flex flex-col items-center justify-center py-20 gap-3">
           <Loader2 className="animate-spin text-[#2563EB]" size={32} />
-          <span className="text-slate-500 text-sm">{isAr ? 'جاري تحميل الخدمة...' : 'Loading service...'}</span>
+          <span className="text-slate-500 text-sm font-semibold">{isAr ? 'جاري تحميل الخدمة...' : 'Loading service...'}</span>
         </div>
         <Footer />
       </div>
@@ -281,16 +286,31 @@ export default function ServiceDetailPage() {
   const timeline = getServiceTimeline(service.id, isAr)
   const catLabel = isAr ? category.label_ar : category.label_en
 
-  // Get related services (services in same category except this one)
+  // Related services
   const relatedServices = services
     .filter(s => s.category === category.dbName && s.id !== service.id && s.active)
     .slice(0, 3)
+
+  // Upsells & Cross-sells
+  const upsellServices = extendedInfo?.upsells 
+    ? services.filter(s => extendedInfo.upsells.includes(s.id) && s.active)
+    : []
+
+  const crossSellServices = extendedInfo?.crossSells
+    ? services.filter(s => extendedInfo.crossSells.includes(s.id) && s.active)
+    : []
+
+  const handleOrderPlan = (planName: string, price: number | string) => {
+    setSelectedPlanName(planName)
+    setSelectedPlanPrice(price)
+    setSelectedService(service)
+  }
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] font-sans flex flex-col">
       <Navbar />
 
-      <main className="flex-1 max-w-[1280px] w-full mx-auto px-5 sm:px-8 lg:px-10 pt-32 pb-24">
+      <main className="flex-1 max-w-[1280px] w-full mx-auto px-4 sm:px-6 lg:px-8 pt-32 pb-24">
         
         {/* Breadcrumbs */}
         <div className={`flex items-center gap-1.5 text-xs font-semibold text-slate-400 mb-8 ${isAr ? 'flex-row-reverse' : ''}`}>
@@ -311,16 +331,138 @@ export default function ServiceDetailPage() {
             
             {/* Header info */}
             <div className="space-y-4">
-              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500/10 to-indigo-500/5 text-[#2563EB] flex items-center justify-center">
-                <ServiceIcon size={32} />
+              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-500/10 to-indigo-500/5 text-[#2563EB] flex items-center justify-center">
+                <ServiceIcon size={28} />
               </div>
               <h1 className="text-3xl sm:text-4xl font-extrabold text-slate-900 leading-tight" style={{ fontFamily: 'Sora, Inter, sans-serif' }}>
                 {title}
               </h1>
-              <p className="text-slate-500 text-base sm:text-lg leading-relaxed font-medium">
+              <p className="text-slate-500 text-sm sm:text-base leading-relaxed font-semibold">
                 {desc}
               </p>
             </div>
+
+            {/* Smart Pricing Plans Section */}
+            {extendedInfo && (
+              <div className="space-y-6">
+                <h3 className="text-xl font-bold text-slate-900 flex items-center gap-2" style={{ fontFamily: 'Sora, Inter, sans-serif' }}>
+                  <Star size={20} className="text-[#2563EB] fill-[#2563EB]/10" />
+                  {isAr ? 'اختر باقة الخدمة المناسبة' : 'Select Your Pricing Plan'}
+                </h3>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Plan 1: Starter */}
+                  <div className="bg-white border border-slate-200/60 rounded-3xl p-6 flex flex-col justify-between shadow-sm hover:border-slate-300 transition-all">
+                    <div>
+                      <div className="flex items-center justify-between mb-4">
+                        <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">{isAr ? 'الباقة الأساسية' : 'Starter Plan'}</span>
+                      </div>
+                      <div className="flex items-baseline gap-1 mb-5">
+                        <span className="text-3xl font-black text-slate-900">${extendedInfo.starterPrice}</span>
+                        <span className="text-[10px] text-slate-400 font-bold">/ {period}</span>
+                      </div>
+                      <ul className="space-y-2.5 mb-6">
+                        {extendedInfo.starterFeatures.map((feat, i) => (
+                          <li key={i} className="flex items-start gap-2 text-xs font-bold text-slate-600">
+                            <Check size={12} className="text-emerald-500 shrink-0 mt-0.5" />
+                            <span>{feat}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                    <button
+                      onClick={() => handleOrderPlan(isAr ? 'الباقة الأساسية (Starter)' : 'Starter Plan', extendedInfo.starterPrice)}
+                      className="w-full py-2.5 rounded-xl bg-slate-50 hover:bg-blue-600 text-slate-700 hover:text-white border border-slate-200/50 hover:border-transparent text-xs font-extrabold transition-all"
+                    >
+                      {isAr ? 'اطلب الباقة الأساسية' : 'Order Starter'}
+                    </button>
+                  </div>
+
+                  {/* Plan 2: Professional (Recommended) */}
+                  <div className="bg-white border-2 border-blue-500/40 rounded-3xl p-6 flex flex-col justify-between shadow-md relative overflow-hidden">
+                    <div className="absolute top-0 right-0 bg-[#2563EB] text-white text-[9px] font-black px-4 py-1 rounded-bl-xl uppercase tracking-wider">
+                      {isAr ? 'موصى به' : 'Popular'}
+                    </div>
+                    <div>
+                      <div className="flex items-center justify-between mb-4">
+                        <span className="text-xs font-bold text-blue-600 uppercase tracking-wider">{isAr ? 'باقة المحترفين' : 'Professional Plan'}</span>
+                      </div>
+                      <div className="flex items-baseline gap-1 mb-5">
+                        <span className="text-3xl font-black text-slate-900">${extendedInfo.professionalPrice}</span>
+                        <span className="text-[10px] text-slate-400 font-bold">/ {period}</span>
+                      </div>
+                      <ul className="space-y-2.5 mb-6">
+                        {extendedInfo.professionalFeatures.map((feat, i) => (
+                          <li key={i} className="flex items-start gap-2 text-xs font-bold text-slate-600">
+                            <Check size={12} className="text-[#2563EB] shrink-0 mt-0.5" />
+                            <span>{feat}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                    <button
+                      onClick={() => handleOrderPlan(isAr ? 'باقة المحترفين (Professional)' : 'Professional Plan', extendedInfo.professionalPrice)}
+                      className="w-full py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-extrabold transition-all shadow-sm shadow-blue-500/10"
+                    >
+                      {isAr ? 'اطلب باقة المحترفين' : 'Order Professional'}
+                    </button>
+                  </div>
+
+                  {/* Plan 3: Enterprise */}
+                  <div className="bg-white border border-slate-200/60 rounded-3xl p-6 flex flex-col justify-between shadow-sm hover:border-slate-300 transition-all">
+                    <div>
+                      <div className="flex items-center justify-between mb-4">
+                        <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">{isAr ? 'باقة الشركات' : 'Enterprise Plan'}</span>
+                      </div>
+                      <div className="flex items-baseline gap-1 mb-5">
+                        <span className="text-3xl font-black text-slate-900">${extendedInfo.enterprisePrice}</span>
+                        <span className="text-[10px] text-slate-400 font-bold">/ {period}</span>
+                      </div>
+                      <ul className="space-y-2.5 mb-6">
+                        {extendedInfo.enterpriseFeatures.map((feat, i) => (
+                          <li key={i} className="flex items-start gap-2 text-xs font-bold text-slate-600">
+                            <Check size={12} className="text-emerald-500 shrink-0 mt-0.5" />
+                            <span>{feat}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                    <button
+                      onClick={() => handleOrderPlan(isAr ? 'باقة الشركات (Enterprise)' : 'Enterprise Plan', extendedInfo.enterprisePrice)}
+                      className="w-full py-2.5 rounded-xl bg-slate-50 hover:bg-blue-600 text-slate-700 hover:text-white border border-slate-200/50 hover:border-transparent text-xs font-extrabold transition-all"
+                    >
+                      {isAr ? 'اطلب باقة الشركات' : 'Order Enterprise'}
+                    </button>
+                  </div>
+
+                  {/* Plan 4: Custom */}
+                  <div className="bg-white border border-slate-200/60 rounded-3xl p-6 flex flex-col justify-between shadow-sm hover:border-slate-300 transition-all">
+                    <div>
+                      <div className="flex items-center justify-between mb-4">
+                        <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">{isAr ? 'باقة خاصة مخصصة' : 'Custom Solutions'}</span>
+                      </div>
+                      <div className="flex items-baseline gap-1 mb-5">
+                        <span className="text-3xl font-black text-slate-900">{isAr ? 'تسعير مخصص' : 'Custom Quote'}</span>
+                      </div>
+                      <ul className="space-y-2.5 mb-6">
+                        {extendedInfo.customFeatures.map((feat, i) => (
+                          <li key={i} className="flex items-start gap-2 text-xs font-bold text-slate-600">
+                            <Check size={12} className="text-emerald-500 shrink-0 mt-0.5" />
+                            <span>{feat}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                    <button
+                      onClick={() => handleOrderPlan(isAr ? 'باقة خاصة مخصصة (Custom)' : 'Custom Solutions Plan', 'Custom Quote')}
+                      className="w-full py-2.5 rounded-xl bg-slate-50 hover:bg-blue-600 text-slate-700 hover:text-white border border-slate-200/50 hover:border-transparent text-xs font-extrabold transition-all"
+                    >
+                      {isAr ? 'اطلب استشارة وتكلفة' : 'Request Custom Quote'}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Overview Section */}
             <div className="bg-white border border-slate-200/50 rounded-3xl p-6 sm:p-8 shadow-[0_8px_30px_rgb(0,0,0,0.01)] space-y-4">
@@ -328,7 +470,7 @@ export default function ServiceDetailPage() {
                 <Shield size={20} className="text-[#2563EB]" />
                 {isAr ? 'نظرة عامة على الخدمة' : 'Service Overview'}
               </h3>
-              <p className="text-slate-600 text-sm leading-relaxed font-medium">
+              <p className="text-slate-600 text-xs sm:text-sm leading-relaxed font-semibold">
                 {isAr ? details.overview_ar : details.overview_en}
               </p>
             </div>
@@ -344,7 +486,7 @@ export default function ServiceDetailPage() {
                     <div className="w-5 h-5 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center shrink-0 mt-0.5">
                       <Check size={12} className="stroke-[3]" />
                     </div>
-                    <span className="text-slate-600 text-xs sm:text-sm font-semibold">{item}</span>
+                    <span className="text-slate-600 text-xs sm:text-sm font-bold">{item}</span>
                   </div>
                 ))}
               </div>
@@ -358,7 +500,6 @@ export default function ServiceDetailPage() {
               <div className="relative border-l border-slate-200/60 pl-6 ml-3 space-y-8">
                 {(isAr ? details.process_ar : details.process_en).map((step, i) => (
                   <div key={i} className="relative">
-                    {/* Circle marker */}
                     <div className="absolute -left-[35px] top-0 w-[18px] h-[18px] rounded-full bg-white border-2 border-blue-500 flex items-center justify-center shadow-sm">
                       <div className="w-1.5 h-1.5 rounded-full bg-blue-500" />
                     </div>
@@ -366,7 +507,7 @@ export default function ServiceDetailPage() {
                     <span className="inline-block text-[#2563EB] text-[10px] font-extrabold uppercase tracking-wider mb-1">
                       {isAr ? `الخطوة ${i + 1}` : `STEP 0${i + 1}`}
                     </span>
-                    <p className="text-slate-700 text-xs sm:text-sm font-semibold leading-relaxed">
+                    <p className="text-slate-700 text-xs sm:text-sm font-bold leading-relaxed">
                       {step}
                     </p>
                   </div>
@@ -380,7 +521,7 @@ export default function ServiceDetailPage() {
                 <AlertTriangle size={18} className="text-[#2563EB]" />
                 {isAr ? 'المتطلبات والمستندات المطلوبة' : 'Client Requirements'}
               </h3>
-              <ul className="space-y-2.5 list-disc pl-5 text-slate-600 text-xs sm:text-sm font-semibold">
+              <ul className="space-y-2.5 list-disc pl-5 text-slate-600 text-xs sm:text-sm font-bold">
                 {(isAr ? details.requirements_ar : details.requirements_en).map((req, i) => (
                   <li key={i} className="leading-relaxed">
                     {req}
@@ -398,10 +539,10 @@ export default function ServiceDetailPage() {
               <div className="space-y-4">
                 {(isAr ? details.faq_ar : details.faq_en).map((faq, i) => (
                   <div key={i} className="border-b border-slate-100 last:border-0 pb-4 last:pb-0 space-y-1.5">
-                    <h4 className="text-slate-800 text-sm sm:text-base font-bold">
+                    <h4 className="text-slate-800 text-sm sm:text-base font-extrabold">
                       {faq.q}
                     </h4>
-                    <p className="text-slate-500 text-xs sm:text-sm leading-relaxed font-semibold">
+                    <p className="text-slate-500 text-xs sm:text-sm leading-relaxed font-bold">
                       {faq.a}
                     </p>
                   </div>
@@ -419,32 +560,32 @@ export default function ServiceDetailPage() {
               <div className="bg-white border border-slate-200/50 rounded-3xl p-6 sm:p-8 shadow-[0_8px_30px_rgb(0,0,0,0.015)] space-y-6">
                 <div>
                   <span className="text-xs font-extrabold text-slate-400 uppercase tracking-widest block mb-2">
-                    {isAr ? 'تكلفة الخدمة' : 'Service Price'}
+                    {isAr ? 'تكلفة الخدمة الأساسية' : 'Base Service Price'}
                   </span>
                   <div className="flex items-baseline gap-1.5">
                     <span className="text-4xl font-black text-blue-600">
                       {service.price > 0 ? `$${service.price}` : (isAr ? 'مشمول' : 'Included')}
                     </span>
                     {service.price > 0 && (
-                      <span className="text-sm font-semibold text-slate-400">/ {period}</span>
+                      <span className="text-sm font-bold text-slate-400">/ {period}</span>
                     )}
                   </div>
                 </div>
 
                 <div className="space-y-3.5 border-t border-slate-100 pt-5">
-                  <div className="flex items-center justify-between text-xs font-semibold">
+                  <div className="flex items-center justify-between text-xs font-bold">
                     <span className="text-slate-400 flex items-center gap-1.5">
                       <Clock size={14} className="text-slate-400" />
                       {isAr ? 'المدة المتوقعة' : 'Timeline'}
                     </span>
-                    <span className="text-slate-800 font-bold">{timeline}</span>
+                    <span className="text-slate-800 font-extrabold">{timeline}</span>
                   </div>
-                  <div className="flex items-center justify-between text-xs font-semibold">
+                  <div className="flex items-center justify-between text-xs font-bold">
                     <span className="text-slate-400 flex items-center gap-1.5">
                       <Calendar size={14} className="text-slate-400" />
                       {isAr ? 'تحديثات الحالة' : 'Status Updates'}
                     </span>
-                    <span className="text-slate-800 font-bold">{isAr ? 'تنبيهات فورية' : 'Real-time Alerts'}</span>
+                    <span className="text-slate-800 font-extrabold">{isAr ? 'تنبيهات فورية' : 'Real-time Alerts'}</span>
                   </div>
                 </div>
 
@@ -453,7 +594,7 @@ export default function ServiceDetailPage() {
                     onClick={() => setSelectedService(service)}
                     className="w-full py-4 rounded-xl bg-[#2563EB] hover:bg-[#1d4ed8] text-white text-sm font-extrabold flex items-center justify-center gap-2 shadow-lg shadow-blue-500/15 transition-all"
                   >
-                    <span>{isAr ? 'اطلب الخدمة الآن' : 'Order Now'}</span>
+                    <span>{isAr ? 'طلب الخدمة السريعة' : 'Order Base Service'}</span>
                     <ArrowRight size={15} className={isAr ? 'rotate-180' : ''} />
                   </button>
                   
@@ -469,13 +610,100 @@ export default function ServiceDetailPage() {
                 </div>
               </div>
 
+              {/* Upsells Sidebar Panel */}
+              {upsellServices.length > 0 && (
+                <div className="bg-white border border-slate-200/50 rounded-3xl p-5 shadow-sm space-y-4">
+                  <h4 className="text-xs font-extrabold text-slate-900 flex items-center gap-1">
+                    <Sparkles size={12} className="text-[#2563EB]" />
+                    {isAr ? 'إضافات مقترحة للشركة' : 'Recommended Upgrades'}
+                  </h4>
+                  <div className="space-y-3">
+                    {upsellServices.map(up => {
+                      const UpIcon = (Icons as any)[up.icon] || Icons.HelpCircle
+                      const upCatSlug = getCategorySlug(up.category)
+                      return (
+                        <Link
+                          key={up.id}
+                          to="/services/$categorySlug/$serviceSlug"
+                          params={{ categorySlug: upCatSlug, serviceSlug: up.id }}
+                          className="flex items-center gap-3 p-2 rounded-xl hover:bg-slate-50 border border-slate-100 hover:border-slate-200/50 transition-all group"
+                        >
+                          <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+                            <UpIcon size={16} />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <h5 className="text-[11px] font-bold text-slate-800 group-hover:text-blue-600 transition-colors truncate">
+                              {isAr ? up.title_ar : up.title_en}
+                            </h5>
+                            <span className="text-[10px] font-black text-blue-600">
+                              {up.price > 0 ? `$${up.price}` : (isAr ? 'مشمول' : 'Included')}
+                            </span>
+                          </div>
+                        </Link>
+                      )
+                    })}
+                  </div>
+                </div>
+              )}
+
             </div>
           </div>
 
         </div>
 
-        {/* Related Services */}
-        {relatedServices.length > 0 && (
+        {/* Cross-sells Section */}
+        {crossSellServices.length > 0 && (
+          <section className="mt-20 border-t border-slate-200/50 pt-16 space-y-8">
+            <div className="flex items-center justify-between">
+              <h3 className="text-xl sm:text-2xl font-bold text-slate-900" style={{ fontFamily: 'Sora, Inter, sans-serif' }}>
+                {isAr ? 'خدمات يُطلب دمجها معاً' : 'Frequently Bought Together'}
+              </h3>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {crossSellServices.map(cs => {
+                const CsIcon = (Icons as any)[cs.icon] || Icons.HelpCircle
+                const csTitle = isAr ? cs.title_ar : cs.title_en
+                const csDesc = isAr ? cs.description_ar : cs.description_en
+                const csCatSlug = getCategorySlug(cs.category)
+                
+                return (
+                  <Link
+                    key={cs.id}
+                    to="/services/$categorySlug/$serviceSlug"
+                    params={{ categorySlug: csCatSlug, serviceSlug: cs.id }}
+                    className="bg-white border border-slate-200/60 rounded-3xl p-6 hover:shadow-lg hover:border-blue-500/20 transition-all duration-300 group flex flex-col justify-between"
+                  >
+                    <div className="space-y-4">
+                      <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                        <CsIcon size={18} />
+                      </div>
+                      <div className="space-y-1">
+                        <h4 className="font-bold text-slate-900 text-base group-hover:text-blue-600 transition-colors">
+                          {csTitle}
+                        </h4>
+                        <p className="text-slate-500 text-xs leading-relaxed line-clamp-2 font-semibold">
+                          {csDesc}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="mt-6 pt-4 border-t border-slate-100 flex items-center justify-between text-xs font-bold">
+                      <span className="text-[#2563EB]">
+                        {cs.price > 0 ? `$${cs.price}` : (isAr ? 'مشمول' : 'Included')}
+                      </span>
+                      <span className="text-slate-400 group-hover:text-blue-600 transition-colors flex items-center gap-1">
+                        {isAr ? 'عرض التفاصيل' : 'View Details'}
+                        <ArrowRight size={12} className={isAr ? 'rotate-180' : ''} />
+                      </span>
+                    </div>
+                  </Link>
+                )
+              })}
+            </div>
+          </section>
+        )}
+
+        {/* Related Services (if no direct cross-sells are populated) */}
+        {crossSellServices.length === 0 && relatedServices.length > 0 && (
           <section className="mt-20 border-t border-slate-200/50 pt-16 space-y-8">
             <h3 className="text-xl sm:text-2xl font-bold text-slate-900" style={{ fontFamily: 'Sora, Inter, sans-serif' }}>
               {isAr ? 'خدمات ذات صلة' : 'Related Services'}
@@ -529,7 +757,13 @@ export default function ServiceDetailPage() {
         <PublicOrderModal
           service={selectedService}
           isAr={isAr}
-          onClose={() => setSelectedService(null)}
+          planName={selectedPlanName}
+          planPrice={selectedPlanPrice}
+          onClose={() => {
+            setSelectedService(null)
+            setSelectedPlanName(undefined)
+            setSelectedPlanPrice(undefined)
+          }}
         />
       )}
 

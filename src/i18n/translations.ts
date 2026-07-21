@@ -284,11 +284,11 @@ export const translations = {
         { label: 'Contact Us', href: '/contact' },
       ],
       services: [
-        { label: 'US LLC Formation', href: '/services/compliance-and-legal/s1' },
-        { label: 'UK LTD Formation', href: '/services/compliance-and-legal/s2' },
-        { label: 'EIN Application', href: '/services/compliance-and-legal/s3' },
-        { label: 'Registered Agent', href: '/services/compliance-and-legal/s4' },
-        { label: 'US ITIN Application', href: '/services/international-documents/s5' },
+        { label: 'US LLC Formation', href: '/services/business-formation' },
+        { label: 'UK LTD Formation', href: '/services/business-formation' },
+        { label: 'EIN Application', href: '/services/government-compliance' },
+        { label: 'Registered Agent', href: '/services/government-compliance' },
+        { label: 'US ITIN Application', href: '/services/government-compliance' },
       ],
       resources: [
         { label: 'Guides', href: '/blog' },
@@ -1040,11 +1040,11 @@ export const translations = {
         { label: 'اتصل بنا', href: '/contact' },
       ],
       services: [
-        { label: 'تأسيس شركة LLC أمريكية', href: '/services/compliance-and-legal/s1' },
-        { label: 'تأسيس شركة LTD بريطانية', href: '/services/compliance-and-legal/s2' },
-        { label: 'الرقم الضريبي الفيدرالي EIN', href: '/services/compliance-and-legal/s3' },
-        { label: 'الوكيل المسجل', href: '/services/compliance-and-legal/s4' },
-        { label: 'رقم تعريف دافع الضرائب ITIN', href: '/services/international-documents/s5' },
+        { label: 'تأسيس شركة LLC أمريكية', href: '/services/business-formation' },
+        { label: 'تأسيس شركة LTD بريطانية', href: '/services/business-formation' },
+        { label: 'الرقم الضريبي الفيدرالي EIN', href: '/services/government-compliance' },
+        { label: 'الوكيل المسجل', href: '/services/government-compliance' },
+        { label: 'رقم تعريف دافع الضرائب ITIN', href: '/services/government-compliance' },
       ],
       resources: [
         { label: 'الأدلة والمقالات', href: '/blog' },

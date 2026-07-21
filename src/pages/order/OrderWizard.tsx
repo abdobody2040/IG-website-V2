@@ -93,7 +93,7 @@ export default function OrderWizard() {
           method: 'POST',
           body: { email: data.email, password: tempPassword }
         })
-        pb.authStore.save('dummy_token_for_sdk', res.record as any)
+        pb.authStore.save(res.token, res.record as any)
         uid = res.record.id
       }
 

@@ -30,7 +30,7 @@ export default function LoginPage() {
         method: 'POST',
         body: { email, password }
       })
-      pb.authStore.save('dummy_token_for_sdk', res.record as RecordModel)
+      pb.authStore.save(res.token, res.record as RecordModel)
       const role = (res.record['role'] as string) ?? 'client'
       if (role === 'admin') {
         navigate({ to: '/admin' })

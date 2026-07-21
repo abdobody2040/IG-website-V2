@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 import { pb } from '../lib/pocketbase'
 
-const SITE_URL = 'https://www.instantgrow-llc.com'
+const SITE_URL = typeof window !== 'undefined' ? window.location.origin : 'https://www.instantgrow-llc.com'
 
 function escapeXml(s: string): string {
   return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
