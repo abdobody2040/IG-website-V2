@@ -53,11 +53,7 @@ export default function SignupPage() {
       })
 
       // Sign in immediately after creation
-      const res = await pb.send('/api/auth/login', {
-        method: 'POST',
-        body: { email, password }
-      })
-      pb.authStore.save(res.token, res.record as RecordModel)
+      await pb.collection('users').authWithPassword(email, password)
 
       // Request email verification (PocketBase sends verification email)
       await pb.collection('users').requestVerification(email)

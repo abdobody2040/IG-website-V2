@@ -26,19 +26,15 @@ export default function LoginPage() {
   const onSubmit = async ({ email, password }: LoginForm) => {
     setServerError('')
     try {
-      const res = await pb.send('/api/auth/login', {
-        method: 'POST',
-        body: { email, password }
-      })
-      pb.authStore.save(res.token, res.record as RecordModel)
-      const role = (res.record['role'] as string) ?? 'client'
+      const authData = await pb.collection('users').authWithPassword(email, password)
+      const role = (authData.record['role'] as string) ?? 'client'
       if (role === 'admin') {
         navigate({ to: '/admin' })
       } else {
         navigate({ to: '/client/dashboard' })
       }
-    } catch {
-      setServerError('Invalid email or password.')
+    } catch (err: any) {
+      setServerError(err?.message || 'Invalid email or password.')
     }
   }
 

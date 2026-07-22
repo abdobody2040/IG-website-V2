@@ -89,12 +89,8 @@ export default function OrderWizard() {
           display_name: data.fullName,
           role: 'client',
         })
-        const res = await pb.send('/api/auth/login', {
-          method: 'POST',
-          body: { email: data.email, password: tempPassword }
-        })
-        pb.authStore.save(res.token, res.record as any)
-        uid = res.record.id
+        const authData = await pb.collection('users').authWithPassword(data.email, tempPassword)
+        uid = authData.record.id
       }
 
       if (!uid) throw new Error('Authentication failed')
