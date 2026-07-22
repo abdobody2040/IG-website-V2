@@ -1,15 +1,15 @@
 const fs = require('fs');
 const path = require('path');
 
-const PB_URL = 'http://127.0.0.1:8090';
-
-// Read email/pass from args
+// Read email/pass and optional URL from args
 const email = process.argv[2];
 const password = process.argv[3];
+const PB_URL = process.argv[4] || 'http://127.0.0.1:8090';
 
 if (!email || !password) {
   console.error('\n❌ Error: Admin credentials required.');
-  console.error('Usage: node scripts/setup-pb-schema.cjs <admin-email> <admin-password>\n');
+  console.error('Usage: node scripts/setup-pb-schema.cjs <admin-email> <admin-password> [pb-url]\n');
+  console.error('Example: node scripts/setup-pb-schema.cjs admin@email.com mypassword https://db.instantgrow.net\n');
   process.exit(1);
 }
 
