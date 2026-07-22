@@ -25,8 +25,12 @@ export default function CTASection() {
           {/* Left: Mascot & Text */}
           <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6 flex-1 text-center sm:text-left rtl:sm:text-right w-full">
             <img 
-              src="/mascot-cta.png" 
+              src="/mascot-cta.webp" 
               alt="Instant Grow Mascot" 
+              width={176}
+              height={176}
+              loading="lazy"
+              decoding="async"
               className={`w-24 sm:w-32 lg:w-44 shrink-0 drop-shadow-[0_10px_25px_rgba(0,0,0,0.15)] ${isAr ? 'scale-x-[-1]' : ''}`} 
             />
             <div>

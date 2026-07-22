@@ -105,8 +105,12 @@ export default function HowItWorks() {
               className="w-full"
             >
               <img
-                src="/mascot-how-it-works.png"
+                src="/mascot-how-it-works.webp"
                 alt="Instant Grow Mascot"
+                width={400}
+                height={400}
+                loading="lazy"
+                decoding="async"
                 className="w-full h-auto drop-shadow-xl"
               />
             </motion.div>

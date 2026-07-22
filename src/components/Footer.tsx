@@ -94,8 +94,12 @@ export default function Footer() {
             <div className="flex items-center gap-3.5 mb-5 select-none">
               <div className="w-12 h-12 overflow-hidden relative shrink-0">
                 <img 
-                  src="/logo.png" 
+                  src="/logo.webp" 
                   alt="Instant Grow" 
+                  width={48}
+                  height={48}
+                  loading="lazy"
+                  decoding="async"
                   className="h-12 max-w-none absolute left-0 top-0 brightness-0 invert" 
                   style={{ width: 'auto' }} 
                   onError={() => {}} 

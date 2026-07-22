@@ -114,8 +114,12 @@ export default function Timeline() {
               className="w-full"
             >
               <img
-                src="/mascot-timeline.png"
+                src="/mascot-timeline.webp"
                 alt="Instant Grow Mascot"
+                width={256}
+                height={256}
+                loading="lazy"
+                decoding="async"
                 className={`w-full h-auto drop-shadow-xl ${isAr ? 'scale-x-[-1]' : ''}`}
               />
             </motion.div>

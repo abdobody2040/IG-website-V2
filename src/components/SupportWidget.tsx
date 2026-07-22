@@ -192,7 +192,7 @@ export default function SupportWidget() {
               <div className="flex items-center gap-3">
                 <div className="relative">
                   <img
-                    src="/mascot-chat.png"
+                    src="/mascot-chat.webp"
                     alt="Instant Grow AI Mascot"
                     className="w-10 h-10 rounded-full object-cover border border-slate-800"
                   />
@@ -232,7 +232,7 @@ export default function SupportWidget() {
                     </div>
                   ) : (
                     <img
-                      src="/mascot-chat.png"
+                      src="/mascot-chat.webp"
                       alt="Bot"
                       className="w-7 h-7 rounded-full object-cover flex-shrink-0 border border-slate-800/80"
                     />
@@ -252,7 +252,7 @@ export default function SupportWidget() {
               {isTyping && (
                 <div className="flex gap-2.5 max-w-[85%] me-auto">
                   <img
-                    src="/mascot-chat.png"
+                    src="/mascot-chat.webp"
                     alt="Bot Typing"
                     className="w-7 h-7 rounded-full object-cover flex-shrink-0 border border-slate-800/80"
                   />
@@ -341,7 +341,7 @@ export default function SupportWidget() {
             </div>
           ) : (
             <img
-              src="/mascot-chat.png"
+              src="/mascot-chat.webp"
               alt="AI Chat Assistant"
               className="w-16 h-16 rounded-full shadow-[0_4px_20px_rgba(26,86,255,0.3)] hover:shadow-[0_4px_24px_rgba(26,86,255,0.5)] transition-all duration-300 object-cover"
             />

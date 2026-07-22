@@ -42,3 +42,22 @@ pb.beforeSend = function (url, options) {
 
 // Keep token fresh — PocketBase SDK handles refresh automatically when autoRefreshThreshold is set
 pb.autoCancellation(false)
+
+// Polyfill to bridge PocketBase SDK 0.27+ with PocketBase Server v0.22 response format
+pb.afterSend = function (response, data) {
+  if (data && Array.isArray(data.authProviders)) {
+    data.authProviders.forEach((p: any) => {
+      if (p.authUrl && !p.authURL) {
+        p.authURL = p.authUrl
+      }
+    })
+    if (!data.oauth2) {
+      data.oauth2 = {
+        enabled: true,
+        providers: data.authProviders,
+      }
+    }
+  }
+  return data
+}
+

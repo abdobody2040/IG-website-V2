@@ -270,7 +270,7 @@ export default function Navbar() {
         <div className="flex items-center justify-between h-[80px]">
           {/* Logo */}
           <a href="/" className="flex items-center">
-            <img src="/logo.png" alt="Instant Grow" className="h-11 sm:h-14 w-auto object-contain" />
+            <img src="/logo.webp" alt="Instant Grow" width={180} height={56} fetchPriority="high" className="h-11 sm:h-14 w-auto object-contain" />
           </a>
 
           {/* Desktop Nav */}
@@ -508,7 +508,7 @@ export default function Navbar() {
               {/* Header inside drawer */}
               <div className="flex items-center justify-between px-6 h-[80px] border-b border-slate-100">
                 <a href="/" onClick={() => setMobileOpen(false)}>
-                  <img src="/logo.png" alt="Instant Grow" className="h-9 w-auto" />
+                  <img src="/logo.webp" alt="Instant Grow" width={120} height={36} loading="lazy" className="h-9 w-auto" />
                 </a>
                 <button
                   onClick={() => setMobileOpen(false)}

@@ -37,62 +37,57 @@ function arcPath(arc: ArcDef) {
 }
 
 
-/* ── World Map Dots ─────────────────────────────────────────────────────────── */
-function WorldDots() {
-  // Generate dots only inside continental landmasses
-  const landMasks = [
-    // North America
-    { cx: 110, cy: 130, rx: 125, ry: 90 },
-    { cx: 130, cy: 220, rx: 82,  ry: 75 },
-    { cx: 170, cy: 295, rx: 52,  ry: 38 },
-    // South America
-    { cx: 200, cy: 365, rx: 62,  ry: 85 },
-    // Europe
-    { cx: 400, cy: 118, rx: 72,  ry: 62 },
-    // Africa
-    { cx: 440, cy: 295, rx: 75,  ry: 105 },
-    // Middle East
-    { cx: 570, cy: 215, rx: 60,  ry: 55 },
-    // Asia main
-    { cx: 655, cy: 148, rx: 168, ry: 112 },
-    // SE Asia
-    { cx: 740, cy: 270, rx: 82,  ry: 68 },
-    // Australia
-    { cx: 815, cy: 362, rx: 85,  ry: 52 },
-    // Greenland
-    { cx: 300, cy: 52,  rx: 48,  ry: 40 },
-    // Japan
-    { cx: 850, cy: 165, rx: 28,  ry: 32 },
-  ]
+/* ── World Map Dots (Pre-calculated statically to prevent main thread reflows) ──────────────── */
+const LAND_MASKS = [
+  { cx: 110, cy: 130, rx: 125, ry: 90 },
+  { cx: 130, cy: 220, rx: 82,  ry: 75 },
+  { cx: 170, cy: 295, rx: 52,  ry: 38 },
+  { cx: 200, cy: 365, rx: 62,  ry: 85 },
+  { cx: 400, cy: 118, rx: 72,  ry: 62 },
+  { cx: 440, cy: 295, rx: 75,  ry: 105 },
+  { cx: 570, cy: 215, rx: 60,  ry: 55 },
+  { cx: 655, cy: 148, rx: 168, ry: 112 },
+  { cx: 740, cy: 270, rx: 82,  ry: 68 },
+  { cx: 815, cy: 362, rx: 85,  ry: 52 },
+  { cx: 300, cy: 52,  rx: 48,  ry: 40 },
+  { cx: 850, cy: 165, rx: 28,  ry: 32 },
+]
 
-  const dots: { x: number; y: number }[] = []
-  const STEP = 18
-  for (let x = 10; x < VW; x += STEP) {
-    for (let y = 10; y < VH; y += STEP) {
-      for (const m of landMasks) {
-        const dx = (x - m.cx) / m.rx
-        const dy = (y - m.cy) / m.ry
-        if (dx * dx + dy * dy <= 1) {
-          dots.push({ x: x + (Math.random() - 0.5) * 4, y: y + (Math.random() - 0.5) * 4 })
-          break
-        }
+const STATIC_DOTS: { x: number; y: number; opacity: number }[] = []
+const STEP = 20
+for (let x = 10; x < VW; x += STEP) {
+  for (let y = 10; y < VH; y += STEP) {
+    for (const m of LAND_MASKS) {
+      const dx = (x - m.cx) / m.rx
+      const dy = (y - m.cy) / m.ry
+      if (dx * dx + dy * dy <= 1) {
+        STATIC_DOTS.push({
+          x: Math.round(x + (Math.sin(x * y) * 2)),
+          y: Math.round(y + (Math.cos(x * y) * 2)),
+          opacity: 0.2,
+        })
+        break
       }
     }
   }
+}
 
+import { memo } from 'react'
+
+const WorldDots = memo(function WorldDots() {
   return (
     <>
-      {dots.map((d, i) => (
+      {STATIC_DOTS.map((d, i) => (
         <circle
           key={i}
-          cx={d.x} cy={d.y} r={2.2}
+          cx={d.x} cy={d.y} r={2}
           fill="#2563EB"
-          opacity={0.18 + Math.random() * 0.12}
+          opacity={d.opacity}
         />
       ))}
     </>
   )
-}
+})
 
 
 /* ── Floating Card (HTML overlay above SVG) ───────────────────────────────── */

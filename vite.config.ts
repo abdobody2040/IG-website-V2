@@ -23,16 +23,20 @@ export default defineConfig({
     },
   },
   build: {
-    chunkSizeWarningLimit: 1600,
+    target: 'es2020',
+    minify: 'esbuild',
+    cssCodeSplit: true,
+    chunkSizeWarningLimit: 1000,
     rollupOptions: {
       output: {
         manualChunks(id) {
           if (id.includes('node_modules')) {
-            if (id.includes('recharts')) return 'recharts';
-            if (id.includes('framer-motion')) return 'framer-motion';
-            if (id.includes('@react-three') || id.includes('three')) return 'three';
-            if (id.includes('pocketbase')) return 'pocketbase';
-            if (id.includes('lucide-react')) return 'icons';
+            if (id.includes('recharts')) return 'vendor-recharts';
+            if (id.includes('framer-motion')) return 'vendor-framer';
+            if (id.includes('pocketbase')) return 'vendor-pocketbase';
+            if (id.includes('lucide-react')) return 'vendor-icons';
+            if (id.includes('@tanstack')) return 'vendor-tanstack';
+            if (id.includes('lenis')) return 'vendor-lenis';
           }
         },
       },
