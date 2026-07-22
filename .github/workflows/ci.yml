@@ -48,7 +48,7 @@ jobs:
       - name: TruffleHog secret scan
         uses: trufflesecurity/trufflehog@v3
         with:
-          extra_args: --results=verified,unknown --no-fail
+          extra_args: --no-fail
 
   dependency-review:
     name: Dependency Review
