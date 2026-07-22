@@ -88,8 +88,9 @@ export default function SignupPage() {
       } else {
         navigate({ to: '/client/dashboard' })
       }
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Google sign-up failed.'
+    } catch (err: any) {
+      console.error('Google Signup Error:', err)
+      const msg = err?.message || 'Google sign-up failed.'
       setServerError(msg)
     }
   }

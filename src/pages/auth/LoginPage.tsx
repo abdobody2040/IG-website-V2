@@ -49,8 +49,9 @@ export default function LoginPage() {
       } else {
         navigate({ to: '/client/dashboard' })
       }
-    } catch {
-      setServerError('Sign-in failed. Please try again.')
+    } catch (err: any) {
+      console.error('Google Login Error:', err)
+      setServerError(err?.message || 'Sign-in failed. Please try again.')
     }
   }
 

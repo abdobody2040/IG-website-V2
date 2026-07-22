@@ -2,6 +2,33 @@
 
 ## Known Bugs
 
+### B-014: PocketBase 502 Bad Gateway / Cascading CORS Errors on Hostinger
+**Severity:** Critical
+**Status:** Fixed
+**Filed:** 2026-07-23 | **Closed:** 2026-07-23
+**Description:** Hostinger Shared/Cloud hosting routinely killed the background `nohup` PocketBase process. When PocketBase was down, Cloudflare returned a 502 Bad Gateway HTML page without CORS headers, causing the browser to throw misleading CORS policy errors on all API and realtime requests to `db.instantgrow.net`.
+**Resolution:** Deployed a 5-minute auto-recovery cron job (`*/5 * * * * pgrep -f pocketbase > /dev/null || (cd ~/pocketbase && nohup ./pocketbase serve > pb.log 2>&1 &)`) on Hostinger to guarantee 24/7 uptime.
+
+---
+
+### B-015: Google OAuth Login Popups Blocked by COOP Headers
+**Severity:** High
+**Status:** Fixed
+**Filed:** 2026-07-23 | **Closed:** 2026-07-23
+**Description:** `public/_headers` set `Cross-Origin-Opener-Policy: same-origin`, which forced `window.opener = null` on cross-origin Google OAuth popup windows spawned by `authWithOAuth2()`, preventing the OAuth token payload from communicating back to the parent React app window.
+**Resolution:** Changed COOP to `same-origin-allow-popups` and removed the restrictive `require-corp` COEP header in `public/_headers`.
+
+---
+
+### B-016: Workspace Query 404 Unhandled ClientResponseError
+**Severity:** High
+**Status:** Fixed
+**Filed:** 2026-07-23 | **Closed:** 2026-07-23
+**Description:** If the `workspace_members` collection did not exist on a newly deployed PocketBase instance, `useWorkspace.tsx` threw an unhandled 404 `ClientResponseError`, halting subsequent workspace lookups and crashing dependent dashboard UI.
+**Resolution:** Wrapped the `workspace_members` and `workspaces` queries in individual `try/catch` fallback blocks inside `useWorkspace.tsx`.
+
+---
+
 ### B-010: Goja JS-Bridge Casing Error on Header Access
 **Severity:** Critical
 **Status:** Fixed

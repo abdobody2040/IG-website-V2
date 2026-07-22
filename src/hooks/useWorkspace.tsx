@@ -38,37 +38,46 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
   const fetchWorkspaces = async (userId: string) => {
     try {
       // 1. Fetch from workspace_members junction table
-      const members = await pb.collection('workspace_members').getFullList({
-        filter: `user = "${userId}"`,
-        expand: 'workspace',
-      })
-
-      let list = members
-        .map(m => {
-          const ws = m.expand?.workspace as RecordModel | undefined
-          if (!ws) return null
-          return {
-            id: ws.id,
-            name: ws.name as string,
-            owner: ws.owner as string,
-            createdAt: ws.created,
-            updatedAt: ws.updated,
-          } as Workspace
+      let list: Workspace[] = []
+      try {
+        const members = await pb.collection('workspace_members').getFullList({
+          filter: `user = "${userId}"`,
+          expand: 'workspace',
         })
-        .filter((w): w is Workspace => w !== null)
+        list = members
+          .map(m => {
+            const ws = m.expand?.workspace as RecordModel | undefined
+            if (!ws) return null
+            return {
+              id: ws.id,
+              name: ws.name as string,
+              owner: ws.owner as string,
+              createdAt: ws.created,
+              updatedAt: ws.updated,
+            } as Workspace
+          })
+          .filter((w): w is Workspace => w !== null)
+      } catch (err: any) {
+        // If workspace_members table is missing or 404, log warning instead of halting
+        console.warn('Could not fetch workspace_members:', err?.message || err)
+      }
 
-      // 2. Also check if user is the direct owner of any workspace (just in case)
-      const owned = await pb.collection('workspaces').getFullList({
-        filter: `owner = "${userId}"`,
-      })
-      
-      const ownedWorkspaces = owned.map(ws => ({
-        id: ws.id,
-        name: ws.name as string,
-        owner: ws.owner as string,
-        createdAt: ws.created,
-        updatedAt: ws.updated,
-      } as Workspace))
+      // 2. Also check if user is the direct owner of any workspace
+      let ownedWorkspaces: Workspace[] = []
+      try {
+        const owned = await pb.collection('workspaces').getFullList({
+          filter: `owner = "${userId}"`,
+        })
+        ownedWorkspaces = owned.map(ws => ({
+          id: ws.id,
+          name: ws.name as string,
+          owner: ws.owner as string,
+          createdAt: ws.created,
+          updatedAt: ws.updated,
+        } as Workspace))
+      } catch (err: any) {
+        console.warn('Could not fetch owned workspaces:', err?.message || err)
+      }
 
       // Combine and de-duplicate
       const combined = [...list]

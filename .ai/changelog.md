@@ -1,5 +1,16 @@
 # Instant Grow — Changelog
 
+## 2026-07-23 — Hostinger PocketBase Uptime, Google OAuth Popups, and Error Resilience
+
+### Added
+- **Hostinger Auto-Recovery Cron Job** — Added deployment documentation in `.ai/deployment.md` covering the `*/5 * * * *` cron job setup required to keep PocketBase alive 24/7 on Hostinger Shared/Cloud hosting environments that kill background `nohup` processes.
+
+### Fixed
+- **Google OAuth Popup Isolation (COOP)** — Changed `Cross-Origin-Opener-Policy` from `same-origin` to `same-origin-allow-popups` and removed `Cross-Origin-Embedder-Policy: require-corp` in `public/_headers`. This fixes Google OAuth login by allowing PocketBase's popup window to maintain `window.opener` communication with the parent tab.
+- **X-Frame-Options Console Warning** — Removed the invalid `<meta http-equiv="X-Frame-Options" content="DENY" />` tag from `index.html` as browsers enforce this exclusively via HTTP headers (already defined in `public/_headers`).
+- **Workspace Collection 404 Crash** — Wrapped `workspace_members` and `workspaces` queries inside `useWorkspace.tsx` with `try/catch` blocks. The frontend now degrades gracefully to a fallback state if the backend collections are missing or lack permission, instead of throwing unhandled `ClientResponseError 404` errors that crash the admin/client dashboards.
+- **PocketBase 502 Bad Gateway / CORS Blockage** — Diagnosed `db.instantgrow.net` 502 Bad Gateway errors causing systemic CORS blocks across all frontend fetch requests. Instructed the use of background `nohup` restarts and a 5-minute watchdog cron job.
+
 ## 2026-07-21 — PocketBase Admin Login, JS-Bridge Header Fixing, & Expanded Price Editor
 
 ### Added

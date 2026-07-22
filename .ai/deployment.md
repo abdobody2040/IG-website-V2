@@ -32,6 +32,21 @@
 └──────────────────────────────────────────────┘
 ```
 
+## PocketBase Deployment (Hostinger / VPS)
+
+PocketBase is a single executable that requires 24/7 uptime to serve the API. On shared or cloud environments (like Hostinger), background processes may be killed periodically by system resource managers, resulting in 502 Bad Gateway errors.
+
+### Hostinger Deployment Steps:
+1. **Upload Executable**: Upload `pocketbase` and `pb_hooks` / `pb_migrations` via FTP or SSH.
+2. **Start Process**: Run `nohup ./pocketbase serve > pb.log 2>&1 &` to run it in the background.
+3. **Setup Keep-Alive Cron Job**: 
+   Since Hostinger kills background processes, you **must** configure a cron job to restart PocketBase automatically if it goes down.
+   In your Hostinger hPanel -> Advanced -> Cron Jobs, add this command to run every 5 minutes:
+   ```bash
+   */5 * * * * pgrep -f pocketbase > /dev/null || (cd /home/uXXXXXXX/pocketbase && nohup ./pocketbase serve > pb.log 2>&1 &)
+   ```
+   *(Replace `/home/uXXXXXXX/pocketbase` with your absolute path).*
+
 ## Frontend Deployment
 
 ### Build Command
