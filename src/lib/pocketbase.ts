@@ -44,7 +44,7 @@ pb.beforeSend = function (url, options) {
 pb.autoCancellation(false)
 
 // Polyfill to bridge PocketBase SDK 0.27+ with PocketBase Server v0.22 response format
-pb.afterSend = function (response, data) {
+pb.afterSend = function (_response, data) {
   if (data && Array.isArray(data.authProviders)) {
     data.authProviders.forEach((p: any) => {
       if (p.authUrl && !p.authURL) {
