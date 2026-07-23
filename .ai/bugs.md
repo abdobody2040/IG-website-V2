@@ -2,6 +2,33 @@
 
 ## Known Bugs
 
+### B-017: PocketBase SDK 0.27 / Server v0.22 Schema Mismatch (`Cannot read properties of undefined (reading 'providers')`)
+**Severity:** Critical
+**Status:** Fixed
+**Filed:** 2026-07-23 | **Closed:** 2026-07-23
+**Description:** PocketBase JS SDK `v0.27.0` expects `e.oauth2.providers` and `p.authURL` from `/auth-methods`, whereas PocketBase Server `v0.22.x` returns `e.authProviders` and `p.authUrl`. Calling `authWithOAuth2({ provider: 'google' })` threw `TypeError: Cannot read properties of undefined (reading 'providers')`.
+**Resolution:** Implemented `pb.afterSend` hook in `src/lib/pocketbase.ts` to map `authProviders` ➔ `oauth2.providers` and standardize `authUrl` ➔ `authURL`.
+
+---
+
+### B-018: TypeScript / ESLint Unused Parameter and Import Warnings
+**Severity:** Low
+**Status:** Fixed
+**Filed:** 2026-07-23 | **Closed:** 2026-07-23
+**Description:** `src/lib/pocketbase.ts` raised `error TS6133: 'response' is declared but its value is never read`, and `LoginPage.tsx` / `SignupPage.tsx` had unused `RecordModel` imports.
+**Resolution:** Renamed parameter to `_response` in `pocketbase.ts` and removed dead imports. `npm run lint:types` (`tsc --noEmit`) passes with 0 errors.
+
+---
+
+### B-019: Mobile Performance Bottlenecks (LCP 6.9s, FCP 5.1s)
+**Severity:** High
+**Status:** Fixed
+**Filed:** 2026-07-23 | **Closed:** 2026-07-23
+**Description:** Mobile performance score was 63 with LCP 6.9s and FCP 5.1s due to 7.7 MB of uncompressed PNG images, dynamic `WorldDots` main thread forced reflows, missing `width`/`height` attributes, and unconfigured server asset caching.
+**Resolution:** Converted assets to WebP (7.7 MB ➔ 490 KB), pre-calculated `WorldDots` statically with `React.memo`, added explicit image dimensions/attributes, created `public/.htaccess` with 1-year caching & Gzip compression, and added preconnect links in `index.html`.
+
+---
+
 ### B-014: PocketBase 502 Bad Gateway / Cascading CORS Errors on Hostinger
 **Severity:** Critical
 **Status:** Fixed

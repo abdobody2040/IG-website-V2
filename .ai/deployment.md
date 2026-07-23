@@ -36,16 +36,28 @@
 
 PocketBase is a single executable that requires 24/7 uptime to serve the API. On shared or cloud environments (like Hostinger), background processes may be killed periodically by system resource managers, resulting in 502 Bad Gateway errors.
 
-### Hostinger Deployment Steps:
-1. **Upload Executable**: Upload `pocketbase` and `pb_hooks` / `pb_migrations` via FTP or SSH.
-2. **Start Process**: Run `nohup ./pocketbase serve > pb.log 2>&1 &` to run it in the background.
-3. **Setup Keep-Alive Cron Job**: 
-   Since Hostinger kills background processes, you **must** configure a cron job to restart PocketBase automatically if it goes down.
-   In your Hostinger hPanel -> Advanced -> Cron Jobs, add this command to run every 5 minutes:
+### Hostinger Web Hosting Deployment Steps:
+1. **Upload Executable**: Upload `pocketbase` to `/home/uXXXXXXX/pocketbase` via FTP or SSH.
+2. **Create Keep-Alive Script**: Create `/home/uXXXXXXX/pocketbase/keep_alive.sh`:
    ```bash
-   */5 * * * * pgrep -f pocketbase > /dev/null || (cd /home/uXXXXXXX/pocketbase && nohup ./pocketbase serve > pb.log 2>&1 &)
+   #!/bin/bash
+   PB_DIR="/home/uXXXXXXX/pocketbase"
+   PB_BIN="$PB_DIR/pocketbase"
+   cd "$PB_DIR" || exit 1
+
+   if ! ps aux | grep -v grep | grep -q "pocketbase serve"; then
+       echo "[$(date)] PocketBase stopped. Restarting..." >> "$PB_DIR/crash.log"
+       pkill -9 -f "pocketbase" 2>/dev/null
+       sleep 1
+       nohup "$PB_BIN" serve > "$PB_DIR/pb.log" 2>&1 &
+   fi
    ```
-   *(Replace `/home/uXXXXXXX/pocketbase` with your absolute path).*
+3. **Make Executable**: Run `chmod +x /home/uXXXXXXX/pocketbase/keep_alive.sh`.
+4. **Setup 1-Minute Cron Job**:
+   In Hostinger hPanel -> Advanced -> Cron Jobs, set the schedule to `* * * * *` (Every 1 Minute) with the command:
+   ```bash
+   /bin/bash /home/uXXXXXXX/pocketbase/keep_alive.sh
+   ```
 
 ## Frontend Deployment
 

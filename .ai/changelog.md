@@ -1,15 +1,19 @@
 # Instant Grow — Changelog
 
-## 2026-07-23 — Hostinger PocketBase Uptime, Google OAuth Popups, and Error Resilience
+## 2026-07-23 — PocketBase SDK 0.27 Polyfill, Mobile Speed Overhaul (93.6% Image Reduction), and Hostinger Keep-Alive Watchdog
 
 ### Added
-- **Hostinger Auto-Recovery Cron Job** — Added deployment documentation in `.ai/deployment.md` covering the `*/5 * * * *` cron job setup required to keep PocketBase alive 24/7 on Hostinger Shared/Cloud hosting environments that kill background `nohup` processes.
+- **PocketBase SDK 0.27+ / Server v0.22 Response Polyfill** — Implemented `pb.afterSend` hook in `src/lib/pocketbase.ts` to bridge PocketBase SDK `v0.27.0` with PocketBase Server `v0.22.x`. Standardizes `authProviders` ➔ `oauth2.providers` and `authUrl` ➔ `authURL`, resolving `TypeError: Cannot read properties of undefined (reading 'providers')` on Google OAuth login.
+- **Hostinger LiteSpeed/Apache `.htaccess` Rules** — Created `public/.htaccess` with 1-year immutable `Cache-Control` rules for static images/fonts, Gzip output compression, and SPA routing fallback (`index.html`) for Hostinger Web Hosting.
+- **Hostinger Keep-Alive Watchdog Script** — Created `keep_alive.sh` shell script with process isolation (`ps aux | grep`), stale PID cleanup (`pkill -9`), and timestamped `crash.log` tracking designed for Hostinger 1-minute cron job execution.
+- **Resource Preconnects & Image Preloading** — Added Google Fonts preconnects (`fonts.googleapis.com`, `fonts.gstatic.com`), backend preconnect (`db.instantgrow.net`), and high-priority logo preloading (`/logo.webp`) in `index.html`.
 
-### Fixed
-- **Google OAuth Popup Isolation (COOP)** — Changed `Cross-Origin-Opener-Policy` from `same-origin` to `same-origin-allow-popups` and removed `Cross-Origin-Embedder-Policy: require-corp` in `public/_headers`. This fixes Google OAuth login by allowing PocketBase's popup window to maintain `window.opener` communication with the parent tab.
-- **X-Frame-Options Console Warning** — Removed the invalid `<meta http-equiv="X-Frame-Options" content="DENY" />` tag from `index.html` as browsers enforce this exclusively via HTTP headers (already defined in `public/_headers`).
-- **Workspace Collection 404 Crash** — Wrapped `workspace_members` and `workspaces` queries inside `useWorkspace.tsx` with `try/catch` blocks. The frontend now degrades gracefully to a fallback state if the backend collections are missing or lack permission, instead of throwing unhandled `ClientResponseError 404` errors that crash the admin/client dashboards.
-- **PocketBase 502 Bad Gateway / CORS Blockage** — Diagnosed `db.instantgrow.net` 502 Bad Gateway errors causing systemic CORS blocks across all frontend fetch requests. Instructed the use of background `nohup` restarts and a 5-minute watchdog cron job.
+### Fixed & Optimized
+- **93.6% Image Weight Reduction (7.7 MB ➔ 490 KB)** — Converted and compressed all heavy PNG mascot assets in `public/` to optimized WebP format (`mascot-clock`, `mascot-footer`, `mascot-how-it-works`, `mascot-timeline`, `world-map`, `logo`).
+- **Main Thread Forced Reflows Fix** — Refactored `WorldDots` in `Hero.tsx` by pre-calculating dot coordinates statically outside the render loop and wrapping the component in `React.memo`, eliminating dynamic `Math.random()` SVG recalculations every 3.5 seconds.
+- **Explicit Image Dimensions & Attributes** — Added explicit `width`, `height`, `loading="lazy"`, `decoding="async"`, and `fetchpriority` attributes across all site components (`Navbar`, `Hero`, `HowItWorks`, `Timeline`, `CTASection`, `SupportWidget`, `Footer`) to eliminate layout shifts (CLS).
+- **Vite Rollup Code-Splitting** — Configured `manualChunks` in `vite.config.ts` to split vendor dependencies (`framer-motion`, `recharts`, `tanstack`, `pocketbase`, `lenis`, `icons`) into cached browser chunks.
+- **TypeScript Unused Variable Warnings** — Resolved unused `_response` parameter warning in `pocketbase.ts` and removed dead `RecordModel` imports in `LoginPage.tsx` and `SignupPage.tsx` to achieve 0 `tsc --noEmit` errors.
 
 ## 2026-07-21 — PocketBase Admin Login, JS-Bridge Header Fixing, & Expanded Price Editor
 
