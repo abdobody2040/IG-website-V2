@@ -1,5 +1,14 @@
 # Instant Grow — Changelog
 
+## 2026-08-08 — Admin CRUD Operations Fix, PHP API Boolean Casting, User Cascade Deletion & Anti-Caching
+
+### Admin Platform CRUD & Persistence Fixes
+- **HTTP Anti-Caching & Cache-Busting (`api/index.php`, `src/lib/pocketbase.ts`)** — Resolved issue where edits/deletions appeared unsaved due to aggressive browser and proxy HTTP caching on `GET` requests. Added `Cache-Control: no-store, no-cache, must-revalidate, max-age=0` headers to `api/index.php` and appended `_t=${Date.now()}` query timestamps to all `getList` and `getOne` requests in `pocketbase.ts`.
+- **MySQL Strict Mode Boolean Serialization (`api/index.php`)** — Fixed `SQLSTATE[22007]` prepared statement failures when creating/editing records with boolean properties (`active`, `published`, `featured`, `requires_company`, `read`). Converted boolean values explicitly to integers (`1` / `0`) prior to binding.
+- **Master Admin JWT Role Enforcement (`api/index.php`)** — Updated `getAuthFromHeader()` to enforce `role: 'admin'` for master admin accounts (`instantgrow.net@gmail.com`, `admin@instantgrow.net`), preventing authorization rejections caused by stale local JWT payloads.
+- **User Profile Edits & Full Cascade Deletion (`api/index.php`)** — Added `'users'` table to `$clientMutableTables` with self-ownership checks (`$id === $auth['id']`), and implemented full cascade deletion across `workspaces` (`owner = ?`) and `admin_audit_log` (`admin = ?`) upon user deletion.
+- **Local File Uploads & Upload Delivery Endpoint (`api/index.php`)** — Added fallback `$_FILES` processing for multipart document uploads into `/api/uploads/` and created static route `GET /uploads/{file}` for direct document viewing.
+
 ## 2026-08-07 — AI Agent Crawling, MENA SEO, Admin Documents CRUD, Client Features & E2E QA
 
 ### AI Crawling & MENA SEO Upgrades

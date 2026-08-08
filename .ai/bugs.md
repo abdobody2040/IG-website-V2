@@ -2,6 +2,36 @@
 
 ## Known Bugs
 
+### B-040: Stale HTTP Response Caching Causing Admin Edits & Deletions to Appear Unsaved
+**Severity:** CRITICAL
+**Status:** Fixed
+**Filed:** 2026-08-08 | **Closed:** 2026-08-08
+**Description:** Edits and deletions across Services, Users, Documents, and Blogs succeeded on the MySQL database in 50ms, but frontend list views continued showing stale data.
+**Root Cause:** Hostinger/Cloudflare proxies and browser disk caches cached `GET` API requests. When `fetchServices()` or React Query invalidated queries, the browser returned cached `GET` responses from before the mutation.
+**Fix Applied:** Added `Cache-Control: no-store, no-cache, must-revalidate, max-age=0` headers in `api/index.php` and added `_t=${Date.now()}` query timestamps to all `getList` and `getOne` requests in `src/lib/pocketbase.ts`.
+
+---
+
+### B-041: MySQL Strict Mode 500 Error on Boolean Fields in Prepared Statements
+**Severity:** HIGH
+**Status:** Fixed
+**Filed:** 2026-08-08 | **Closed:** 2026-08-08
+**Description:** Saving records with boolean properties (`active`, `published`, `featured`, `requires_company`, `read`) failed with HTTP 500 (`SQLSTATE[22007]: Incorrect integer value`).
+**Root Cause:** PDO prepared statements cast PHP boolean `false` to an empty string (`""`), which MySQL strict mode rejects for TINYINT/INT columns.
+**Fix Applied:** Updated `POST` and `PATCH` query builders in `api/index.php` to explicitly cast boolean values to integers (`1` or `0`).
+
+---
+
+### B-042: Orphaned Workspace & Audit Log Records Blocking User Deletion
+**Severity:** HIGH
+**Status:** Fixed
+**Filed:** 2026-08-08 | **Closed:** 2026-08-08
+**Description:** Deleting a user in `AdminClientsPage.tsx` failed or left orphan records in foreign tables.
+**Root Cause:** `workspaces` (`owner`) and `admin_audit_log` (`admin`) were missing from the cascade deletion logic in `api/index.php`.
+**Fix Applied:** Added `execute("DELETE FROM workspaces WHERE owner=?", [$id])` and `execute("DELETE FROM admin_audit_log WHERE admin=?", [$id])` prior to executing user row deletion.
+
+---
+
 ### B-039: Pages Table Schema Mismatch Causing 500 Error on Page Creation
 **Severity:** HIGH
 **Status:** Fixed
