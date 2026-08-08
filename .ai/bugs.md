@@ -2,7 +2,207 @@
 
 ## Known Bugs
 
-### B-017: PocketBase SDK 0.27 / Server v0.22 Schema Mismatch (`Cannot read properties of undefined (reading 'providers')`)
+### B-039: Pages Table Schema Mismatch Causing 500 Error on Page Creation
+**Severity:** HIGH
+**Status:** Fixed
+**Filed:** 2026-08-05 | **Closed:** 2026-08-05
+**Description:** Creating a new page entry in `AdminPageEditorPage.tsx` or sending a POST to `/collections/pages/records` failed with `500 Internal Server Error` (`SQLSTATE[42S22]: Column not found: 1054 Unknown column 'title' in 'INSERT INTO'`).
+
+**Root Cause:** `$tableColumns['pages']` in `api/index.php` listed non-existent columns (`title`, `content`, `meta_title`, `meta_description`, `created_by`) that were not present in the MySQL `pages` table schema (`slug`, `title_en`, `title_ar`, `content_en`, `content_ar`, `active`).
+
+**Fix Applied:** Updated `$tableColumns['pages']` in `api/index.php` to strictly match the MySQL `pages` table schema:
+```php
+'pages' => ['slug','title_en','title_ar','content_en','content_ar','active'],
+```
+
+---
+
+### B-038: Admin Dashboard Entirely Read-Only — All CRUD Writes Return 401 (ROOT CAUSE)
+**Severity:** CRITICAL
+**Status:** Fixed
+**Filed:** 2026-08-05 | **Closed:** 2026-08-05
+**Description:** Every POST, PATCH, PUT, DELETE to the PHP API returned `401 Unauthorized` even when the admin was authenticated. The admin could read data (GET works fine) but nothing could be created, updated, or deleted — the entire admin dashboard was non-functional for writes. The bug affected ALL modules: Orders, Clients, Companies, Documents, Blog, SEO Pages, Payments, Services, Pages, Home Editor, Price Editor, Tracking.
+
+**Root Cause:** On Hostinger shared hosting running Apache + FastCGI, standard HTTP `Authorization` headers are aggressively stripped before reaching PHP. `extractBearerToken()` and `getAuthFromHeader()` in `api/index.php` failed to extract tokens under FastCGI.
+
+**Fix Applied:**
+1. Implemented **Dual-Header Strategy**: Updated `src/lib/pocketbase.ts` (`apiFetch`) to send auth tokens in both `Authorization: Bearer <token>` AND `X-Auth-Token: Bearer <token>`.
+2. Updated `api/.htaccess` with `CGIPassAuth On` and FastCGI environment variable pass-through rules (`SetEnvIf Authorization "(.*)" HTTP_AUTHORIZATION=$1`).
+3. Unified `extractBearerToken()` in `api/index.php` to read tokens from **4 redundant locations**:
+   - `HTTP_X_AUTH_TOKEN` (custom header, immune to FastCGI stripping)
+   - `HTTP_AUTHORIZATION`
+   - `REDIRECT_HTTP_AUTHORIZATION`
+   - `apache_request_headers()`
+   - `$_GET['token']` fallback
+
+---
+
+### B-037: IDE False-Positive Tailwind CSS Warnings (`Unknown at rule @tailwind`)
+**Severity:** Low
+**Status:** Fixed
+**Filed:** 2026-08-04 | **Closed:** 2026-08-04
+**Description:** VS Code's built-in CSS linter reported `Unknown at rule @tailwind` and `Unknown at rule @apply` warnings in `src/index.css`. These were purely IDE cosmetic issues and did not affect the build or runtime output.
+**Resolution:** Created `.vscode/settings.json` with `"css.lint.unknownAtRules": "ignore"` and `"scss.lint.unknownAtRules": "ignore"` to suppress the warnings project-wide.
+
+---
+
+### B-036: Render-Blocking Google Fonts Causing Poor PageSpeed (LCP 5.1s, FCP 3.9s)
+**Severity:** High
+**Status:** Fixed
+**Filed:** 2026-08-04 | **Closed:** 2026-08-04
+**Description:** PageSpeed Insights scored the site at 65/100. Root cause was `@import url('https://fonts.googleapis.com/...')` at the top of `src/index.css`, which is a render-blocking CSS resource. Also: hero logo lacked `fetchpriority`, flagcdn.com had no preconnect, and Lucide React was bundled as a monolith increasing TBT.
+**Resolution:**
+1. Removed `@import` from `src/index.css`.
+2. Added async font loading in `index.html` (`<link rel="preload">` + `onload="this.media='all'"` pattern).
+3. Added `preconnect` for `flagcdn.com`.
+4. Set `fetchpriority="high"` on hero logo `<img>`.
+5. Decoupled `lucide-react` in `vite.config.ts` `manualChunks`.
+
+---
+
+### B-035: CSP Blocking Third-Party Tracking & Analytics Scripts
+**Severity:** Medium
+**Status:** Fixed
+**Filed:** 2026-08-04 | **Closed:** 2026-08-04
+**Description:** Google Tag Manager, Microsoft Clarity, and Facebook Pixel scripts were blocked by Content Security Policy headers in `public/_headers` and `index.html`.
+**Resolution:** Updated CSP rules in `public/_headers` and `index.html` to allow `googletagmanager.com`, `clarity.ms`, `connect.facebook.net`, and `cloudflareinsights.com`.
+
+---
+
+### B-034: Apache/FastCGI Authorization Header Stripping
+**Severity:** High
+**Status:** Fixed
+**Filed:** 2026-08-04 | **Closed:** 2026-08-04
+**Description:** API authentication failed on Hostinger/cPanel shared hosting because Apache stripped the `Authorization` header under FastCGI environments, causing all JWT-authenticated API calls to return 401.
+**Resolution:** Added `SetEnvIf Authorization "(.*)$" HTTP_AUTHORIZATION=$1` and `RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP_AUTHORIZATION}]` in both `public/.htaccess` and `api/.htaccess`.
+
+---
+
+### B-033: USA Formation Service 404 (`usllc149onetime`)
+**Severity:** High
+**Status:** Fixed
+**Filed:** 2026-08-04 | **Closed:** 2026-08-04
+**Description:** Visiting `/services/business-formation/usllc149onetime` threw "Service Not Found" because service ID resolution did not fall back to `FALLBACK_SERVICES` or `SERVICES_EXTENDED_DATA` when database records were fetched.
+**Resolution:** Implemented multi-stage service resolution in `ServiceDetailPage.tsx` checking DB services → `FALLBACK_SERVICES` → `SERVICES_EXTENDED_DATA`.
+
+---
+
+### B-032: MySQL Foreign Key Constraint Failure on User Deletion (`MySQL 1451`)
+**Severity:** High
+**Status:** Fixed
+**Filed:** 2026-08-04 | **Closed:** 2026-08-04
+**Description:** Deleting a client user in `AdminClientsPage.tsx` failed because related records in `orders`, `companies`, `documents`, `payments`, and `notifications` triggered a foreign key constraint error (`MySQL 1451`).
+**Resolution:** Added pre-delete cascade cleanup in `api/index.php` for `users` table to remove related rows across all dependent tables prior to deleting the user row.
+
+---
+
+### B-031: Admin Auth Refresh Logout on Dashboard Routes
+**Severity:** Critical
+**Status:** Fixed
+**Filed:** 2026-08-04 | **Closed:** 2026-08-04
+**Description:** Admin users refreshing dashboard routes were intermittently logged out because `pocketbase.ts` cleared token state on transient 401s and `router.tsx` did not await `waitForAuthReady()` before evaluating guards.
+**Resolution:** Updated `pocketbase.ts` to inspect token validity non-destructively, hydrated user auth state synchronously from `localStorage` in `useAuth.ts`, and forced `router.tsx` guards to await `waitForAuthReady()`.
+
+---
+
+### B-029: Service Detail `ReferenceError: getCategorySlug is not defined`
+**Severity:** High
+**Status:** Fixed
+**Filed:** 2026-08-03 | **Closed:** 2026-08-03
+**Description:** Navigating to a service detail page (e.g. `/services/business-formation/usllc149onetime`) threw a runtime `ReferenceError: getCategorySlug is not defined` because `getCategorySlug` was omitted from `ServiceDetailPage.tsx` imports when `CATEGORY_MAP` was refactored.
+**Resolution:** Added `getCategorySlug` to the `categoriesData` import list in `ServiceDetailPage.tsx`.
+
+---
+
+### B-030: Vite Static vs Dynamic Import Bundle Warning for `ServicesPage.tsx`
+**Severity:** Medium
+**Status:** Fixed
+**Filed:** 2026-08-03 | **Closed:** 2026-08-03
+**Description:** Vite emitted a build warning `(!) ServicesPage.tsx is dynamically imported by router.tsx but also statically imported by Navbar.tsx` because `CATEGORY_MAP` and `getCategorySlug` were exported directly from `ServicesPage.tsx`.
+**Resolution:** Extracted `CATEGORY_MAP` and `getCategorySlug` to `src/data/categoriesData.ts` and updated all consumer components.
+
+---
+
+### B-026: Google OAuth Client ID Undefined & GSI Prompt Block
+**Severity:** Critical
+**Status:** Fixed
+**Filed:** 2026-08-03 | **Closed:** 2026-08-03
+**Description:** Google Sign-In failed on live production due to missing environment variable substitution at build time (`import.meta.env.VITE_GOOGLE_CLIENT_ID` was `undefined`) and GSI One-Tap prompt suppression in browsers.
+**Resolution:** Embedded default Google Client ID fallback (`748421095690-am0lfmkfdh1qfu7j0e8t6v6f4jmhottj.apps.googleusercontent.com`) into `pocketbase.ts` and enhanced button click handler.
+
+---
+
+### B-027: Session Refresh Logout on Client Portal Routes
+**Severity:** High
+**Status:** Fixed
+**Filed:** 2026-08-03 | **Closed:** 2026-08-03
+**Description:** Refreshing the browser page on `/client/dashboard` evicted users to `/order` because `requireAuthGuard()` checked `sessionStorage.getItem('ig_has_paid_order_' + info.userId)`, which was cleared on new browser tabs/refreshes.
+**Resolution:** Updated `requireAuthGuard()` in `src/router.tsx` to check `localStorage` and ensure authenticated client users are not booted off client portal routes on page refresh.
+
+---
+
+### B-028: Admin Price Editor & Services Database Update Failure
+**Severity:** High
+**Status:** Fixed
+**Filed:** 2026-08-03 | **Closed:** 2026-08-03
+**Description:** Admin edits to pricing configuration or services failed to render on page reload because `api/index.php` function `formatRow()` omitted `'features_en'` and `'features_ar'` from `$jsonFields`, returning raw JSON strings that failed `Array.isArray()` checks in `AdminPriceEditorPage.tsx`. Also, `AdminServicesPage.tsx` sent read-only columns (`id`, `created`, `updated`) in `update()` payloads.
+**Resolution:** Added `'features_en'` and `'features_ar'` to `$jsonFields` in `api/index.php`, robustly parsed string/array features in `AdminPriceEditorPage.tsx`, and sanitized update payloads in `AdminServicesPage.tsx`.
+
+---
+
+### B-024: Local Dev API Cross-Port / Connection Errors (`TypeError: Failed to fetch`)
+**Severity:** High
+**Status:** Fixed
+**Filed:** 2026-08-03 | **Closed:** 2026-08-03
+**Description:** In local development, the browser attempts to fetch `http://localhost:8080` from `http://localhost:3000`. Cross-origin restrictions, browser security shields, or IPv4/IPv6 localhost binding differences caused `TypeError: Failed to fetch` on auth and collection requests.
+**Resolution:** Added `/api` proxy rule to `vite.config.ts` targeting `http://localhost:8080`, updated `.env.local` to `VITE_API_URL=/api`, and updated `pocketbase.ts` `API_BASE` default to `/api`. Local requests now route seamlessly through Vite dev server proxy.
+
+---
+
+### B-025: SEO Report Critical Scan Failures (Score 57/100)
+**Severity:** High
+**Status:** Fixed
+**Filed:** 2026-08-03 | **Closed:** 2026-08-03
+**Description:** Automated SEO scan reported 18 critical issues including missing canonical tags, missing Open Graph & Twitter metadata, 0-word thin content (SPA root element empty prior to JS execution), missing XML sitemap, invalid sitemap URL in `robots.txt`, HTTP-only served page, and missing security response headers.
+**Resolution:** Added static canonical link, full OG & Twitter metadata, static JSON-LD schemas (`Organization`, `WebSite`, `WebPage`, `ProfessionalService`, `FAQPage`), and a 600+ word semantic `<noscript>` HTML fallback in `index.html`. Created `public/sitemap.xml` with 14 URLs, fixed `public/robots.txt`, and updated `public/.htaccess` with 301 force HTTPS redirect and security response headers (`X-Frame-Options`, `nosniff`, `HSTS`, `Permissions-Policy`).
+
+---
+
+### B-020: PocketBase Filter Parser `AND` Over-Join (`Article Not Found` on `/blog/:slug`)
+**Severity:** Critical
+**Status:** Fixed
+**Filed:** 2026-07-24 | **Closed:** 2026-07-24
+**Description:** `parsePbFilter()` in `api/index.php` joined all extracted comparison matches with `AND`. When the frontend requested `published = true && (slug = "xyz" || slug_ar = "xyz")`, it generated `WHERE published = 1 AND slug = 'xyz' AND slug_ar = 'xyz'`. Because `slug_ar` was `NULL` for English blogs, 0 rows were returned, triggering a 404 "Blog Not Found" error.
+**Resolution:** Updated `parsePbFilter()` using `preg_replace_callback` to process PocketBase operators `&&` (AND), `||` (OR), and parenthesized groupings `(...)`, yielding `WHERE \`published\` = ? AND (\`slug\` = ? OR \`slug_ar\` = ?)`.
+
+---
+
+### B-021: Blog Tags Array Type Safety Crash (`TypeError: a.tags.slice(...).map is not a function`)
+**Severity:** High
+**Status:** Fixed
+**Filed:** 2026-07-24 | **Closed:** 2026-07-24
+**Description:** In MySQL responses, `tags` is returned as a string (e.g. `"[]"` or comma-separated string) instead of an array. Calling `.slice().map()` on `tags` threw `TypeError: a.tags.slice(...).map is not a function`.
+**Resolution:** Added `parseArrayField` helper in `src/hooks/useBlogs.ts` and `parseJson` in `useSeoPages.ts` to convert raw string values to arrays before returning them.
+
+---
+
+### B-022: MySQL Multi-Column Order By Syntax Error (`Unknown column 'sort_ordertitle_en'`)
+**Severity:** High
+**Status:** Fixed
+**Filed:** 2026-07-24 | **Closed:** 2026-07-24
+**Description:** Requests to `/api/collections/services/records?sort=sort_order,title_en` failed with MySQL syntax error because `api/index.php` did not parse comma-separated multi-column sort parameters, concatenating column names into a single invalid column identifier.
+**Resolution:** Rewrote `paginate()` in `api/index.php` to split `sort` by comma and wrap each column name in backticks (`\`sort_order\`, \`title_en\``).
+
+---
+
+### B-023: phpMyAdmin Multi-Line SQL Seed Syntax Failure
+**Severity:** Medium
+**Status:** Fixed
+**Filed:** 2026-07-24 | **Closed:** 2026-07-24
+**Description:** Importing `seed_data.sql` into Hostinger phpMyAdmin failed with `#1064 - You have an error in your SQL syntax` near line 1 due to raw newlines and single quotes inside blog markdown content.
+**Resolution:** Created automated Node.js scripts `scripts/extract_seed.cjs` and `scripts/build_clean_blogs_v3.cjs` to generate clean, single-line SQL seed files (`seed_services_clean.sql` and `seed_blogs_fixed_v3.sql`).
+
+---
 **Severity:** Critical
 **Status:** Fixed
 **Filed:** 2026-07-23 | **Closed:** 2026-07-23

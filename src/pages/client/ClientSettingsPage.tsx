@@ -195,16 +195,81 @@ export default function ClientSettingsPage() {
                 <Shield size={15} className="text-[#1a56ff]" />
                 <h3 className="text-base font-semibold text-slate-900">{sp.security}</h3>
               </div>
-              <div className="p-5">
-                <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl border border-slate-100">
-                  <div className="w-8 h-8 bg-white rounded-lg border border-slate-200 flex items-center justify-center flex-shrink-0">
-                    <span className="text-base">{'\ud83d\udd11'}</span>
+              <div className="p-5 space-y-4">
+                <form
+                  onSubmit={async (e) => {
+                    e.preventDefault()
+                    if (!user?.id) return
+                    const formData = new FormData(e.currentTarget)
+                    const oldPassword = formData.get('oldPassword') as string
+                    const password = formData.get('newPassword') as string
+                    const passwordConfirm = formData.get('confirmPassword') as string
+                    if (password !== passwordConfirm) {
+                      toast.error(t.auth.passwordsDoNotMatch || 'Passwords do not match')
+                      return
+                    }
+                    if (password.length < 8) {
+                      toast.error('Password must be at least 8 characters')
+                      return
+                    }
+                    try {
+                      await pb.collection('users').update(user.id, {
+                        oldPassword,
+                        password,
+                        passwordConfirm,
+                      })
+                      toast.success('Password updated successfully')
+                      ;(e.target as HTMLFormElement).reset()
+                    } catch (err: any) {
+                      toast.error(err?.message || 'Failed to update password')
+                    }
+                  }}
+                  className="space-y-3"
+                >
+                  <p className="text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">Change Password</p>
+                  <div>
+                    <label className="block text-xs font-medium text-slate-600 mb-1">Current Password</label>
+                    <input
+                      type="password"
+                      name="oldPassword"
+                      required
+                      placeholder="••••••••"
+                      className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#1a56ff]/30 focus:border-[#1a56ff]"
+                    />
                   </div>
-                  <div className="flex-1">
-                    <p className="text-sm font-semibold text-slate-900">{sp.emailPassword}</p>
-                    <p className="text-xs text-slate-500">{sp.securityDesc}</p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-medium text-slate-600 mb-1">New Password</label>
+                      <input
+                        type="password"
+                        name="newPassword"
+                        required
+                        minLength={8}
+                        placeholder="••••••••"
+                        className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#1a56ff]/30 focus:border-[#1a56ff]"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-slate-600 mb-1">Confirm New Password</label>
+                      <input
+                        type="password"
+                        name="confirmPassword"
+                        required
+                        minLength={8}
+                        placeholder="••••••••"
+                        className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#1a56ff]/30 focus:border-[#1a56ff]"
+                      />
+                    </div>
                   </div>
-                </div>
+                  <div className="flex justify-end pt-1">
+                    <button
+                      type="submit"
+                      className="px-4 py-2 bg-slate-900 text-white text-xs font-semibold rounded-lg hover:bg-slate-800 transition-colors"
+                    >
+                      Update Password
+                    </button>
+                  </div>
+                </form>
               </div>
             </div>
           </div>
@@ -253,7 +318,31 @@ export default function ClientSettingsPage() {
                     <p className="text-sm font-medium text-slate-900">{sp.dataExport}</p>
                     <p className="text-xs text-slate-500">{sp.dataExportDesc}</p>
                   </div>
-                  <button className="flex items-center gap-1.5 text-xs font-semibold text-[#1a56ff] hover:underline">
+                  <button
+                    onClick={async () => {
+                      if (!user?.id) return
+                      try {
+                        const orders = await pb.collection('orders').getList(1, 100, { filter: `user = "${user.id}"` })
+                        const docs = await pb.collection('documents').getList(1, 100, { filter: `user = "${user.id}"` })
+                        const exportObj = {
+                          user: { id: user.id, email: user.email, name: user.displayName },
+                          orders: orders.items,
+                          documents: docs.items,
+                        }
+                        const blob = new Blob([JSON.stringify(exportObj, null, 2)], { type: 'application/json' })
+                        const url = URL.createObjectURL(blob)
+                        const a = document.createElement('a')
+                        a.href = url
+                        a.download = `instant_grow_data_${user.id}.json`
+                        a.click()
+                        URL.revokeObjectURL(url)
+                        toast.success('Data exported successfully')
+                      } catch {
+                        toast.error('Failed to export data')
+                      }
+                    }}
+                    className="flex items-center gap-1.5 text-xs font-semibold text-[#1a56ff] hover:underline"
+                  >
                     <Download size={12} />
                     {sp.export}
                   </button>
@@ -264,7 +353,25 @@ export default function ClientSettingsPage() {
                       <p className="text-sm font-medium text-red-600">{sp.deleteAccount}</p>
                       <p className="text-xs text-slate-500">{sp.deleteAccountDesc}</p>
                     </div>
-                    <button className="flex items-center gap-1.5 text-xs font-semibold text-white bg-red-500 hover:bg-red-600 transition-colors px-3 py-1.5 rounded-lg">
+                    <button
+                      onClick={async () => {
+                        if (!user?.id) return
+                        const confirmed = window.confirm('Are you sure you want to request account deletion? This action cannot be undone.')
+                        if (!confirmed) return
+                        try {
+                          await pb.collection('notifications').create({
+                            user: user.id,
+                            type: 'admin_message',
+                            title: 'Account Deletion Requested',
+                            message: `User ${user.email} requested account deletion.`,
+                          })
+                          toast.success('Account deletion request submitted. Support will contact you within 24h.')
+                        } catch {
+                          toast.error('Failed to submit request')
+                        }
+                      }}
+                      className="flex items-center gap-1.5 text-xs font-semibold text-white bg-red-500 hover:bg-red-600 transition-colors px-3 py-1.5 rounded-lg"
+                    >
                       <Trash2 size={11} />
                       {sp.delete}
                     </button>

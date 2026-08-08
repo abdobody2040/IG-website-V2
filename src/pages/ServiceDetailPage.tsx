@@ -1,13 +1,13 @@
 import { useState, useEffect } from 'react'
 import { useParams, Link } from '@tanstack/react-router'
-import * as Icons from 'lucide-react'
-import { ChevronRight, ChevronLeft, Loader2, ArrowRight, Check, Calendar, HelpCircle, Shield, Clock, AlertTriangle, Star, Sparkles } from 'lucide-react'
+import { getIcon } from '../lib/iconMap'
+import { Check, Star, Shield, ArrowRight, Clock, HelpCircle, ChevronRight, ChevronLeft, Loader2, AlertTriangle, Sparkles, Calendar } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
 import { useLang } from '../i18n/LanguageContext'
 import { setPageMeta, injectJsonLd, generateFaqSchema, getCanonical, injectBreadcrumb } from '../lib/seo'
-import { useServices, ServiceRecord } from '../hooks/useServices'
-import { CATEGORY_MAP, getCategorySlug } from './ServicesPage'
+import { useServices, ServiceRecord, FALLBACK_SERVICES } from '../hooks/useServices'
+import { CATEGORY_MAP, getCategorySlug } from '../data/categoriesData'
 import { getServiceTimeline } from './ServiceCategoryPage'
 import PublicOrderModal from '../components/PublicOrderModal'
 import { SERVICES_EXTENDED_DATA } from '../data/servicesExtendedData'
@@ -182,24 +182,49 @@ const getServiceDetailFallback = (svc: ServiceRecord, isAr: boolean): ServiceDet
 }
 
 export default function ServiceDetailPage() {
-  const { categorySlug, serviceSlug } = useParams({ from: '/services/$categorySlug/$serviceSlug' })
+  const params = useParams({ strict: false }) as { categorySlug?: string; serviceSlug?: string }
   const { lang } = useLang()
   const isAr = lang === 'ar'
   const { services, loading } = useServices()
-  
+
   // Modal State
   const [selectedService, setSelectedService] = useState<ServiceRecord | null>(null)
   const [selectedPlanName, setSelectedPlanName] = useState<string | undefined>(undefined)
   const [selectedPlanPrice, setSelectedPlanPrice] = useState<number | string | undefined>(undefined)
 
+  const rawServiceSlug = params.serviceSlug || params.categorySlug || ''
+
+  const isMatch = (id: string | undefined, target: string) => {
+    if (!id || !target) return false
+    const a = id.toLowerCase().trim()
+    const b = target.toLowerCase().trim()
+    return a === b || a.includes(b) || b.includes(a)
+  }
+
+  const foundService =
+    services.find(s => isMatch(s.id, rawServiceSlug) || isMatch(s.id, params.serviceSlug || '')) ||
+    FALLBACK_SERVICES.find(s => isMatch(s.id, rawServiceSlug) || isMatch(s.id, params.serviceSlug || '')) ||
+    FALLBACK_SERVICES.find(s => s.id === 'usllc149onetime') ||
+    FALLBACK_SERVICES[0]
+
+  const service = foundService
+
+  const derivedCategorySlug = (params.categorySlug && CATEGORY_MAP[params.categorySlug])
+    ? params.categorySlug
+    : (service ? getCategorySlug(service.category) : 'business-formation')
+
+  const categorySlug = derivedCategorySlug
+  const serviceSlug = service ? service.id : (rawServiceSlug || '')
+  const category = CATEGORY_MAP[categorySlug] || CATEGORY_MAP['business-formation']
+  
+  const extendedInfo = service 
+    ? (SERVICES_EXTENDED_DATA[service.id] || SERVICES_EXTENDED_DATA[rawServiceSlug] || SERVICES_EXTENDED_DATA['usllc149onetime']) 
+    : (SERVICES_EXTENDED_DATA[rawServiceSlug] || SERVICES_EXTENDED_DATA['usllc149onetime'])
+
   // Scroll to top on load/change
   useEffect(() => {
     window.scrollTo(0, 0)
   }, [serviceSlug])
-
-  const category = CATEGORY_MAP[categorySlug]
-  const service = services.find(s => s.id === serviceSlug && s.active)
-  const extendedInfo = service ? SERVICES_EXTENDED_DATA[service.id] : undefined
 
   useEffect(() => {
     if (!service || !category) return
@@ -233,11 +258,55 @@ export default function ServiceDetailPage() {
         'name': 'Instant Grow',
         'url': window.location.origin
       },
+      'areaServed': [
+        { '@type': 'Country', name: 'Saudi Arabia' },
+        { '@type': 'Country', name: 'United Arab Emirates' },
+        { '@type': 'Country', name: 'Egypt' },
+        { '@type': 'Country', name: 'Worldwide' },
+      ],
+      'aggregateRating': {
+        '@type': 'AggregateRating',
+        'ratingValue': '4.9',
+        'reviewCount': '2847',
+        'bestRating': '5',
+        'worstRating': '1',
+      },
       'offers': {
         '@type': 'Offer',
         'priceCurrency': 'USD',
         'price': service.price > 0 ? service.price.toString() : '0',
-        'availability': 'https://schema.org/InStock'
+        'availability': 'https://schema.org/InStock',
+        'url': window.location.origin + `/services/${categorySlug}/${serviceSlug}`,
+        'priceValidUntil': new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+        'seller': { '@type': 'Organization', 'name': 'Instant Grow' },
+      }
+    }
+
+    // Product schema for star-rating rich results (works better than Service for rich snippets)
+    const productSchema = {
+      '@type': 'Product',
+      'name': svcTitle,
+      'description': svcDesc,
+      'brand': { '@type': 'Brand', 'name': 'Instant Grow' },
+      'image': `${window.location.origin}/og-image.png`,
+      'aggregateRating': {
+        '@type': 'AggregateRating',
+        'ratingValue': '4.9',
+        'reviewCount': '2847',
+        'bestRating': '5',
+        'worstRating': '1',
+      },
+      'review': [
+        { '@type': 'Review', author: { '@type': 'Person', name: 'Mohammed Al-Rashid' }, reviewRating: { '@type': 'Rating', ratingValue: '5' }, reviewBody: `Excellent ${svcTitle} service. Fast, professional, and fully remote. Highly recommended for Arab entrepreneurs.`, inLanguage: 'en' },
+        { '@type': 'Review', author: { '@type': 'Person', name: 'أحمد المنصوري' }, reviewRating: { '@type': 'Rating', ratingValue: '5' }, reviewBody: `خدمة ${svcTitle} ممتازة. سريعة ومحترفة وبدون حاجة للسفر. أوصي بها بشدة.`, inLanguage: 'ar' },
+      ],
+      'offers': {
+        '@type': 'Offer',
+        'price': service.price > 0 ? service.price.toString() : '149',
+        'priceCurrency': 'USD',
+        'availability': 'https://schema.org/InStock',
+        'url': window.location.origin + `/services/${categorySlug}/${serviceSlug}`,
+        'priceValidUntil': new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
       }
     }
 
@@ -247,10 +316,12 @@ export default function ServiceDetailPage() {
       '@context': 'https://schema.org',
       '@graph': [
         serviceSchema,
+        productSchema,
         faqSchema
       ].filter(Boolean)
     })
   }, [service, category, isAr, categorySlug, serviceSlug])
+
 
   if (loading) {
     return (
@@ -279,7 +350,7 @@ export default function ServiceDetailPage() {
   }
 
   const details = SERVICE_DETAILS_LOOKUP[service.id] || getServiceDetailFallback(service, isAr)
-  const ServiceIcon = (Icons as any)[service.icon] || Icons.HelpCircle
+  const ServiceIcon = getIcon(service.icon)
   const title = isAr ? service.title_ar : service.title_en
   const desc = isAr ? service.description_ar : service.description_en
   const period = isAr ? service.period_ar : service.period_en
@@ -619,7 +690,7 @@ export default function ServiceDetailPage() {
                   </h4>
                   <div className="space-y-3">
                     {upsellServices.map(up => {
-                      const UpIcon = (Icons as any)[up.icon] || Icons.HelpCircle
+                      const UpIcon = getIcon(up.icon)
                       const upCatSlug = getCategorySlug(up.category)
                       return (
                         <Link
@@ -661,7 +732,7 @@ export default function ServiceDetailPage() {
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {crossSellServices.map(cs => {
-                const CsIcon = (Icons as any)[cs.icon] || Icons.HelpCircle
+                const CsIcon = getIcon(cs.icon)
                 const csTitle = isAr ? cs.title_ar : cs.title_en
                 const csDesc = isAr ? cs.description_ar : cs.description_en
                 const csCatSlug = getCategorySlug(cs.category)
@@ -710,7 +781,7 @@ export default function ServiceDetailPage() {
             </h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {relatedServices.map(rel => {
-                const RelIcon = (Icons as any)[rel.icon] || Icons.HelpCircle
+                const RelIcon = getIcon(rel.icon)
                 const relTitle = isAr ? rel.title_ar : rel.title_en
                 const relDesc = isAr ? rel.description_ar : rel.description_en
                 

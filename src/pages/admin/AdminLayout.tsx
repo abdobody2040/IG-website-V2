@@ -26,6 +26,7 @@ const navItems: NavItem[] = [
   { label: 'SEO Pages',     href: '/admin/seo',            icon: Globe },
   { label: 'Payments',      href: '/admin/payments',       icon: CreditCard },
   { label: 'Analytics',     href: '/admin/analytics',      icon: BarChart3 },
+  { label: 'Tracking',      href: '/admin/tracking',       icon: BarChart3 },
   { label: 'Home Editor',   href: '/admin/home-editor',    icon: Home },
   { label: 'Price Editor',  href: '/admin/pricing-editor', icon: DollarSign },
   { label: 'Services',      href: '/admin/services',       icon: Briefcase },

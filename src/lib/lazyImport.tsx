@@ -4,11 +4,35 @@ export function lazyImport<T extends ComponentType<any>>(
   importFn: () => Promise<{ default: T }>,
   fallback?: React.ReactNode
 ): T {
-  const LazyComponent = lazy(importFn)
+  const LazyComponent = lazy(async () => {
+    try {
+      return await importFn()
+    } catch (error: any) {
+      console.warn('[Router] Failed to load dynamic chunk:', error)
+      const pageHasBeenReloaded = sessionStorage.getItem('chunk_reload_retry')
+      if (!pageHasBeenReloaded) {
+        sessionStorage.setItem('chunk_reload_retry', 'true')
+        window.location.reload()
+      } else {
+        sessionStorage.removeItem('chunk_reload_retry')
+      }
+      throw error
+    }
+  })
+
   const Wrapped = (props: React.ComponentProps<T>) => (
-    <Suspense fallback={fallback ?? <div className="flex items-center justify-center h-screen"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#1a56ff]" /></div>}>
+    <Suspense
+      fallback={
+        fallback ?? (
+          <div className="flex items-center justify-center h-screen">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#1a56ff]" />
+          </div>
+        )
+      }
+    >
       <LazyComponent {...props} />
     </Suspense>
   )
+
   return Wrapped as unknown as T
 }

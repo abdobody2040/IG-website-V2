@@ -4,6 +4,19 @@ import toast from 'react-hot-toast'
 import type { Blog, BlogFormData } from '../types/db'
 import { logAdminAction } from './useAdminAuditLog'
 
+function parseArrayField(val: unknown): string[] {
+  if (Array.isArray(val)) return val
+  if (typeof val === 'string' && val.trim()) {
+    try {
+      const parsed = JSON.parse(val)
+      if (Array.isArray(parsed)) return parsed
+    } catch {
+      return val.split(',').map(s => s.trim()).filter(Boolean)
+    }
+  }
+  return []
+}
+
 function mapBlog(raw: Record<string, unknown>): Blog {
   return {
     id: raw['id'] as string,
@@ -13,9 +26,9 @@ function mapBlog(raw: Record<string, unknown>): Blog {
     content: raw['content'] as string,
     coverImage: raw['cover_image'] as string | null,
     author: raw['author'] as string,
-    tags: (raw['tags'] as string[]) ?? [],
-    published: raw['published'] as boolean,
-    featured: raw['featured'] as boolean,
+    tags: parseArrayField(raw['tags']),
+    published: Boolean(raw['published']),
+    featured: Boolean(raw['featured']),
     createdBy: raw['created_by'] as string | null,
     createdAt: raw['created'] as string,
     updatedAt: raw['updated'] as string,
@@ -89,7 +102,7 @@ export function useCreateBlog() {
         created_by: pb.authStore.model?.['id'] ?? null,
       })
 
-      logAdminAction({ action: 'create', tableName: 'blogs', recordId: record.id })
+      logAdminAction({ action: 'create', tableName: 'blogs', recordId: (record as Record<string, unknown>)['id'] as string })
       return mapBlog(record as unknown as Record<string, unknown>)
     },
     onSuccess: () => {

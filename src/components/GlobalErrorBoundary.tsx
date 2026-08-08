@@ -21,6 +21,14 @@ export class GlobalErrorBoundary extends Component<Props, State> {
 
   public override componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     console.error('Uncaught error:', error, errorInfo)
+    const msg = error?.message || ''
+    if (msg.includes('Failed to fetch dynamically imported module') || msg.includes('Importing a module script failed')) {
+      const reloaded = sessionStorage.getItem('ig_chunk_reloaded')
+      if (!reloaded) {
+        sessionStorage.setItem('ig_chunk_reloaded', 'true')
+        window.location.reload()
+      }
+    }
   }
 
   public override render() {

@@ -5,7 +5,8 @@ import { pb } from '../../lib/pocketbase'
 import { useAuth } from '../../hooks/useAuth'
 import { useWorkspace } from '../../hooks/useWorkspace'
 import toast from 'react-hot-toast'
-import type { RecordModel } from 'pocketbase'
+type RecordModel = Record<string, unknown> & { id: string; created: string; updated: string; expand?: Record<string, unknown> }
+
 
 interface Member {
   id: string
@@ -42,18 +43,18 @@ export default function WorkspaceSettingsPage() {
     if (!activeWorkspace?.id) return
     setLoadingMembers(true)
     try {
-      const result = await pb.collection('workspace_members').getFullList({
+      const result = await pb.collection('workspace_members').getFullList<RecordModel>({
         filter: `workspace = "${activeWorkspace.id}"`,
         expand: 'user',
       })
       
       const mapped = result.map(m => {
-        const u = m.expand?.user as RecordModel | undefined
+        const u = m.expand?.['user'] as RecordModel | undefined
         return {
           id: m.id,
           userId: m.user as string,
-          email: u?.email as string || 'Unknown',
-          displayName: u?.display_name as string || u?.email?.split('@')[0] || 'Unknown',
+          email: (u?.email as string) || 'Unknown',
+          displayName: (u?.display_name as string) || (u?.email as string)?.split('@')[0] || 'Unknown',
           role: m.role as Member['role'],
           joinedAt: m.created,
         }
@@ -93,7 +94,7 @@ export default function WorkspaceSettingsPage() {
       // 1. Check if user exists in the system
       let targetUser: RecordModel | null = null
       try {
-        const usersList = await pb.collection('users').getList(1, 1, {
+        const usersList = await pb.collection('users').getList<RecordModel>(1, 1, {
           filter: `email = "${inviteEmail.trim()}"`,
         })
         if (usersList.items.length > 0) {

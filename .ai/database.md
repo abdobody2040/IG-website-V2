@@ -1,8 +1,12 @@
 # Instant Grow — Database Engineering
 
 > [!NOTE]
-> **Migration Notice:** The database has been migrated from Supabase (PostgreSQL) to a locally run PocketBase (v0.22.22) backend using SQLite.
-> The relations and field types described below are now defined inside [pb_schema.json](file:///g:/Vibe%20coding/IG%20website%20V2/pocketbase/pb_schema.json). All primary keys and relation fields are standard 15-character string IDs.
+> **Migration Notice:** The database has been migrated from PocketBase (SQLite) to **Hostinger MySQL (MariaDB)** using a custom PDO PHP API backend (`api/index.php`).
+> The schema definition is in [mysql_schema_v2.sql](file:///g:/Vibe%20coding/IG%20website%20V2/pocketbase/seed-sql/mysql_schema_v2.sql). Clean seed scripts are located in `pocketbase/seed-sql/`:
+> - `MASTER_SEED_ALL.sql` (Master seed file: pricing_config + core services + blogs + SEO pages)
+> - `seed_services_clean.sql` (132 complete services)
+> - `seed_blogs_clean.sql` (Full blog posts collection)
+> - `seed_seo_countries_clean_mysql.sql` (52 country SEO pages)
 
 ## Schema Overview
 
@@ -152,8 +156,8 @@
 
 ### pages
 - **Purpose:** Dynamic, localized generic pages
-- **PK:** `id` (string 15)
-- **Unique:** `slug`
+- **PK:** `id` (string 50)
+- **Fields:** `slug`, `title_en`, `title_ar`, `content_en`, `content_ar`, `active`
 - **Status:** active (bool)
 - **RLS:** Admins can manage, public can view
 

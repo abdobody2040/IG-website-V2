@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
-import * as Icons from 'lucide-react'
-import { Search, Loader2, ArrowRight, SlidersHorizontal, RotateCcw, Check, Star, Sparkles, Clock, Globe } from 'lucide-react'
+import { Search, Loader2, ArrowRight, SlidersHorizontal, RotateCcw, Check, Star, Sparkles, Clock, Globe, AlertCircle } from 'lucide-react'
+import { getIcon } from '../lib/iconMap'
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
 import { useLang } from '../i18n/LanguageContext'
@@ -9,143 +9,7 @@ import { useServices } from '../hooks/useServices'
 import { motion, AnimatePresence } from 'framer-motion'
 import { SERVICES_EXTENDED_DATA } from '../data/servicesExtendedData'
 
-export const CATEGORY_MAP: Record<string, {
-  dbName: string
-  label_en: string
-  label_ar: string
-  icon: string
-  desc_en: string
-  desc_ar: string
-  startingPrice: string
-  startingPriceAr: string
-}> = {
-  'business-formation': {
-    dbName: 'Business Formation',
-    label_en: 'Business Formation',
-    label_ar: 'تأسيس الشركات',
-    icon: 'Building2',
-    desc_en: 'Launch your UK LTD, US LLC, or UAE company globally.',
-    desc_ar: 'أسس شركتك في بريطانيا، أمريكا، أو الإمارات بكل سهولة.',
-    startingPrice: '$149',
-    startingPriceAr: '149 دولار'
-  },
-  'government-compliance': {
-    dbName: 'Government & Compliance',
-    label_en: 'Government & Compliance',
-    label_ar: 'الامتثال والشؤون الحكومية',
-    icon: 'Shield',
-    desc_en: 'EIN, registered agents, BOI reporting, and annual filings.',
-    desc_ar: 'الرقم الضريبي EIN، الوكيل المسجل، وإقرارات ملكية المستفيد السنوية.',
-    startingPrice: '$79',
-    startingPriceAr: '79 دولار'
-  },
-  'banking-payments': {
-    dbName: 'Banking & Payments',
-    label_en: 'Banking & Payments',
-    label_ar: 'الحسابات البنكية والدفع',
-    icon: 'CreditCard',
-    desc_en: 'Setup business accounts with Mercury, Wise, Stripe, and PayPal.',
-    desc_ar: 'تفعيل حسابات ميركوري ووايز وبوابات دفع سترايب وباي بال.',
-    startingPrice: '$129',
-    startingPriceAr: '129 دولار'
-  },
-  'legal-documents': {
-    dbName: 'Legal Documents',
-    label_en: 'Legal Documents',
-    label_ar: 'المستندات القانونية',
-    icon: 'FileText',
-    desc_en: 'Draft custom contracts, NDAs, and corporate resolutions.',
-    desc_ar: 'صياغة العقود التجارية الخاصة، اتفاقيات عدم الإفصاح والقرارات.',
-    startingPrice: '$49',
-    startingPriceAr: '49 دولار'
-  },
-  'branding': {
-    dbName: 'Branding',
-    label_en: 'Branding & Design',
-    label_ar: 'الهوية البصرية والتصميم',
-    icon: 'Palette',
-    desc_en: 'Logo design, brand guidelines, and social media kits.',
-    desc_ar: 'تصميم الشعارات، أدلة استخدام العلامة، وحزم التواصل الاجتماعي.',
-    startingPrice: '$49',
-    startingPriceAr: '49 دولار'
-  },
-  'websites': {
-    dbName: 'Websites',
-    label_en: 'Websites & E-Commerce',
-    label_ar: 'المواقع والمتاجر الإلكترونية',
-    icon: 'Laptop',
-    desc_en: 'Custom landing pages, Shopify stores, and SaaS websites.',
-    desc_ar: 'تصميم صفحات الهبوط، متاجر شوبيفاي، ومواقع البرمجيات المخصصة.',
-    startingPrice: '$29',
-    startingPriceAr: '29 دولار'
-  },
-  'marketing': {
-    dbName: 'Marketing',
-    label_en: 'Marketing & Ads',
-    label_ar: 'التسويق والإعلانات',
-    icon: 'TrendingUp',
-    desc_en: 'Google Ads, Meta campaigns, SEO, and growth strategies.',
-    desc_ar: 'إعلانات جوجل وميتا الممولة، تحسين السيو، وإستراتيجيات النمو.',
-    startingPrice: '$149',
-    startingPriceAr: '149 دولار'
-  },
-  'content': {
-    dbName: 'Content',
-    label_en: 'Content & Copywriting',
-    label_ar: 'صناعة المحتوى والكتابة',
-    icon: 'BookOpen',
-    desc_en: 'Copywriting, blog posts, video editing, and motion graphics.',
-    desc_ar: 'كتابة النصوص الإعلانية، المقالات، مونتاج الفيديو والموشن جرافيك.',
-    startingPrice: '$79',
-    startingPriceAr: '79 دولار'
-  },
-  'ai-automation': {
-    dbName: 'AI Automation',
-    label_en: 'AI Automation & Agents',
-    label_ar: 'أتمتة الذكاء الاصطناعي',
-    icon: 'Bot',
-    desc_en: 'AI customer support, WhatsApp agents, and voice call automation.',
-    desc_ar: 'روبوتات خدمة العملاء، مساعد واتساب، وأتمتة المكالمات الصوتية.',
-    startingPrice: '$149',
-    startingPriceAr: '149 دولار'
-  },
-  'software': {
-    dbName: 'Software',
-    label_en: 'Software & Integrations',
-    label_ar: 'البرمجيات والربط التقني',
-    icon: 'Code',
-    desc_en: 'CRM setup, ERP deployment, custom portals, and apps.',
-    desc_ar: 'تنصيب أنظمة CRM وERP، وتطوير بوابات العملاء والتطبيقات.',
-    startingPrice: '$249',
-    startingPriceAr: '249 دولار'
-  },
-  'business-consulting': {
-    dbName: 'Business Consulting',
-    label_en: 'Business Consulting',
-    label_ar: 'الاستشارات وإستراتيجيات الأعمال',
-    icon: 'BarChart3',
-    desc_en: 'Market research, competitor analysis, and pitch decks.',
-    desc_ar: 'دراسات وأبحاث السوق، تحليل المنافسين، وعروض المستثمرين.',
-    startingPrice: '$149',
-    startingPriceAr: '149 دولار'
-  },
-  'education': {
-    dbName: 'Education',
-    label_en: 'Education & Templates',
-    label_ar: 'التعليم والملفات الجاهزة',
-    icon: 'GraduationCap',
-    desc_en: 'Business templates bundles, SOP libraries, and guides.',
-    desc_ar: 'حزم قوالب ونماذج العمل، مكتبة إجراءات التشغيل، والأدلة.',
-    startingPrice: '$19',
-    startingPriceAr: '19 دولار'
-  }
-}
-
-export const getCategorySlug = (categoryDbName?: string): string => {
-  if (!categoryDbName) return 'business-formation'
-  const entry = Object.entries(CATEGORY_MAP).find(([_, value]) => value.dbName === categoryDbName)
-  return entry ? entry[0] : 'business-formation'
-}
+import { CATEGORY_MAP, getCategorySlug } from '../data/categoriesData'
 
 export default function ServicesPage() {
   const { lang } = useLang()
@@ -360,7 +224,7 @@ export default function ServicesPage() {
             className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6"
           >
             {Object.entries(CATEGORY_MAP).map(([slug, cat], index) => {
-              const IconComponent = (Icons as any)[cat.icon] || Icons.HelpCircle
+              const IconComponent = getIcon(cat.icon)
               const label = isAr ? cat.label_ar : cat.label_en
               const desc = isAr ? cat.desc_ar : cat.desc_en
               
@@ -403,7 +267,7 @@ export default function ServicesPage() {
                       className="w-full flex items-center justify-center gap-1.5 py-3 px-4 rounded-xl bg-slate-50 hover:bg-[#2563EB] text-slate-700 hover:text-white border border-slate-200/40 hover:border-transparent text-xs font-bold transition-all duration-200"
                     >
                       <span>{isAr ? 'عرض القسم' : 'Explore Category'}</span>
-                      <Icons.ArrowRight size={12} className={isAr ? 'rotate-180' : ''} />
+                      <ArrowRight size={12} className={isAr ? 'rotate-180' : ''} />
                     </a>
                   </div>
                 </motion.div>
@@ -737,7 +601,7 @@ export default function ServicesPage() {
                 </div>
               ) : filteredServices.length === 0 ? (
                 <div className="bg-white rounded-3xl border border-slate-200/60 shadow-sm p-16 text-center">
-                  <Icons.AlertCircle size={44} className="text-slate-300 mx-auto mb-4" />
+                  <AlertCircle size={44} className="text-slate-300 mx-auto mb-4" />
                   <h3 className="text-lg font-bold text-slate-900 mb-1">
                     {isAr ? 'لا توجد نتائج مطابقة' : 'No Matching Services'}
                   </h3>
@@ -760,7 +624,7 @@ export default function ServicesPage() {
                 >
                   <AnimatePresence>
                     {filteredServices.map(svc => {
-                      const IconComponent = (Icons as any)[svc.icon] || Icons.HelpCircle
+                      const IconComponent = getIcon(svc.icon)
                       const extended = SERVICES_EXTENDED_DATA[svc.id]
                       const title = isAr ? svc.title_ar : svc.title_en
                       const desc = isAr ? svc.description_ar : svc.description_en

@@ -24,20 +24,19 @@ export default function BlogListPage() {
     })
     injectBreadcrumb([
       { name: isRTL ? 'الرئيسية' : 'Home', url: getCanonical('/') },
-      { name: isRTL ? 'المدونة' : 'Blog', url: getCanonical('/blog') },
     ])
   }, [s, isRTL])
 
-
   const featuredPosts = blogs.filter(b => b.featured)
   const featuredPost = featuredPosts[0]
-  const allTags = [...new Set(blogs.flatMap(b => b.tags))].sort()
+  const allTags = [...new Set(blogs.flatMap(b => Array.isArray(b.tags) ? b.tags : []))].sort()
 
   const filtered = blogs.filter(b => {
     const title = (isRTL && b.titleAr) ? b.titleAr : b.title
     const excerpt = (isRTL && b.excerptAr) ? b.excerptAr : (b.excerpt || '')
     const matchesSearch = !search || title.toLowerCase().includes(search.toLowerCase()) || excerpt.toLowerCase().includes(search.toLowerCase())
-    const matchesTag = !activeTag || b.tags.includes(activeTag)
+    const tagsArr = Array.isArray(b.tags) ? b.tags : []
+    const matchesTag = !activeTag || tagsArr.includes(activeTag)
     const isNotFeatured = !b.featured || !featuredPost || b.id !== featuredPost.id
     return matchesSearch && matchesTag && isNotFeatured
   })
@@ -93,7 +92,7 @@ export default function BlogListPage() {
                   <div className="p-6 sm:p-8 flex flex-col justify-center flex-1">
                     <div className="flex items-center gap-2 mb-3">
                       <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-[#1a56ff] text-white">{b.featured}</span>
-                      {featuredPost.tags.slice(0, 2).map(t => (
+                      {(Array.isArray(featuredPost.tags) ? featuredPost.tags : []).slice(0, 2).map(t => (
                         <span key={t} className="text-xs text-slate-500 bg-white rounded-full px-2 py-0.5 border border-slate-200">{t}</span>
                       ))}
                     </div>
@@ -160,7 +159,7 @@ export default function BlogListPage() {
                   )}
                   <div className="p-5">
                     <div className="flex flex-wrap gap-1.5 mb-2">
-                      {post.tags.slice(0, 2).map(t => (
+                      {(Array.isArray(post.tags) ? post.tags : []).slice(0, 2).map(t => (
                         <span key={t} className="text-[10px] font-semibold text-slate-500 bg-slate-100 rounded-full px-2 py-0.5">{t}</span>
                       ))}
                     </div>

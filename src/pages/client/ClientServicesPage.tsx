@@ -2,7 +2,7 @@ import { useState } from 'react'
 import {
   ArrowRight, FileText, Mail,
 } from 'lucide-react'
-import * as Icons from 'lucide-react'
+import { getIcon } from '../../lib/iconMap'
 import ClientLayout from './ClientLayout'
 import { useAuth } from '../../hooks/useAuth'
 import { useCompanies } from '../../hooks/useCompanies'
@@ -45,9 +45,10 @@ export default function ClientServicesPage() {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 mb-12">
           {(() => {
-            const activeAddons = dbServices.filter(s => s.active && s.type === 'addon')
-            const mappedAddons: Service[] = activeAddons.map(s => {
-              const IconComponent = (Icons as any)[s.icon] || Icons.HelpCircle
+            const activeAddons = dbServices.filter(s => s.active && s.type !== 'landing')
+            const sourceServices = activeAddons.length > 0 ? activeAddons : dbServices.filter(s => s.active)
+            const mappedAddons: Service[] = sourceServices.map(s => {
+              const IconComponent = getIcon(s.icon)
               return {
                 id: s.id,
                 icon: IconComponent,

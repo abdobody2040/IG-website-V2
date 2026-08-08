@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { pb } from '../lib/pocketbase'
+import type { ListResult } from '../lib/pocketbase'
 import type { Order, User, Company, Document } from '../types/db'
 
 interface QueryOptions {
@@ -66,13 +67,13 @@ export function useUpdateOrderStatus() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: async ({ orderId, status }: { orderId: string, status: string }) => {
-      // 1. Update in PocketBase
       const record = await pb.collection('orders').update(orderId, { status })
-      
-      // 2. Fire webhook to Make/Zapier
+
+      // Fire optional webhook to Make/Zapier if configured
       const webhookUrl = import.meta.env.VITE_ORDER_WEBHOOK_URL
       if (webhookUrl) {
         try {
+          const r = record as Record<string, unknown>
           await fetch(webhookUrl, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -80,21 +81,20 @@ export function useUpdateOrderStatus() {
               event: 'order.status.updated',
               orderId,
               status,
-              orderNumber: record.order_number,
-              companyName: record.company_name,
+              orderNumber: r['order_number'],
+              companyName: r['company_name'],
               timestamp: new Date().toISOString()
             })
           })
         } catch (err) {
           console.error('Failed to trigger order webhook', err)
-          // We don't throw here to ensure the UI updates if PB succeeded
         }
       }
-      
+
       return record
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin', 'orders'] })
+      queryClient.invalidateQueries({ queryKey: ['admin'] })
     }
   })
 }
@@ -130,65 +130,28 @@ export function useCompanies({ page = 1, perPage = 20, search = '', status = 'al
   return useQuery({
     queryKey: ['admin', 'companies', page, perPage, search, status, compliance],
     queryFn: async () => {
+      // Build a simple filter for search + status (these work fine with parsePbFilter)
       const filters: string[] = []
       if (search) filters.push(`company_name ~ "${search}"`)
       if (status !== 'all') filters.push(`status = "${status}"`)
 
-      if (compliance !== 'all') {
-        const nowStr = new Date().toISOString().replace('T', ' ').slice(0, 19)
-        const thirtyDaysOutStr = new Date(Date.now() + 30 * 86400000).toISOString().replace('T', ' ').slice(0, 19)
+      // Compliance filtering is handled server-side via a dedicated ?compliance= param
+      // because MySQL stores dates as NULL (not empty string), which PocketBase filter
+      // syntax cannot express. The PHP API translates this to proper IS NULL / date range queries.
+      const params = new URLSearchParams()
+      params.set('page', String(page))
+      params.set('perPage', String(perPage))
+      params.set('sort', '-created')
+      if (filters.length) params.set('filter', filters.join(' && '))
+      if (compliance !== 'all') params.set('compliance', compliance)
 
-        if (compliance === 'overdue') {
-          filters.push(`(
-            (renewal_due_date != "" && renewal_due_date < "${nowStr}") ||
-            (annual_report_due_date != "" && annual_report_due_date < "${nowStr}") ||
-            (tax_filing_due_date != "" && tax_filing_due_date < "${nowStr}") ||
-            (registered_agent_renewal_date != "" && registered_agent_renewal_date < "${nowStr}")
-          )`)
-        } else if (compliance === 'due_soon') {
-          const noneOverdue = `(
-            (renewal_due_date = "" || renewal_due_date >= "${nowStr}") &&
-            (annual_report_due_date = "" || annual_report_due_date >= "${nowStr}") &&
-            (tax_filing_due_date = "" || tax_filing_due_date >= "${nowStr}") &&
-            (registered_agent_renewal_date = "" || registered_agent_renewal_date >= "${nowStr}")
-          )`
-          const atLeastOneDueSoon = `(
-            (renewal_due_date != "" && renewal_due_date >= "${nowStr}" && renewal_due_date <= "${thirtyDaysOutStr}") ||
-            (annual_report_due_date != "" && annual_report_due_date >= "${nowStr}" && annual_report_due_date <= "${thirtyDaysOutStr}") ||
-            (tax_filing_due_date != "" && tax_filing_due_date >= "${nowStr}" && tax_filing_due_date <= "${thirtyDaysOutStr}") ||
-            (registered_agent_renewal_date != "" && registered_agent_renewal_date >= "${nowStr}" && registered_agent_renewal_date <= "${thirtyDaysOutStr}")
-          )`
-          filters.push(`(${noneOverdue} && ${atLeastOneDueSoon})`)
-        } else if (compliance === 'compliant') {
-          const hasAtLeastOneDate = `(
-            renewal_due_date != "" ||
-            annual_report_due_date != "" ||
-            tax_filing_due_date != "" ||
-            registered_agent_renewal_date != ""
-          )`
-          const allDatesCompliant = `(
-            (renewal_due_date = "" || renewal_due_date > "${thirtyDaysOutStr}") &&
-            (annual_report_due_date = "" || annual_report_due_date > "${thirtyDaysOutStr}") &&
-            (tax_filing_due_date = "" || tax_filing_due_date > "${thirtyDaysOutStr}") &&
-            (registered_agent_renewal_date = "" || registered_agent_renewal_date > "${thirtyDaysOutStr}")
-          )`
-          filters.push(`(${hasAtLeastOneDate} && ${allDatesCompliant})`)
-        } else if (compliance === 'no_dates') {
-          filters.push(`(
-            renewal_due_date = "" &&
-            annual_report_due_date = "" &&
-            tax_filing_due_date = "" &&
-            registered_agent_renewal_date = ""
-          )`)
-        }
-      }
+      const result = await pb.send<ListResult>(
+        `/collections/companies/records?${params.toString()}`,
+        { method: 'GET' }
+      )
 
-      const result = await pb.collection('companies').getList(page, perPage, {
-        sort: '-created',
-        filter: filters.join(' && '),
-      })
       return {
-        items: result.items.map(mapCompany),
+        items: (result.items ?? []).map(mapCompany),
         totalPages: result.totalPages,
         totalItems: result.totalItems,
       }

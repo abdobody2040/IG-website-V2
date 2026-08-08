@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion'
 import { ArrowRight } from 'lucide-react'
-import * as Icons from 'lucide-react'
+import { getIcon } from '../lib/iconMap'
 import { useLang } from '../i18n/LanguageContext'
 import { useServices } from '../hooks/useServices'
 
@@ -13,7 +13,7 @@ const staticServices = [
     title_ar: 'تأسيس الشركات',
     description_en: 'Form your US LLC, UK LTD & more in 50+ countries.',
     description_ar: 'أسس شركتك الأمريكية أو البريطانية وأكثر.',
-    href: '/order',
+    href: '/services/business-formation',
   },
   {
     icon: 'Landmark',
@@ -23,7 +23,7 @@ const staticServices = [
     title_ar: 'الحساب البنكي التجاري',
     description_en: 'Open US business bank accounts remotely.',
     description_ar: 'افتح حساباً بنكياً أمريكياً عن بُعد.',
-    href: '/#pricing',
+    href: '/services/banking-payments',
   },
   {
     icon: 'CreditCard',
@@ -33,7 +33,7 @@ const staticServices = [
     title_ar: 'حلول الدفع',
     description_en: 'Stripe, PayPal & merchant account setup.',
     description_ar: 'إعداد Stripe وPayPal والحسابات التجارية.',
-    href: '/#pricing',
+    href: '/services/banking-payments',
   },
   {
     icon: 'Shield',
@@ -43,7 +43,7 @@ const staticServices = [
     title_ar: 'الامتثال والرقم الضريبي',
     description_en: 'EIN, tax compliance, and annual reports.',
     description_ar: 'رقم EIN والامتثال الضريبي والتقارير السنوية.',
-    href: '/#pricing',
+    href: '/services/government-compliance',
   },
   {
     icon: 'Headphones',
@@ -53,7 +53,7 @@ const staticServices = [
     title_ar: 'الدعم المستمر',
     description_en: 'Dedicated support to keep your business growing.',
     description_ar: 'دعم متخصص لمتابعة نمو أعمالك.',
-    href: '/#contact',
+    href: '/services/government-compliance',
   },
 ]
 
@@ -108,7 +108,7 @@ export default function Services() {
           viewport={{ once: true, margin: '-60px' }}
         >
           {servicesToRender.map((svc, i) => {
-            const IconComponent = (Icons as any)[svc.icon] || Icons.HelpCircle
+            const IconComponent = getIcon(svc.icon)
             return (
               <motion.a
                 key={i}

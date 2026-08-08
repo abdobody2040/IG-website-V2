@@ -1,3 +1,9 @@
+// src/lib/authState.ts
+// ──────────────────────────────────────────────────────────────────
+// Thin module that exposes the current auth state synchronously
+// and waits for it to be ready. No PocketBase SDK dependency.
+// ──────────────────────────────────────────────────────────────────
+
 import { pb } from './pocketbase'
 
 export interface AuthInfo {
@@ -10,28 +16,24 @@ let authInfo: AuthInfo = { userId: null, role: null, ready: false }
 let readyResolve: (() => void) | null = null
 const readyPromise = new Promise<void>((resolve) => { readyResolve = resolve })
 
-// Initialize from persisted PocketBase session (synchronous — SDK loads from localStorage)
-if (pb.authStore.isValid && pb.authStore.model) {
-  authInfo.userId = pb.authStore.model.id
-  authInfo.role = (pb.authStore.model['role'] as string) ?? 'client'
-  authInfo.ready = true
-  readyResolve!()
-} else {
-  authInfo.ready = true
-  readyResolve!()
-}
-
-// Listen for auth state changes (login, logout, token refresh)
-pb.authStore.onChange((token, model) => {
-  if (token && model) {
+function syncFromStore() {
+  const model = pb.authStore.model
+  if (pb.authStore.isValid && model) {
     authInfo.userId = model.id
-    authInfo.role = (model['role'] as string) ?? 'client'
+    authInfo.role = model.role ?? 'client'
   } else {
     authInfo.userId = null
     authInfo.role = null
   }
   authInfo.ready = true
-})
+  readyResolve?.()
+}
+
+// Initialise synchronously from localStorage-restored session
+syncFromStore()
+
+// Keep in sync on auth changes (login, logout, token refresh)
+pb.authStore.onChange(() => syncFromStore())
 
 export function getAuthInfo(): AuthInfo {
   return authInfo

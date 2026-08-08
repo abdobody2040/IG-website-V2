@@ -1,13 +1,13 @@
 import { useState, useEffect } from 'react'
 import { useParams, Link } from '@tanstack/react-router'
-import * as Icons from 'lucide-react'
-import { ChevronRight, ChevronLeft, Loader2, ArrowRight, ShieldCheck, Clock, Award } from 'lucide-react'
+import { getIcon } from '../lib/iconMap'
+import { ChevronRight, ChevronLeft, Loader2, ArrowRight, ShieldCheck, Clock, Award, AlertCircle } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
 import { useLang } from '../i18n/LanguageContext'
 import { setPageMeta, injectBreadcrumb, getCanonical } from '../lib/seo'
 import { useServices, ServiceRecord } from '../hooks/useServices'
-import { CATEGORY_MAP } from './ServicesPage'
+import { CATEGORY_MAP } from '../data/categoriesData'
 import PublicOrderModal from '../components/PublicOrderModal'
 
 // Helper to determine service timeline dynamically
@@ -39,13 +39,14 @@ export const getServiceTimeline = (serviceId: string, isAr: boolean): string => 
 }
 
 export default function ServiceCategoryPage() {
-  const { categorySlug } = useParams({ from: '/services/$categorySlug' })
+  const params = useParams({ strict: false }) as { categorySlug?: string }
+  const categorySlug = params.categorySlug || 'business-formation'
   const { lang } = useLang()
   const isAr = lang === 'ar'
   const { services, loading } = useServices()
   const [selectedService, setSelectedService] = useState<ServiceRecord | null>(null)
 
-  const category = CATEGORY_MAP[categorySlug]
+  const category = CATEGORY_MAP[categorySlug] || CATEGORY_MAP['business-formation']
   
   // Keep window scrolled to top on page load/change
   useEffect(() => {
@@ -93,7 +94,7 @@ export default function ServiceCategoryPage() {
   ) || categoryServices[0]
 
   const otherServices = categoryServices.filter(s => s.id !== featuredService?.id)
-  const CategoryIcon = (Icons as any)[category.icon] || Icons.HelpCircle
+  const CategoryIcon = getIcon(category.icon)
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] font-sans flex flex-col">
@@ -121,7 +122,7 @@ export default function ServiceCategoryPage() {
                 {isAr ? 'أقسام الخدمات' : 'Service Categories'}
               </h3>
               {Object.entries(CATEGORY_MAP).map(([slug, cat]) => {
-                const SidebarIcon = (Icons as any)[cat.icon] || Icons.HelpCircle
+                const SidebarIcon = getIcon(cat.icon)
                 const isActive = categorySlug === slug
                 return (
                   <Link
@@ -199,7 +200,7 @@ export default function ServiceCategoryPage() {
                       <div className="space-y-2">
                         <div className="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
                           {(() => {
-                            const SvcIcon = (Icons as any)[featuredService.icon] || Icons.HelpCircle
+                            const SvcIcon = getIcon(featuredService.icon)
                             return <SvcIcon size={24} />
                           })()}
                         </div>
@@ -259,7 +260,7 @@ export default function ServiceCategoryPage() {
                     </h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       {otherServices.map(svc => {
-                        const SvcIcon = (Icons as any)[svc.icon] || Icons.HelpCircle
+                        const SvcIcon = getIcon(svc.icon)
                         const title = isAr ? svc.title_ar : svc.title_en
                         const desc = isAr ? svc.description_ar : svc.description_en
                         const period = isAr ? svc.period_ar : svc.period_en

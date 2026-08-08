@@ -22,10 +22,28 @@ Allow: /
 User-agent: ClaudeBot
 Allow: /
 
+User-agent: AnthropicBot
+Allow: /
+
 User-agent: Google-Extended
 Allow: /
 
+User-agent: Gemini
+Allow: /
+
 User-agent: Bytespider
+Allow: /
+
+User-agent: CCBot
+Allow: /
+
+User-agent: Meta-ExternalAgent
+Allow: /
+
+User-agent: cohere-ai
+Allow: /
+
+User-agent: YouBot
 Allow: /
 
 # Disallow private user & administrative portals from indexing
@@ -38,4 +56,8 @@ Disallow: /auth/*
 Disallow: /order/
 Disallow: /order/*
 
-Sitemap: https://www.instantgrow-llc.com/sitemap.xml
+Sitemap: https://instantgrow.net/sitemap.xml
+Sitemap: https://instantgrow.net/api/sitemap.xml
+
+# AI Agent discoverability
+LLMs: https://instantgrow.net/llms.txt

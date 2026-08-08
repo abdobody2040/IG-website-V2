@@ -1,10 +1,10 @@
 import { useState, useRef, useEffect } from 'react'
 import { Menu, X, Globe, Calendar, ChevronDown, LogIn, ChevronRight, ChevronLeft } from 'lucide-react'
-import * as Icons from 'lucide-react'
+import { getIcon } from '../lib/iconMap'
 import { useLang } from '../i18n/LanguageContext'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useServices } from '../hooks/useServices'
-import { getCategorySlug } from '../pages/ServicesPage'
+import { getCategorySlug } from '../data/categoriesData'
 
 const CAL_BASE = 'https://cal.com/instant-grow-llc'
 
@@ -336,7 +336,7 @@ export default function Navbar() {
                           {/* Services Column */}
                           <div className={`flex-1 ${isAr ? 'pr-3' : 'pl-3'} flex flex-col gap-1 max-h-[500px] overflow-y-auto custom-scrollbar`}>
                             {activeServices.filter(s => s.category === hoveredCategory).map(svc => {
-                              const IconComponent = (Icons as any)[svc.icon] || Icons.HelpCircle
+                              const IconComponent = getIcon(svc.icon)
                               const title = isAr ? svc.title_ar : svc.title_en
                               const period = isAr ? svc.period_ar : svc.period_en
                               const priceStr = svc.price > 0 ? `$${svc.price}` : (isAr ? 'مشمول' : 'Included')

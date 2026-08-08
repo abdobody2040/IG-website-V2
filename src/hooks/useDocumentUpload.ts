@@ -94,7 +94,8 @@ export function useDocumentUpload({ userId, orderId = '', companyId = '' }: Uplo
         formData.append('file', file)
 
         const record = await pb.collection('documents').create(formData)
-        publicUrl = pb.files.getURL(record, record['file'] as string)
+        // PHP backend stores the full URL in file_url (not the raw filename from pb.files.getURL)
+        publicUrl = (record as Record<string, unknown>)['file_url'] as string || ''
 
         setState({ uploading: false, progress: 100, error: null })
         await queryClient.invalidateQueries({ queryKey: ['documents', userId] })

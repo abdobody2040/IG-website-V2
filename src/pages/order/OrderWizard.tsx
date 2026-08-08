@@ -26,8 +26,19 @@ export default function OrderWizard() {
   const search = useSearch({ strict: false }) as { plan?: string }
   const preselect = search?.plan ?? 'us-premium'
 
-  const [step, setStep] = useState(0)
-  const [planId, setPlanId] = useState(preselect)
+  const [step, setStep] = useState(() => {
+    const saved = sessionStorage.getItem('ig_order_wizard_step')
+    return saved ? parseInt(saved, 10) : 0
+  })
+  const [planId, setPlanId] = useState(() => {
+    const saved = sessionStorage.getItem('ig_order_wizard_plan')
+    return saved || preselect
+  })
+
+  const updateStep = (newStep: number) => {
+    setStep(newStep)
+    sessionStorage.setItem('ig_order_wizard_step', String(newStep))
+  }
   const [stateFee, setStateFee] = useState(0)
   const [selectedAddOns, setSelectedAddOns] = useState<string[]>([])
   const [submitting, setSubmitting] = useState(false)
@@ -56,6 +67,7 @@ export default function OrderWizard() {
 
   const handleSetPlanId = (id: string) => {
     setPlanId(id)
+    sessionStorage.setItem('ig_order_wizard_plan', id)
     setValue('companyType', id.startsWith('uk') ? 'LTD' : 'LLC')
   }
 
@@ -67,10 +79,10 @@ export default function OrderWizard() {
     let valid = true
     if (step === 0) valid = await trigger(['companyName'])
     if (step === 5) valid = await trigger(['fullName', 'email'])
-    if (valid) setStep(s => Math.min(s + 1, TOTAL_STEPS - 1))
+    if (valid) updateStep(Math.min(step + 1, TOTAL_STEPS - 1))
   }
 
-  const back = () => setStep(s => Math.max(s - 1, 0))
+  const back = () => updateStep(Math.max(step - 1, 0))
 
   const onSubmit = async () => {
     setSubmitting(true)
@@ -164,6 +176,9 @@ export default function OrderWizard() {
           status: 'pending',
           notes: paymentMethod === 'invoice' ? 'Pending Invoice Payment' : 'Dev payment',
         }).catch(err => console.error('Failed to create payment record:', err))
+
+        sessionStorage.removeItem('ig_order_wizard_step')
+        sessionStorage.removeItem('ig_order_wizard_plan')
 
         if (paymentMethod === 'invoice') {
           toast.success(lang === 'ar' ? 'تم تقديم الطلب بنجاح!' : 'Order submitted successfully!')

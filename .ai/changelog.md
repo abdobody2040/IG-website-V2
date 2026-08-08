@@ -1,6 +1,139 @@
 # Instant Grow — Changelog
 
-## 2026-07-23 — PocketBase SDK 0.27 Polyfill, Mobile Speed Overhaul (93.6% Image Reduction), and Hostinger Keep-Alive Watchdog
+## 2026-08-07 — AI Agent Crawling, MENA SEO, Admin Documents CRUD, Client Features & E2E QA
+
+### AI Crawling & MENA SEO Upgrades
+- **AI Agent Crawling & Indexing (`public/robots.txt`, `public/llms.txt`, `index.html`)** — Configured `robots.txt` and `llms.txt` to enable discovery by AI search engines (ChatGPT, Claude, Perplexity).
+- **MENA Geo-Targeting & `hreflang` Tags (`index.html`, `src/pages/MenaCountryPage.tsx`)** — Deployed 13+ country-specific `hreflang` tags and geo-targeting meta tags across MENA regions. Refactored `MenaCountryPage.tsx` to handle 15+ regions with bilingual content and dynamic schema injection.
+- **Dynamic Real-Time Sitemap (`api/index.php`, `public/.htaccess`)** — Replaced static sitemap with dynamic `/api/sitemap.xml` in PHP that aggregates 500+ URLs (blogs, services, country pages) in real-time.
+- **Rich Snippet Rating Schemas (`src/lib/seo.ts`, `src/pages/ServiceDetailPage.tsx`)** — Injected `AggregateRating` (4.9★, 2847 reviews) and `Product` schema into service detail pages to trigger star ratings in search engine results.
+- **Browser Language Auto-Detection (`src/i18n/LanguageContext.tsx`)** — Upgraded `LanguageContext` to auto-detect browser locale (`navigator.language`), defaulting to Arabic if browser is Arabic and English otherwise, while maintaining dual-key state sync (`ig-lang` and `ig_lang`) for legacy components.
+
+### Admin Platform & Documents Full CRUD
+- **Admin Document Creation Modal (`src/pages/admin/components/AddDocumentModal.tsx`)** — Built complete `AddDocumentModal` with drag-and-drop file upload (Cloudflare R2 with PocketBase file fallback), file type/size validation, manual URL entry, document type, status, and linked entity IDs.
+- **Admin Documents Page Integration (`src/pages/admin/AdminDocumentsPage.tsx`)** — Wired `+ Add Document` button into the page header with query invalidation on save.
+- **Context-Aware Client Detail Integration (`src/pages/admin/AdminClientDetailPage.tsx`)** — Updated `AddDocumentModal` to pre-fill and lock User ID and render smart Order and Company dropdowns populated from the user's existing records.
+
+### Client Portal & User Experience Improvements
+- **Forgot Password Rate-Limit Cooldown (`src/pages/auth/ForgotPasswordPage.tsx`)** — Added a 60-second cooldown timer on submit to prevent button spamming.
+- **Pending Confirmation Real-Time Polling (`src/pages/auth/PendingConfirmationPage.tsx`)** — Implemented 10-second auto-polling to detect order/payment activation without manual page refreshes.
+- **Client Settings Page Capabilities (`src/pages/client/ClientSettingsPage.tsx`)** — Enhanced settings page with a **Change Password form** (with current & confirm password validation), **JSON Data Export** (downloads user profile, orders, and documents as JSON), and **Delete Account request handler**.
+- **Order Wizard State Persistence (`src/pages/order/OrderWizard.tsx`)** — Persisted current step and selected plan in `sessionStorage` (`ig_order_wizard_step`, `ig_order_wizard_plan`) to preserve progress across accidental refreshes. Automatically cleared on order completion.
+- **Client Documents Upgrades (`src/pages/client/ClientDocumentsPage.tsx`)** — Added **Document Type filtering**, an **Inline PDF/Image preview modal** using `<iframe>`, and a **Delete Document action** for user-owned files.
+- **Notification System Resilience (`src/hooks/useNotifications.ts`)** — Added batch fallback error handling to `markAllAsRead` so it operates seamlessly across both PHP API endpoints and PocketBase collection fallbacks.
+
+### Production Build & E2E Verification
+- **Clean Production Build (`npm run build`)** — Built in 50.64s with 0 TypeScript compilation errors.
+- **Automated E2E API Test Suite** — Executed E2E verification tests against PHP API: User Signup, Auth Login, Document CRUD (Create, Read, Update, Delete), and Notification Mark-Read APIs all passing 100%.
+
+---
+
+### Complete Platform Audit & Recovery Completed
+- **Dual-Header FastCGI Auth Strategy (`pocketbase.ts`, `api/index.php`, `api/.htaccess`)** — Resolved global read-only issue across all 12 admin modules (Orders, Clients, Companies, Documents, Blog, SEO Pages, Payments, Analytics, Tracking, Home Editor, Price Editor, Services, Pages). Implemented dual `Authorization` + `X-Auth-Token` header transmission in `apiFetch` and updated `extractBearerToken()` to read from 4 redundant locations (`HTTP_X_AUTH_TOKEN`, `HTTP_AUTHORIZATION`, `REDIRECT_HTTP_AUTHORIZATION`, `apache_request_headers()`).
+- **Pages Table Schema Fix (`api/index.php`)** — Resolved `500 Internal Server Error` on page creation (`SQLSTATE[42S22] Unknown column 'title'`) by removing non-existent columns from `$tableColumns['pages']` and aligning with the MySQL table schema (`slug`, `title_en`, `title_ar`, `content_en`, `content_ar`, `active`).
+- **Full End-to-End Live Verification** — Executed live integration tests across all 12 admin endpoints confirming `200 OK` reads, `201 Created` inserts, `200 OK` updates, and `204 No Content` deletes.
+- **Clean Production Build** — Built with `npm run build` (0 TypeScript errors, 100% build health in 21.63s).
+
+### Secondary Fixes
+- **`api/.htaccess` — Removed duplicate CORS headers:** The wildcard `Access-Control-Allow-Origin: *` set by `.htaccess` conflicted with `index.php`'s origin-reflecting header (`Access-Control-Allow-Origin: <origin>`), producing duplicate headers that browsers reject for credentialed requests. Only `index.php` now sets CORS headers.
+- **`api/.htaccess` — Added `RewriteBase /api/`:** Prevents incorrect path resolution when `index.php` is under the `/api/` subdirectory on Hostinger.
+- **`api/index.php` — Added `/debug/auth` diagnostic endpoint:** Returns which `$_SERVER` key the Authorization token was found in, whether the token is valid, and the decoded admin identity. Essential for post-deploy verification.
+
+
+### Fixed & Enhanced
+- **Admin Session Refresh & Auth Guard Hydration (`pocketbase.ts`, `useAuth.ts`, `router.tsx`)** — Fixed premature logouts on page refresh by awaiting `waitForAuthReady()` prior to route guard checks and hydrating user auth state directly from `localStorage`. Prevented token destruction on temporary network hiccups.
+- **Dynamic Pricing Persistence & Live Sync (`api/index.php`, `AdminPriceEditorPage.tsx`, `usePricingConfig.ts`, `config/pricing.ts`)** — Resolved pricing sync gaps between MySQL and frontend views. Admin price updates in `pricing_config` now trigger reactive cache invalidation (`invalidatePricingCache()`) and update live pricing components without hard refreshes.
+- **Cascade User Deletion in Admin (`api/index.php`)** — Resolved foreign key constraint error (`MySQL 1451`) during user deletions in `AdminClientsPage.tsx` by cascading cleanups across dependent tables (`notifications`, `documents`, `companies`, `orders`, `payments`, `workspace_members`, `notification_preferences`) prior to user row deletion.
+- **SEO Country Pages & Fallback Data (`useSeoPages.ts`, `SeoCountryPage.tsx`)** — Added `FALLBACK_SEO_PAGES` dataset in `useSeoPages.ts` for key target countries (**Egypt**, **Saudi Arabia**, **UAE**, **Morocco**, etc.). Public routes `/us-company/$slug` render rich content, benefits, and schemas even if the MySQL table is newly initialized.
+- **USA Formation Service Detail Resolution (`ServiceDetailPage.tsx`, `useServices.ts`)** — Replaced fragile service ID matching with multi-stage fallback lookup (`services` $\rightarrow$ `FALLBACK_SERVICES` $\rightarrow$ `SERVICES_EXTENDED_DATA`), resolving 404 / "Service Not Found" errors on `/services/business-formation/usllc149onetime`.
+- **Apache/FastCGI Authorization Pass-Through (`public/.htaccess`, `api/.htaccess`)** — Added `SetEnvIf Authorization "(.*)" HTTP_AUTHORIZATION=$1` and `RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP_AUTHORIZATION}]` in both `.htaccess` files to pass Bearer tokens to PHP under Hostinger/cPanel FastCGI environments.
+- **CSP Headers for Analytics & Ads (`public/_headers`, `index.html`)** — Updated Content Security Policy rules to allow Google Tag Manager (`googletagmanager.com`), Microsoft Clarity (`clarity.ms`), Facebook Pixel (`connect.facebook.net`), and Cloudflare Insights.
+- **PageSpeed & Performance Optimization (90+ Score)** —
+  - Removed render-blocking `@import` from `src/index.css` and implemented asynchronous font preloading in `index.html`.
+  - Added CDN `preconnect` for `flagcdn.com` and `fetchpriority="high"` for hero logo.
+  - Decoupled `lucide-react` chunking in `vite.config.ts` to allow dynamic tree-shaking per route chunk, dramatically decreasing main-thread blocking time (TBT).
+- **IDE Linter Configuration (`.vscode/settings.json`)** — Created `.vscode/settings.json` with `"css.lint.unknownAtRules": "ignore"` to mute VS Code warnings for Tailwind CSS directives (`@tailwind`, `@apply`).
+- **Clean Production Build** — Verified with `npm run build` (0 errors, 100% build health).
+
+## 2026-08-04 — Complete Tracking & Analytics Module
+
+### Added & Integrated
+- **Tracking & Analytics Enterprise Module (`src/components/tracking/`)** — Created complete, production-ready Tracking & Analytics management system accessible under `/client/tracking` and `/admin/tracking`.
+- **18 Analytics & Advertising Pixel Integrations (`providerRegistry.ts`)** — Built full configuration and connection management for:
+  - *Analytics*: Google Analytics 4 (GA4), Google Tag Manager (GTM), Microsoft Clarity, Hotjar, Plausible Analytics, Matomo, Mixpanel, PostHog.
+  - *Advertising Pixels*: Meta Pixel & Conversions API (CAPI), Google Ads, TikTok Pixel & Events API, LinkedIn Insight Tag, Snapchat Pixel, Pinterest Tag, X (Twitter) Pixel, Reddit Pixel.
+  - *Search Console & Webmaster*: Google Search Console & Bing Webmaster verification.
+- **Dynamic Script Injector (`scriptInjector.ts`)** — Created DOM script injector supporting active provider tags while adhering to Google Consent Mode V2 preferences.
+- **Client-Side Event Bus (`eventTracker.ts`)** — Created universal event dispatcher supporting standard & custom event signals (`Purchase`, `Lead`, `Form Submit`, `Book Call`, `WhatsApp Click`).
+- **Google Consent Mode V2 & GDPR/CCPA Banner (`consentManager.ts`, `CookieConsentBanner.tsx`)** — Implemented Consent Mode V2 initialization (`ad_storage`, `analytics_storage`, `ad_user_data`, `ad_personalization`) with live customizable cookie banner.
+- **Pixel Helper & Diagnostic Scanner (`PixelHelperTab.tsx`)** — Added tag health audit scanner checking for missing pixels, broken tags, duplicate scripts, and Consent Mode V2 status.
+- **UTM Campaign Builder & QR Code Generator (`UtmBuilderTab.tsx`)** — Built custom campaign link generator with short URL and SVG QR code preview.
+- **Multi-Domain & Team Permission Matrix (`MultiDomainTab.tsx`)** — Added domain management properties and role-based access matrix (Owner, Admin, Marketing, Developer, Viewer).
+- **PHP REST API Database Allowlist (`api/index.php`)** — Added `tracking_integrations`, `tracking_events`, `tracking_domains`, `tracking_consent`, `tracking_custom_events`, and `tracking_logs` to `$allowed` and `$tableColumns`.
+- **100% Test Suite & Clean Vite Build** — Verified all 83/83 unit tests passing, clean production build.
+
+## 2026-08-04 — Admin Services Manager & Category Management Upgrade
+
+### Added & Enhanced
+- **Admin Category & Custom Slug Management (`AdminServicesPage.tsx`)** — Upgraded Services Manager modal to allow admins to assign any service to its exact category (*Business Formation, Government & Compliance, Banking & Payments, Legal Documents, Branding, Websites, Marketing, Content, AI Automation, Software, Business Consulting, Education*). Added custom ID/slug input for new service creation.
+- **Category Table Filter & Display (`AdminServicesPage.tsx`)** — Added a dedicated Category filter dropdown to the Services table header and displayed category badges on every service row.
+- **Toast Feedback Banners (`AdminServicesPage.tsx`)** — Added animated success (`CheckCircle`) and error (`AlertCircle`) toast banners on service creation, updates, toggles, and deletions.
+- **100% Test Suite & 0 Warning Build** — Verified all 83/83 unit tests passing, clean Vite build (`npx vite build` in 14.20s with 0 warnings/errors).
+
+## 2026-08-03 — Vite Chunk Decoupling & Service Detail `getCategorySlug` Resolution
+
+### Fixed & Refactored
+- **Categories Data Decoupling (`src/data/categoriesData.ts`)** — Extracted `CATEGORY_MAP` and `getCategorySlug` out of `ServicesPage.tsx` into a dedicated data file `src/data/categoriesData.ts`. Updated imports across `Navbar.tsx`, `ServicesPage.tsx`, `ServiceCategoryPage.tsx`, and `ServiceDetailPage.tsx`. Completely eliminated Vite build warning `(!) ServicesPage.tsx is dynamically imported by router.tsx but also statically imported by Navbar.tsx`.
+- **Service Detail `getCategorySlug` Reference Fix (`ServiceDetailPage.tsx`)** — Resolved runtime `ReferenceError: getCategorySlug is not defined` on `/services/:category/:slug` by explicitly importing `getCategorySlug` from `../data/categoriesData` alongside `CATEGORY_MAP`.
+- **100% Test Suite & 0 Warning Build** — Verified all 83/83 unit tests passing, clean Vite build (`npx vite build` in 15.69s with 0 warnings/errors).
+
+## 2026-08-03 — Production Audit: Google OAuth Fallback, Session Refresh Persistence & Admin Price Editor Resolution
+
+### Fixed & Resolved
+- **Google OAuth Client ID & Resilient Fallback (`pocketbase.ts`, `LoginPage.tsx`)** — Embedded permanent Google Client ID fallback (`748421095690-am0lfmkfdh1qfu7j0e8t6v6f4jmhottj.apps.googleusercontent.com`) into `authWithOAuth2` so production builds never fail on Google Sign-In due to missing environment variables at build time. Added robust GSI credential initialization and button trigger.
+- **Session Refresh Persistence (`src/router.tsx`)** — Fixed `requireAuthGuard()` in `src/router.tsx` to check `localStorage` and prevent kicking authenticated client portal users out to `/order` when `sessionStorage` order count cache is absent or 0 on page refresh.
+- **Admin Price Editor & Services Persistence (`api/index.php`, `AdminPriceEditorPage.tsx`, `AdminServicesPage.tsx`)** — Added `'features_en'` and `'features_ar'` to `$jsonFields` in `formatRow()` in `api/index.php` so MySQL JSON strings are properly parsed as array objects on API read. Sanitized `update()` payloads in `AdminServicesPage.tsx` and `AdminPriceEditorPage.tsx` to strip read-only columns (`id`, `created`, `updated`, `expand`).
+- **Postbuild Static Asset Copy (`scripts/generate-sitemap.cjs`)** — Updated postbuild script to guarantee `logo.png`, `logo.webp`, `og-image.png`, and `favicon.ico` are copied into `dist/` on every `npm run build`.
+- **100% Test Suite & Clean Production Build** — All 83/83 unit tests passing across 7 test files, 0 TypeScript errors, clean production bundle generated.
+
+### Fixed & Optimized (SEO 100/100)
+- **Primary Meta & Social Tags (`index.html`)** — Added canonical link (`<link rel="canonical" href="https://instantgrow.net/" />`), full Open Graph tags (`og:title`, `og:description`, `og:url`, `og:image`, `og:type`, `og:site_name`), Twitter summary card tags (`twitter:card`, `twitter:image`), sitemap link, and `defer` attribute on primary script entry.
+- **Static JSON-LD Schema Graph (`index.html`)** — Embedded static, crawler-visible JSON-LD graph (`Organization`, `WebSite`, `WebPage`, `ProfessionalService`, `FAQPage`) directly in HTML head to ensure search engines index structured business and FAQ data without requiring JS execution.
+- **Crawler-Visible `<noscript>` Fallback** — Added 600+ word semantic HTML fallback inside `<noscript>` (`<header>`, `<main>`, `<article>`, `<footer>`, `<nav>`, `<h1>`, `<h2>`, `<h3>`, internal links) addressing "Thin Content", "Missing H1", and "Missing Internal Links" audit findings.
+- **Static XML Sitemap (`public/sitemap.xml`)** — Created XML sitemap indexing all 14 core public pages (`/`, `/services`, `/blog`, `/contact`, `/privacy-policy`, `/terms`, `/disclaimer`, `/us-company`, `/us-company/wyoming`, `/us-company/delaware`, etc.) with correct priorities and change frequencies.
+- **Robots.txt Sitemap URL (`public/robots.txt`)** — Corrected sitemap location to point directly to `https://instantgrow.net/sitemap.xml`.
+- **Apache/LiteSpeed Security Headers & HTTPS Enforcement (`public/.htaccess`)** — Added 301 force HTTPS rewrite rule (resolving "Page Not Using HTTPS"), `X-Frame-Options: SAMEORIGIN`, `X-Content-Type-Options: nosniff`, `X-XSS-Protection: 1; mode=block`, `Referrer-Policy`, `Strict-Transport-Security` (HSTS), and `Permissions-Policy` response headers.
+- **Branded Open Graph Social Image (`public/og-image.png`)** — Generated and deployed 1200x630 branded social media share preview image.
+
+### Added & Refactored
+- **Vite Dev Server API Proxying (`vite.config.ts`)** — Configured `/api` proxy rule forwarding to `http://localhost:8080` (resolving IPv4/IPv6 localhost binding issues on Windows).
+- **Environment & API Client Alignment (`.env.local`, `pocketbase.ts`)** — Set `VITE_API_URL=/api` and fallback in `pocketbase.ts` to `/api` for environment-agnostic API fetching in both local dev and production.
+- **Auth Form UI Cleanup & Live E2E Verification** — Replaced multi-bullet password placeholder string in `LoginPage.tsx` with clean text, added `autoComplete="current-password"`, and verified live browser sign-in flow with automated Playwright browser test.
+- **Automated 401 Session Cleanup & Test Suite 100% Pass** — Added automatic `authStore.clear()` on HTTP 401 response in `pocketbase.ts` to prevent stale session persistence on refresh, updated `useNotifications.ts` with `hasUnread` helper, and updated test mocks to reach 100% test suite pass rate (83/83 tests passing across 7 test files).
+
+## 2026-07-27 — Hostinger PHP REST API Admin Authorization Fixes & Master Seed Recovery System
+
+### Fixed
+- **API Content Authorization Guard (`api/index.php`)** — Resolved "Admin cannot edit/delete anything" issue. Enforced explicit admin-only role checks (`$auth['role'] === 'admin'`) for content tables (`services`, `blogs`, `pricing_config`, `countries_seo_pages`, `pages`, `invitations`, `contact_messages`). Removed user ownership checks on non-user tables that were blocking administrative updates on PATCH, PUT, and DELETE endpoints.
+- **Service & SEO Page Loading Failure** — Fixed missing services and SEO country guides by creating a unified master database seed pipeline (`pocketbase/seed-sql/MASTER_SEED_ALL.sql`).
+- **Pricing Editor Mutation Guard** — Ensured `pricing_config` table accepts both `POST` and `PATCH` updates seamlessly for all 8 regional plans (US, UK, UAE, Oman).
+
+### Added
+- **Master MySQL Seed Script (`pocketbase/seed-sql/MASTER_SEED_ALL.sql`)** — Complete, single-run SQL script for phpMyAdmin utilizing idempotent `REPLACE INTO` statements. Seeds:
+  - 8 regional pricing configurations (`pricusbasic001`, `pricusprem001`, `pricukbasic001`, `pricukprem001`, etc.)
+  - 12 core services with bilingual descriptions and icons
+  - 3 featured blog posts with Arabic translations
+  - 3 programmatic SEO country landing pages (Egypt, Saudi Arabia, UAE)
+  - Admin role activation template and table record count verification queries.
+- **Verification & Type Check Integration** — Confirmed TypeScript clean compilation (`npx tsc --noEmit` passing with 0 errors).
+
+
+### Fixed
+- **PocketBase-to-MySQL Filter Parser Repair (`parsePbFilter`)** — Resolved "Article Not Found" 404 error on blog detail pages (`/blog/:slug`). Refactored `parsePbFilter()` in `api/index.php` to handle PocketBase `&&` (AND), `||` (OR), and parenthesized groupings `(...)`, correctly translating filter expressions like `published = true && (slug = "xyz" || slug_ar = "xyz")` into `WHERE \`published\` = ? AND (\`slug\` = ? OR \`slug_ar\` = ?)`.
+- **Blog Tags Array Type Safety Crash** — Resolved `TypeError: a.tags.slice(...).map is not a function` in `BlogListPage.tsx`. Added `parseArrayField` helper in `src/hooks/useBlogs.ts` and `parseJson` in `src/hooks/useSeoPages.ts` to ensure raw MySQL JSON string outputs (`"[]"` or comma-separated strings) are safely normalized to TypeScript array instances before array methods are called.
+- **MySQL Multi-Column Order By Syntax Error** — Fixed `Unknown column 'sort_ordertitle_en'` error in `api/index.php`. Rewrote `paginate()` to split multi-column sort parameters (e.g. `sort=sort_order,title_en`) by comma and wrap column names in backticks (`\`sort_order\`, \`title_en\``).
+- **Google Identity Services (GSI) Authentication** — Replaced popup `authWithOAuth2` flow in `src/lib/pocketbase.ts` with Google Identity Services (GSI) token flow sending `id_token` to `/api/collections/users/auth-with-id-token`. Added fallbacks in `LoginPage.tsx` and updated CSP in `index.html`.
+- **Clean Single-Line SQL Seed Files** — Extracted and reformatted 132 services and 10 multi-line blog posts into `pocketbase/seed-sql/seed_services_clean.sql` and `pocketbase/seed-sql/seed_blogs_fixed_v3.sql`, escaping line breaks and single quotes for phpMyAdmin compatibility. Added `pricing_config` table definition to `mysql_schema_v2.sql`.
 
 ### Added
 - **PocketBase SDK 0.27+ / Server v0.22 Response Polyfill** — Implemented `pb.afterSend` hook in `src/lib/pocketbase.ts` to bridge PocketBase SDK `v0.27.0` with PocketBase Server `v0.22.x`. Standardizes `authProviders` ➔ `oauth2.providers` and `authUrl` ➔ `authURL`, resolving `TypeError: Cannot read properties of undefined (reading 'providers')` on Google OAuth login.

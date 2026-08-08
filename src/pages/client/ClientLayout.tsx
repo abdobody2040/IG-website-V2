@@ -28,6 +28,7 @@ function useNavItems(): NavItem[] {
     { label: t.client.nav.documents,     href: '/client/documents',     icon: FileText },
     { label: t.client.nav.mailInbox,     href: '/client/mail-inbox',    icon: Mail },
     { label: t.client.nav.services,      href: '/client/services',      icon: Zap },
+    { label: 'Tracking & Analytics',     href: '/client/tracking',      icon: Zap },
     { label: t.client.nav.verifications, href: '/client/verifications', icon: ShieldCheck },
     { label: 'Workspace Settings',       href: '/client/workspace-settings', icon: Briefcase },
     { label: t.client.nav.notifications, href: '/client/notifications',  icon: Bell },

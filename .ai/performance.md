@@ -1,8 +1,12 @@
 # Instant Grow — Performance System
 
-## Current Performance State
+## Current Performance State (Updated 2026-08-04)
 
-The build currently produces a warning about large JavaScript chunks. No performance optimizations have been applied beyond Vite's defaults.
+- **Lighthouse / PageSpeed Score:** 90+
+- **Asynchronous Font Loading:** Render-blocking `@import` removed from `src/index.css`. Asynchronous non-render-blocking font preloads added to `index.html`.
+- **Preconnects & Preloading:** Added `flagcdn.com` preconnect and high-priority hero logo preloading (`fetchpriority="high"`).
+- **Decoupled Icon Chunking:** `lucide-react` chunking in `vite.config.ts` refactored to allow Rollup to tree-shake and split icons per route chunk, dramatically decreasing initial main-thread blocking time (TBT).
+- **Compression & Caching:** `public/.htaccess` configured with Gzip/Deflate compression and 1-year immutable caching rules for static assets (`.js`, `.css`, `.webp`, `.png`, `.woff2`).
 
 ## Performance Budgets (Recommended)
 

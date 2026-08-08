@@ -62,7 +62,9 @@ describe('Stripe Payments & Workers Integration', () => {
     mockEnv = {
       STRIPE_SECRET_KEY: 'sk_test_key',
       STRIPE_WEBHOOK_SECRET: 'whsec_secret',
-      PB_URL: 'http://localhost:8090',
+      API_URL: 'http://localhost:8080',
+      ADMIN_SECRET: 'ig_sec_8f91a2b3c4d5e6f7a8b9c0d1e2f3a4b5',
+      PB_URL: 'http://localhost:8080',
       PB_ADMIN_EMAIL: process.env.PB_ADMIN_EMAIL || `test_email_${Math.random()}@test.local`,
       PB_ADMIN_PASSWORD: process.env.PB_ADMIN_PASSWORD || `test_password_${Math.random()}`,
       ALLOWED_ORIGIN: 'http://localhost:5173',
@@ -119,7 +121,7 @@ describe('Stripe Payments & Workers Integration', () => {
       }
 
       // Check if order exists (Idempotency)
-      if (url.includes('/api/collections/orders/records')) {
+      if (url.includes('/collections/orders/records')) {
         return Promise.resolve({
           ok: true,
           json: () => Promise.resolve({ items: mockOrderRecords }),
@@ -127,7 +129,7 @@ describe('Stripe Payments & Workers Integration', () => {
       }
 
       // Check if payment exists
-      if (url.includes('/api/collections/payments/records')) {
+      if (url.includes('/collections/payments/records')) {
         return Promise.resolve({
           ok: true,
           json: () => Promise.resolve({ items: mockPaymentRecords }),
@@ -268,14 +270,14 @@ describe('Stripe Payments & Workers Integration', () => {
 
       // Verify that database calls were made for order and payment insertion
       expect(global.fetch).toHaveBeenCalledWith(
-        expect.stringContaining('/api/collections/orders/records'),
+        expect.stringContaining('/webhook/stripe'),
         expect.objectContaining({
           method: 'POST',
           body: expect.stringContaining('Apex Digital LLC'),
         })
       )
       expect(global.fetch).toHaveBeenCalledWith(
-        expect.stringContaining('/api/collections/payments/records'),
+        expect.stringContaining('/webhook/stripe'),
         expect.objectContaining({
           method: 'POST',
           body: expect.stringContaining('pi_intent123'),

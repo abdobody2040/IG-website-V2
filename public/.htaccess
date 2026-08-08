@@ -1,16 +1,67 @@
-# Instant Grow — Hostinger Performance & Caching Configuration
+# Instant Grow — Hostinger Performance, Security & Caching Configuration
+
+# 0. Force HTTPS & Canonical Hostname (301 Redirect)
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  # Force HTTPS or www -> non-www canonical
+  RewriteCond %{HTTPS} off [OR]
+  RewriteCond %{HTTP_HOST} ^www\.instantgrow\.net$ [NC]
+  RewriteRule ^(.*)$ https://instantgrow.net/$1 [L,R=301]
+</IfModule>
 
 # 1. SPA Routing Fallback
 <IfModule mod_rewrite.c>
   RewriteEngine On
   RewriteBase /
   RewriteRule ^index\.html$ - [L]
-  RewriteCond %{REQUEST_FILENAME} !-f
-  RewriteCond %{REQUEST_FILENAME} !-d
+
+  # Don't rewrite real files or directories
+  RewriteCond %{REQUEST_FILENAME} -f [OR]
+  RewriteCond %{REQUEST_FILENAME} -d
+  RewriteRule ^ - [L]
+
+  # ── Pass Authorization header to PHP ─────────────────────────────
+  SetEnvIf Authorization "(.*)" HTTP_AUTHORIZATION=$1
+  RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP_AUTHORIZATION}]
+
+  # ── Dynamic sitemap → PHP API (serves all 500+ URLs from DB) ─────
+  RewriteRule ^sitemap\.xml$ api/index.php [L,QSA]
+  RewriteRule ^sitemap$ api/index.php [L,QSA]
+
+  # ── llms.txt → serve static file ──────────────────────────────────
+  RewriteRule ^llms\.txt$ /llms.txt [L]
+
+  # ── Pass API requests to PHP API ─────────────────────────────────
+  RewriteRule ^api/ - [L]
+
+  # ── NEVER rewrite static asset files to index.html ───────────────
+  RewriteRule ^assets/ - [L]
+  RewriteRule \.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot|webp|json|xml|txt)$ - [L]
+
+  # ── Everything else → React SPA ──────────────────────────────────
   RewriteRule . /index.html [L]
 </IfModule>
 
-# 2. Browser Caching (Expires Headers)
+# 2. Security Headers (fixes X-Frame-Options, HSTS, and more)
+<IfModule mod_headers.c>
+  # Clickjacking protection
+  Header always set X-Frame-Options "SAMEORIGIN"
+  # MIME-type sniffing protection
+  Header always set X-Content-Type-Options "nosniff"
+  # XSS protection (legacy browsers)
+  Header always set X-XSS-Protection "1; mode=block"
+  # Referrer policy
+  Header always set Referrer-Policy "strict-origin-when-cross-origin"
+  # HSTS — force HTTPS for 1 year (enables browser caching of HTTPS preference)
+  Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+  # Permissions policy
+  Header always set Permissions-Policy "camera=(), microphone=(), geolocation=(self), payment=(self)"
+  # Remove server signature
+  Header unset Server
+  Header always unset X-Powered-By
+</IfModule>
+
+# 3. Browser Caching (Expires Headers)
 <IfModule mod_expires.c>
   ExpiresActive On
   ExpiresDefault "access plus 1 month"
@@ -21,16 +72,27 @@
   ExpiresByType text/css "access plus 1 year"
   ExpiresByType application/javascript "access plus 1 year"
   ExpiresByType font/woff2 "access plus 1 year"
+  ExpiresByType application/xml "access plus 1 week"
+  ExpiresByType text/xml "access plus 1 week"
 </IfModule>
 
-# 3. Gzip / Deflate Compression
+# 4. Gzip / Deflate Compression
 <IfModule mod_deflate.c>
-  AddOutputFilterByType DEFLATE text/html text/plain text/xml text/css application/javascript application/json image/svg+xml
+  AddOutputFilterByType DEFLATE text/html text/plain text/xml text/css application/javascript application/json image/svg+xml application/xml
 </IfModule>
 
-# 4. Cache-Control Headers
+# 5. Cache-Control Headers for static assets
 <IfModule mod_headers.c>
   <FilesMatch "\.(webp|png|jpg|jpeg|svg|css|js|woff2)$">
     Header set Cache-Control "public, max-age=31536000, immutable"
   </FilesMatch>
+  <FilesMatch "\.(xml|txt)$">
+    Header set Cache-Control "public, max-age=604800"
+  </FilesMatch>
 </IfModule>
+
+# 6. Block access to sensitive files
+<FilesMatch "\.(env|log|sql|bak|htpasswd|DS_Store)$">
+  Order allow,deny
+  Deny from all
+</FilesMatch>

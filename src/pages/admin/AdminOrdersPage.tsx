@@ -108,8 +108,9 @@ function EditOrderModal({
 
       toast.success('Order updated successfully')
       onSaved()
-    } catch {
-      toast.error('Failed to update order')
+    } catch (err) {
+      console.error('Failed to update order:', err)
+      toast.error(err instanceof Error ? err.message : 'Failed to update order')
     } finally {
       setSaving(false)
     }
@@ -290,18 +291,19 @@ export default function AdminOrdersPage() {
     try {
       await pb.collection('orders').delete(deletingOrder.id)
       logAdminAction({ action: 'delete', tableName: 'orders', recordId: deletingOrder.id });
-      await queryClient.invalidateQueries({ queryKey: ['admin', 'orders'] })
+      await queryClient.invalidateQueries({ queryKey: ['admin'] })
       toast.success('Order deleted')
       setDeletingOrder(null)
-    } catch {
-      toast.error('Failed to delete order')
+    } catch (err) {
+      console.error('Failed to delete order:', err)
+      toast.error(err instanceof Error ? err.message : 'Failed to delete order')
     } finally {
       setDeleteLoading(false)
     }
   }
 
   const handleSaved = async () => {
-    await queryClient.invalidateQueries({ queryKey: ['admin', 'orders'] })
+    await queryClient.invalidateQueries({ queryKey: ['admin'] })
     setEditingOrder(null)
   }
 

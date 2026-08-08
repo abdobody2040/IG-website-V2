@@ -363,5 +363,57 @@
 - Clean, tailored UX for each region.
 - Built-in verification logic preventing 100% single-member ownership when multiple members are active.
 
+---
 
+## ADR-016: Hostinger Shared Hosting + Custom PHP REST API (Active Production)
 
+**Title:** Deploy frontend on Hostinger shared hosting with a custom PHP 8.2 REST API replacing the PocketBase executable binary.
+
+**Status:** Active (Production)
+
+**Why Chosen:**
+- Hostinger shared hosting does not support persistent background processes like PocketBase's executable server.
+- PHP is natively supported by Hostinger with no additional configuration.
+- MySQL is built into Hostinger hPanel with phpMyAdmin and direct connection support.
+- A custom `api/index.php` with PDO provides full control over query logic, auth flow (JWT), and table structures.
+
+**Alternatives Considered:**
+- PocketBase on VPS (DigitalOcean/Hetzner): Requires a separate $5–$10/month server + cron watchdog to restart on crash.
+- Supabase cloud: Monthly cost, vendor lock-in, not compatible with Hostinger shared hosting.
+
+**Pros:**
+- Zero extra cost (MySQL already included in Hostinger plan).
+- No background process management or watchdog scripts required.
+- Full SQL control allows complex cascade deletions, multi-table joins, and custom query logic.
+- Apache/.htaccess can be configured for auth header pass-through, HTTPS enforcement, and caching.
+
+**Cons:**
+- Manual migration from PocketBase SDK patterns to custom REST format required.
+- `parsePbFilter()` and `formatRow()` must be maintained in `api/index.php` to remain compatible with the existing frontend PocketBase SDK client.
+
+**Future Implications:**
+- If traffic scales significantly, can migrate MySQL to a managed cloud DB (PlanetScale, Supabase Postgres, etc.) without frontend changes.
+
+---
+
+## ADR-017: PageSpeed Optimization Strategy (Async Fonts + Code Splitting)
+
+**Title:** Async Google Fonts loading via `<link rel="preload">` + `media` swap trick, and decoupled Vite chunk splitting for third-party icon libraries.
+
+**Status:** Approved (2026-08-04)
+
+**Why Chosen:**
+- Render-blocking `@import url(...)` in `src/index.css` was identified as a critical LCP/FCP bottleneck.
+- Lucide React was bundled monolithically, increasing TBT (Total Blocking Time).
+- PageSpeed score was ~65; target is 90+.
+
+**Changes Applied:**
+1. Removed `@import url(...)` from `src/index.css`.
+2. Added `<link rel="preconnect">` and asynchronous font preload (`media="print" onload="this.media='all'"`) in `index.html`.
+3. Added `preconnect` for `flagcdn.com` (flag images in hero).
+4. Set `fetchpriority="high"` on the hero logo `<img>`.
+5. Decoupled `lucide-react` into its own named chunk in `vite.config.ts` `manualChunks` to enable per-route tree-shaking.
+
+**Trade-offs:**
+- FOUT (Flash of Unstyled Text) may occur for a few milliseconds on slow connections before fonts load; acceptable for performance gains.
+- Requires maintaining async loading pattern in `index.html` instead of simpler CSS imports.

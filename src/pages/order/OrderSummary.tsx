@@ -1,5 +1,6 @@
 import type { Plan, AddOn } from './data'
 import { useLang } from '../../i18n/LanguageContext'
+import { usePricingConfig, resolvePrice } from '../../hooks/usePricingConfig'
 
 export function OrderSummary({
   plan, stateFee, selectedAddOns
@@ -9,9 +10,15 @@ export function OrderSummary({
   selectedAddOns: AddOn[]
 }) {
   const { t } = useLang()
+  const { pricing } = usePricingConfig()
+
   if (!plan) return null
+  const region = plan.region as 'us' | 'uk'
+  const planType = plan.id.endsWith('premium') ? 'premium' : 'basic'
+  const livePrice = resolvePrice(pricing[region]?.[planType] ?? null, region, planType)
+
   const addOnTotal = selectedAddOns.reduce((s, a) => s + a.price, 0)
-  const total = plan.price + stateFee + addOnTotal
+  const total = livePrice + stateFee + addOnTotal
   const planT = t.order.plans[plan.id]
 
   return (
@@ -20,7 +27,7 @@ export function OrderSummary({
       <div className="space-y-2 text-sm">
         <div className="flex justify-between">
           <span className="text-slate-600">{t.order.basePackage}</span>
-          <span className="font-semibold">${plan.price}</span>
+          <span className="font-semibold">${livePrice}</span>
         </div>
         <div className="flex justify-between">
           <span className="text-slate-600">{t.order.stateFeeLabel}</span>

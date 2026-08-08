@@ -1,3 +1,4 @@
+import { Link } from '@tanstack/react-router'
 import { useLang } from '../../i18n/LanguageContext'
 
 export function AuthPanel() {
@@ -27,13 +28,23 @@ export function AuthPanel() {
       </div>
 
       <div className="relative z-10 flex items-center justify-between">
-        <img src="/logo.png" alt="Instant Grow" className="h-10 w-auto" />
+        <Link to="/">
+          <img
+            src="/logo.png"
+            alt="Instant Grow"
+            loading="lazy"
+            decoding="async"
+            className="h-10 w-auto transition-opacity hover:opacity-80"
+            style={{ filter: 'brightness(0) invert(1)' }}
+          />
+        </Link>
         <span className="flex items-center gap-1.5 text-xs font-semibold text-white/50">
           <span className={`cursor-pointer select-none hover:text-white transition-colors ${!isRTL ? 'text-white' : ''}`} onClick={() => { if (isRTL) toggleLang() }}>EN</span>
           <span className="text-white/20">|</span>
           <span className={`cursor-pointer select-none hover:text-white transition-colors ${isRTL ? 'text-white' : ''}`} onClick={() => { if (!isRTL) toggleLang() }}>AR</span>
         </span>
       </div>
+
 
       <div className="relative z-10 space-y-4">
         <h2

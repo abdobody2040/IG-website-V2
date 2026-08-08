@@ -1,7 +1,12 @@
+// src/hooks/useAuth.ts
+// ──────────────────────────────────────────────────────────────────
+// Auth hook — works with the new custom ApiClient (no PocketBase SDK).
+// ──────────────────────────────────────────────────────────────────
+
 import { useState, useEffect } from 'react'
 import { pb } from '../lib/pocketbase'
 import { updateAuthRole } from '../lib/authState'
-import type { RecordModel } from 'pocketbase'
+import type { AuthModel } from '../lib/pocketbase'
 
 export interface AppUser {
   id: string
@@ -21,64 +26,54 @@ interface AuthState {
   signOut: () => Promise<void>
 }
 
-function mapUser(model: RecordModel): AppUser {
-  const email = model['email'] as string | undefined
-  const role = (model['role'] as string | undefined) ?? 'client'
+function mapUser(model: AuthModel): AppUser {
   return {
     id: model.id,
-    email,
-    displayName: (model['display_name'] as string | undefined) ?? email?.split('@')[0],
-    avatarUrl: model['avatar']
-      ? pb.files.getURL(model, model['avatar'] as string)
-      : (model['avatar_url'] as string | undefined),
-    role,
-    phone: model['phone'] as string | undefined,
-    emailVerified: (model['verified'] as boolean | undefined) ?? false,
-    metadata: model['metadata'] as string | undefined,
+    email: model.email,
+    displayName: model.display_name ?? model.name ?? model.email?.split('@')[0],
+    avatarUrl: model.avatar_url ?? undefined,
+    role: model.role ?? 'client',
+    phone: model.phone,
+    emailVerified: model.verified ?? false,
+    metadata: undefined,
   }
 }
 
-/**
- * Update last_sign_in for the current user in PocketBase.
- * Uses sessionStorage to fire only once per browser session, preventing
- * redundant writes and loops when authStore changes fire on refresh.
- */
+/** Update last_sign_in (fire-and-forget, once per browser session) */
 async function syncLastSignIn(userId: string): Promise<void> {
-  const sessionKey = `pb_last_signin_${userId}`
-  if (sessionStorage.getItem(sessionKey)) return
+  const key = `ig_last_signin_${userId}`
+  if (sessionStorage.getItem(key)) return
   try {
-    await pb.collection('users').update(userId, {
-      last_sign_in: new Date().toISOString(),
-    })
-    sessionStorage.setItem(sessionKey, '1')
-  } catch {
-    // Non-critical - don't block auth flow if this update fails
-  }
+    await pb.collection('users').update(userId, { last_sign_in: new Date().toISOString() })
+    sessionStorage.setItem(key, '1')
+  } catch { /* non-critical */ }
 }
 
 export function useAuth(): AuthState {
-  const [user, setUser] = useState<AppUser | null>(() => {
-    if (pb.authStore.isValid && pb.authStore.model) {
-      return mapUser(pb.authStore.model as RecordModel)
-    }
-    return null
-  })
-  const [isLoading, setIsLoading] = useState(!pb.authStore.isValid)
+  // On page refresh: if auth store has a valid (non-expired) token,
+  // pre-populate the user immediately so we never flash "logged out".
+  const initialUser = (pb.authStore.isValid && pb.authStore.model)
+    ? mapUser(pb.authStore.model)
+    : null
+
+  const [user, setUser] = useState<AppUser | null>(initialUser)
+  // Only show loading when there's no stored valid session
+  const [isLoading, setIsLoading] = useState(false)
 
   useEffect(() => {
+    // Sync role into authState immediately from stored model
     if (pb.authStore.isValid && pb.authStore.model) {
-      const appUser = mapUser(pb.authStore.model as RecordModel)
+      const appUser = mapUser(pb.authStore.model)
       updateAuthRole(appUser.role)
       setUser(appUser)
-      setIsLoading(false)
       syncLastSignIn(appUser.id)
     } else {
-      setIsLoading(false)
+      setUser(null)
     }
 
     const unsubscribe = pb.authStore.onChange((_token, model) => {
       if (model) {
-        const appUser = mapUser(model as RecordModel)
+        const appUser = mapUser(model)
         updateAuthRole(appUser.role)
         setUser(appUser)
         syncLastSignIn(appUser.id)
@@ -92,11 +87,6 @@ export function useAuth(): AuthState {
   }, [])
 
   const signOut = async (): Promise<void> => {
-    try {
-      await pb.send('/api/auth/logout', { method: 'POST' })
-    } catch (e) {
-      console.error('Logout error:', e)
-    }
     pb.authStore.clear()
     setUser(null)
   }

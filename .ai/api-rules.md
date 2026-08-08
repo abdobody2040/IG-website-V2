@@ -2,10 +2,11 @@
 
 ## API Architecture
 
-This application has two API layers:
+This application uses a custom **Hostinger PHP MySQL REST API** (`api/index.php`) mimicking PocketBase REST endpoints (`/api/collections/...`):
 
-1. **Supabase Client API** — Direct DB access via RLS (primary data access)
-2. **Edge Functions** — Serverless API endpoints for secure operations
+1. **Custom PHP REST API (`api/index.php`)** — Handles authentication, user management, and collection CRUD endpoints against Hostinger MySQL (MariaDB).
+2. **Dual-Header FastCGI Auth Strategy** — Client calls send auth tokens in both `Authorization: Bearer <token>` AND `X-Auth-Token: Bearer <token>` to bypass FastCGI header stripping on Hostinger Apache.
+3. **Cloudflare Worker Functions** — Serverless endpoints for Stripe Checkout generation and webhook processing.
 
 ## Supabase Client API Patterns
 

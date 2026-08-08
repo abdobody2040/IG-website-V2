@@ -94,8 +94,9 @@ function EditPaymentModal({
       logAdminAction({ action: 'update', tableName: 'payments', recordId: payment.id });
       toast.success('Payment updated successfully')
       onSaved()
-    } catch {
-      toast.error('Failed to update payment')
+    } catch (err) {
+      console.error('Failed to update payment:', err)
+      toast.error(err instanceof Error ? err.message : 'Failed to update payment')
     } finally {
       setSaving(false)
     }
@@ -390,18 +391,19 @@ export default function AdminPaymentsPage() {
     try {
       await pb.collection('payments').delete(deletingPayment.id)
       logAdminAction({ action: 'delete', tableName: 'payments', recordId: deletingPayment.id });
-      await queryClient.invalidateQueries({ queryKey: ['admin', 'payments'] })
+      await queryClient.invalidateQueries({ queryKey: ['admin'] })
       toast.success('Payment record deleted')
       setDeletingPayment(null)
-    } catch {
-      toast.error('Failed to delete payment record')
+    } catch (err) {
+      console.error('Failed to delete payment:', err)
+      toast.error(err instanceof Error ? err.message : 'Failed to delete payment record')
     } finally {
       setDeleteLoading(false)
     }
   }
 
   const handleSaved = async () => {
-    await queryClient.invalidateQueries({ queryKey: ['admin', 'payments'] })
+    await queryClient.invalidateQueries({ queryKey: ['admin'] })
     setEditingPayment(null)
   }
 

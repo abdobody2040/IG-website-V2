@@ -48,7 +48,13 @@ export default function PendingConfirmationPage() {
     }
 
     getLatestOrder()
-    return () => { isMounted = false }
+    const pollTimer = setInterval(() => {
+      getLatestOrder()
+    }, 10_000)
+    return () => { 
+      isMounted = false
+      clearInterval(pollTimer)
+    }
   }, [user, navigate])
 
   const handleCheckStatus = async () => {
@@ -71,11 +77,11 @@ export default function PendingConfirmationPage() {
         navigate({ to: '/client/dashboard' })
       } else {
         // Still pending
-        const latest = res.items[0]
+        const latest = res.items[0] as Record<string, unknown> | undefined
         if (latest) {
           setOrderInfo({
-            orderNumber: latest.order_number,
-            isInvoice: !latest.stripe_session_id,
+            orderNumber: (latest['order_number'] as string) || '',
+            isInvoice: !latest['stripe_session_id'],
           })
         }
       }

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Plus, Search, Edit, Trash2, Briefcase, Loader2, Info } from 'lucide-react'
+import { Plus, Search, Edit, Trash2, Briefcase, Loader2, Info, CheckCircle, AlertCircle } from 'lucide-react'
 import { pb } from '../../lib/pocketbase'
 import { useRequireAdmin } from '../../hooks/useRequireAuth'
 import { invalidateServicesCache, ServiceRecord } from '../../hooks/useServices'
@@ -8,7 +8,23 @@ import { DeleteConfirmModal } from '../../components/DeleteConfirmModal'
 const POPULAR_ICONS = [
   'Calendar', 'RefreshCw', 'Hash', 'FileEdit', 'Award',
   'Building2', 'Landmark', 'CreditCard', 'Shield', 'HeadphonesIcon',
-  'MessageSquare', 'HelpCircle', 'Activity', 'PhoneCall'
+  'MessageSquare', 'HelpCircle', 'Activity', 'PhoneCall', 'Palette',
+  'Laptop', 'TrendingUp', 'BookOpen', 'Bot', 'Code', 'BarChart3', 'GraduationCap'
+]
+
+const CATEGORIES_LIST = [
+  'Business Formation',
+  'Government & Compliance',
+  'Banking & Payments',
+  'Legal Documents',
+  'Branding',
+  'Websites',
+  'Marketing',
+  'Content',
+  'AI Automation',
+  'Software',
+  'Business Consulting',
+  'Education'
 ]
 
 export default function AdminServicesPage() {
@@ -17,11 +33,14 @@ export default function AdminServicesPage() {
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
   const [typeFilter, setTypeFilter] = useState<'all' | 'addon' | 'landing'>('all')
+  const [categoryFilter, setCategoryFilter] = useState<string>('all')
   const [activeFilter, setActiveFilter] = useState<'all' | 'active' | 'inactive'>('all')
 
   const [modalOpen, setModalOpen] = useState(false)
-  const [editingService, setEditingService] = useState<Partial<ServiceRecord> | null>(null)
+  const [editingService, setEditingService] = useState<(Partial<ServiceRecord> & { customId?: string }) | null>(null)
   const [saving, setSaving] = useState(false)
+  const [successMsg, setSuccessMsg] = useState<string | null>(null)
+  const [errorMsg, setErrorMsg] = useState<string | null>(null)
   const [deletingId, setDeletingId] = useState<string | null>(null)
 
   const fetchServices = async () => {
@@ -48,8 +67,11 @@ export default function AdminServicesPage() {
       })
       setServices(prev => prev.map(s => s.id === service.id ? updated : s))
       invalidateServicesCache()
+      setSuccessMsg(`Service "${service.title_en}" ${!service.active ? 'activated' : 'deactivated'}.`)
+      setTimeout(() => setSuccessMsg(null), 3000)
     } catch (err) {
       console.error('Failed to toggle status:', err)
+      setErrorMsg('Failed to update service status.')
     }
   }
 
@@ -60,13 +82,18 @@ export default function AdminServicesPage() {
       setServices(prev => prev.filter(s => s.id !== deletingId))
       setDeletingId(null)
       invalidateServicesCache()
+      setSuccessMsg('Service deleted successfully.')
+      setTimeout(() => setSuccessMsg(null), 3000)
     } catch (err) {
       console.error('Failed to delete service:', err)
+      setErrorMsg('Failed to delete service.')
     }
   }
 
   const handleOpenEdit = (service: ServiceRecord | null) => {
+    setErrorMsg(null)
     setEditingService(service ? { ...service } : {
+      customId: '',
       title_en: '',
       title_ar: '',
       description_en: '',
@@ -85,7 +112,8 @@ export default function AdminServicesPage() {
       type: 'addon',
       color: '#2563EB',
       bg_color: '#EFF6FF',
-      href: ''
+      href: '',
+      category: 'Business Formation'
     })
     setModalOpen(true)
   }
@@ -94,23 +122,34 @@ export default function AdminServicesPage() {
     e.preventDefault()
     if (!editingService) return
     setSaving(true)
+    setErrorMsg(null)
     try {
-      const data = {
-        ...editingService,
+      const { id, created, updated, expand, customId, ...payload } = editingService as any
+      const data: Record<string, any> = {
+        ...payload,
         price: Number(editingService.price || 0),
-        sort_order: Number(editingService.sort_order || 10)
+        sort_order: Number(editingService.sort_order || 10),
+        category: editingService.category || 'Business Formation'
       }
+
       if (editingService.id) {
         await pb.collection('services').update(editingService.id, data)
+        setSuccessMsg(`Updated service "${editingService.title_en}" successfully!`)
       } else {
+        if (customId && customId.trim()) {
+          data.id = customId.trim()
+        }
         await pb.collection('services').create(data)
+        setSuccessMsg(`Created new service "${editingService.title_en}" successfully!`)
       }
       invalidateServicesCache()
       await fetchServices()
       setModalOpen(false)
       setEditingService(null)
-    } catch (err) {
+      setTimeout(() => setSuccessMsg(null), 4000)
+    } catch (err: any) {
       console.error('Failed to save service:', err)
+      setErrorMsg(err?.message || 'Failed to save service. Check field values and try again.')
     }
     setSaving(false)
   }
@@ -119,16 +158,39 @@ export default function AdminServicesPage() {
     const matchesSearch = !search ||
       s.title_en.toLowerCase().includes(search.toLowerCase()) ||
       s.title_ar.includes(search) ||
-      s.description_en.toLowerCase().includes(search.toLowerCase())
+      s.description_en.toLowerCase().includes(search.toLowerCase()) ||
+      (s.category && s.category.toLowerCase().includes(search.toLowerCase()))
     const matchesType = typeFilter === 'all' || s.type === typeFilter
+    const matchesCategory = categoryFilter === 'all' || s.category === categoryFilter
     const matchesActive = activeFilter === 'all' ||
       (activeFilter === 'active' && s.active) ||
       (activeFilter === 'inactive' && !s.active)
-    return matchesSearch && matchesType && matchesActive
+    return matchesSearch && matchesType && matchesCategory && matchesActive
   })
 
   return (
     <div className="max-w-6xl mx-auto space-y-6">
+      {/* Toast Notifications */}
+      {successMsg && (
+        <div className="bg-emerald-50 border border-emerald-200 rounded-xl px-5 py-3.5 text-emerald-800 text-sm font-semibold flex items-center justify-between shadow-sm animate-in fade-in">
+          <div className="flex items-center gap-2">
+            <CheckCircle size={18} className="text-emerald-600 flex-shrink-0" />
+            <span>{successMsg}</span>
+          </div>
+          <button onClick={() => setSuccessMsg(null)} className="text-emerald-500 hover:text-emerald-700">&times;</button>
+        </div>
+      )}
+
+      {errorMsg && (
+        <div className="bg-red-50 border border-red-200 rounded-xl px-5 py-3.5 text-red-800 text-sm font-semibold flex items-center justify-between shadow-sm animate-in fade-in">
+          <div className="flex items-center gap-2">
+            <AlertCircle size={18} className="text-red-600 flex-shrink-0" />
+            <span>{errorMsg}</span>
+          </div>
+          <button onClick={() => setErrorMsg(null)} className="text-red-500 hover:text-red-700">&times;</button>
+        </div>
+      )}
+
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -151,7 +213,7 @@ export default function AdminServicesPage() {
         <div>
           <p className="text-sm font-semibold text-blue-800">Dynamic Content Delivery</p>
           <p className="text-xs text-blue-700 mt-0.5">
-            Services added here will automatically render on the landing page services section (if marked <strong>Landing</strong>) or as buyable items in the client dashboard (if marked <strong>Addon</strong>).
+            Services added here will automatically render on the public site and category pages (assigned to their <strong>Category</strong>) or as buyable items in the client dashboard.
           </p>
         </div>
       </div>
@@ -166,6 +228,18 @@ export default function AdminServicesPage() {
             placeholder="Search services…"
             className="w-full pl-8 pr-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
           />
+        </div>
+        <div>
+          <select
+            value={categoryFilter}
+            onChange={e => setCategoryFilter(e.target.value)}
+            className="text-sm border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
+          >
+            <option value="all">All Categories</option>
+            {CATEGORIES_LIST.map(cat => (
+              <option key={cat} value={cat}>{cat}</option>
+            ))}
+          </select>
         </div>
         <div>
           <select
@@ -202,7 +276,7 @@ export default function AdminServicesPage() {
           <Briefcase size={40} className="text-slate-300 mx-auto mb-4" />
           <h3 className="font-semibold text-slate-900 mb-1">No services found</h3>
           <p className="text-slate-500 text-sm">
-            {search || typeFilter !== 'all' || activeFilter !== 'all' ? 'Try adjusting your filters' : 'Add your first service to get started'}
+            {search || typeFilter !== 'all' || activeFilter !== 'all' || categoryFilter !== 'all' ? 'Try adjusting your filters' : 'Add your first service to get started'}
           </p>
         </div>
       ) : (
@@ -212,6 +286,7 @@ export default function AdminServicesPage() {
               <thead className="bg-slate-50 text-slate-600 text-xs uppercase tracking-wider border-b border-slate-200">
                 <tr>
                   <th className="px-6 py-4 font-semibold">Service Name</th>
+                  <th className="px-6 py-4 font-semibold">Category</th>
                   <th className="px-6 py-4 font-semibold">Type</th>
                   <th className="px-6 py-4 font-semibold">Pricing</th>
                   <th className="px-6 py-4 font-semibold">Sort Order</th>
@@ -225,13 +300,18 @@ export default function AdminServicesPage() {
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
                         <div className="w-9 h-9 rounded-lg flex items-center justify-center font-bold text-slate-700 bg-slate-100 flex-shrink-0">
-                          {service.icon.slice(0, 2)}
+                          {service.icon ? service.icon.slice(0, 2) : 'S'}
                         </div>
                         <div>
                           <p className="text-sm font-semibold text-slate-900">{service.title_en}</p>
                           <p className="text-xs text-slate-400 font-medium">{service.title_ar}</p>
                         </div>
                       </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className="inline-block text-xs font-medium px-2.5 py-1 rounded-md bg-slate-100 text-slate-700 border border-slate-200">
+                        {service.category || 'General'}
+                      </span>
                     </td>
                     <td className="px-6 py-4">
                       <span className={`inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-full border ${
@@ -293,14 +373,38 @@ export default function AdminServicesPage() {
           <div className="bg-white rounded-2xl border border-slate-200 shadow-xl max-w-2xl w-full max-h-[90vh] flex flex-col">
             <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between flex-shrink-0">
               <h3 className="font-bold text-slate-900">
-                {editingService.id ? 'Edit Service' : 'Add New Service'}
+                {editingService.id ? `Edit Service: ${editingService.title_en || editingService.id}` : 'Add New Service'}
               </h3>
               <button onClick={() => setModalOpen(false)} className="text-slate-400 hover:text-slate-600 font-semibold">&times;</button>
             </div>
             
             <form onSubmit={e => void handleSave(e)} className="flex-1 overflow-y-auto p-6 space-y-6">
-              {/* Type Selection */}
-              <div className="grid grid-cols-2 gap-4">
+
+              {/* ID / Category / Type Header Row */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {!editingService.id && (
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-600 mb-1.5">Custom ID / Slug (Optional)</label>
+                    <input
+                      value={editingService.customId || ''}
+                      onChange={e => setEditingService(prev => ({ ...prev, customId: e.target.value }))}
+                      className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm"
+                      placeholder="e.g. custom-service-id"
+                    />
+                  </div>
+                )}
+                <div>
+                  <label className="block text-xs font-semibold text-slate-600 mb-1.5">Category</label>
+                  <select
+                    value={editingService.category || 'Business Formation'}
+                    onChange={e => setEditingService(prev => ({ ...prev, category: e.target.value }))}
+                    className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-400 font-medium"
+                  >
+                    {CATEGORIES_LIST.map(cat => (
+                      <option key={cat} value={cat}>{cat}</option>
+                    ))}
+                  </select>
+                </div>
                 <div>
                   <label className="block text-xs font-semibold text-slate-600 mb-1.5">Service Type</label>
                   <select

@@ -277,7 +277,7 @@ export const translations = {
       disclaimer:
         'Instant Grow is not a law firm and does not provide legal advice. Formation services are provided for informational purposes only.',
       company: [
-        { label: 'About Us', href: '#' },
+        { label: 'About Us', href: '/about' },
         { label: 'Careers', href: '#' },
         { label: 'Blog', href: '/blog' },
         { label: 'Partners', href: '#' },
@@ -1033,7 +1033,7 @@ export const translations = {
       disclaimer:
         'Instant Grow ليست شركة محاماة ولا تقدم استشارات قانونية. خدمات التأسيس مقدمة لأغراض إعلامية فقط.',
       company: [
-        { label: 'من نحن', href: '#' },
+        { label: 'من نحن', href: '/about' },
         { label: 'الوظائف', href: '#' },
         { label: 'المدونة', href: '/blog' },
         { label: 'الشركاء', href: '#' },

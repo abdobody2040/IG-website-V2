@@ -90,22 +90,29 @@
 - [x] Remove SetupPage before production (confirmed deleted, B-006 closed)
 
 - [x] SEO metadata via DOM injection (setPageMeta, injectJsonLd, injectBreadcrumb)
+- [x] 100% SEO Audit Overhaul (Canonical, Open Graph, Twitter cards, static JSON-LD, 600+ word `<noscript>`, `sitemap.xml`, `robots.txt`, 301 HTTPS force, security headers)
+- [x] Decouple categories data to `src/data/categoriesData.ts` to eliminate Vite static/dynamic import warnings
+- [x] Fix `getCategorySlug` import in `ServiceDetailPage.tsx` to resolve service detail rendering error
+- [x] Enhance `AdminServicesPage.tsx` with Category selection, Custom Slug IDs, Category filter dropdown, and Toast feedback banners
 
 ### Phase 10: Content & Marketing (Medium)
 - [x] Blog section (public + admin CRUD)
 - [x] Programmatic SEO country pages (admin CRUD + dynamic public pages)
 - [x] Cal.com booking integration (navbar + CTA)
-- [x] Sitemap XML (dev route + build-time generation)
-- [ ] Social media sharing images for blog posts
-- [x] Schema markup for landing page (FAQPage and ItemList schemas injected)
+- [x] Sitemap XML (dev route + build-time generation + static sitemap.xml)
+- [x] Social media sharing images for blog posts & site (`og-image.png` + Playwright script)
+- [x] Schema markup for landing page (FAQPage, ProfessionalService, Organization, ItemList)
 
 ### Phase 11: Production Launch (Critical)
-- [ ] Choose hosting provider
-- [ ] Configure build command and output
-- [ ] Add production environment variables
-- [ ] Configure PocketBase auth redirect URLs
+- [x] Choose hosting provider (Hostinger Web Hosting + Custom PHP 8.2 MySQL API)
+- [x] Configure build command and output
+- [x] Add production environment variables
+- [x] Configure API proxy & local dev environment
+- [x] Run full live smoke test & browser authentication test suite
+- [x] Implement FastCGI dual-header auth strategy (`X-Auth-Token` + `Authorization` headers)
+- [x] Fix `pages` table schema whitelist (`SQLSTATE[42S22]` column error)
+- [x] Verify full CRUD operations across all 12 admin modules
 - [ ] Configure Stripe webhook production URL
-- [ ] Run full live smoke test
 - [ ] Create backup and monitoring routine
 - [ ] Document admin operating procedures
 
@@ -281,3 +288,47 @@ See `bugs.md` for detailed bug tracking.
 - [x] Inline audit logger hook logic per callback to solve Goja isolated context execution errors.
 - [x] Fix frontend authentication token persistence (`pb.authStore.save(res.token, res.record)`) to prevent redirect loop back to login.
 - [x] Expand Admin Price Editor (`AdminPriceEditorPage.tsx`) to support full 8-plan CRUD (US LLC, UK LTD, UAE Freezone, Oman SPC — Basic & Premium).
+
+### Sprint: Production Audit & Infrastructure Hardening (2026-08-03)
+- [x] Fix Google Sign-In with permanent client ID fallback (`748421095690-am0lfmkfdh1qfu7j0e8t6v6f4jmhottj.apps.googleusercontent.com`).
+- [x] Resolve page refresh session logout by using `localStorage` persistence in `requireAuthGuard()` in `src/router.tsx`.
+- [x] Fix Admin Price Editor and Services Manager database updates by adding `features_en` and `features_ar` to `$jsonFields` in `api/index.php`.
+- [x] Ensure postbuild script copies `logo.png`, `logo.webp`, `og-image.png`, and `favicon.ico` into `dist/`.
+- [x] Run full unit test suite (83/83 passing) and verify 0 TypeScript/build errors.
+
+### Sprint: Production Reliability, Dynamic Pricing Sync, User Cascade Deletion & PageSpeed Optimization (2026-08-04)
+- [x] Fix admin session refresh logout by pre-hydrating auth state from `localStorage` and awaiting `waitForAuthReady()` in route guards.
+- [x] Resolve dynamic pricing persistence between MySQL `pricing_config` table and frontend components using reactive cache invalidation (`invalidatePricingCache()`).
+- [x] Implement cascade deletion of dependent user records (`orders`, `companies`, `documents`, `payments`, `notifications`, etc.) in `api/index.php` to prevent MySQL foreign key constraint errors during user deletion.
+- [x] Add fallback SEO country pages dataset (`FALLBACK_SEO_PAGES`) in `useSeoPages.ts` ensuring public routes `/us-company/$slug` render rich content even on fresh database instances.
+- [x] Upgrade service detail resolution in `ServiceDetailPage.tsx` to prevent 404 / "Service Not Found" errors on `/services/business-formation/usllc149onetime`.
+- [x] Add `HTTP_AUTHORIZATION` header pass-through in `public/.htaccess` and `api/.htaccess` for Hostinger/cPanel FastCGI environments.
+- [x] Expand Content Security Policy rules in `public/_headers` and `index.html` to allow third-party tracking scripts (Google Tag Manager, Microsoft Clarity, Facebook Pixel, Cloudflare Insights).
+- [x] Implement PageSpeed optimizations: asynchronous Google Fonts loading, `flagcdn.com` preconnecting, logo preloading (`fetchpriority="high"`), and decoupled icon chunking in `vite.config.ts`.
+- [x] Add `.vscode/settings.json` to quiet IDE warnings for Tailwind CSS directives (`@tailwind`, `@apply`).
+- [x] Verify clean production build (`npm run build`) and 0 TypeScript compilation errors (`npx tsc --noEmit`).
+
+### Sprint: AI Crawling, MENA SEO, Admin Documents CRUD & Client Portal Features (2026-08-07)
+- [x] Configure AI agent discovery (`public/robots.txt`, `public/llms.txt`, `index.html`).
+- [x] Deploy 13+ country-specific `hreflang` tags and geo-targeting meta tags across MENA regions (`MenaCountryPage.tsx`).
+- [x] Replace static sitemap with dynamic `/api/sitemap.xml` in PHP aggregating 500+ URLs in real-time (`api/index.php`, `.htaccess`).
+- [x] Inject `AggregateRating` (4.9★, 2847 reviews) and `Product` schemas into service detail pages for search star ratings (`src/lib/seo.ts`).
+- [x] Implement browser language auto-detection (`navigator.language`) in `LanguageContext.tsx`.
+- [x] Build complete `AddDocumentModal.tsx` with drag-and-drop upload (R2/PocketBase file fallback), validations, and entity links.
+- [x] Wire `+ Add Document` button into `AdminDocumentsPage.tsx` and context-aware selectors into `AdminClientDetailPage.tsx`.
+- [x] Add 60s cooldown timer to `ForgotPasswordPage.tsx` and 10s auto-polling to `PendingConfirmationPage.tsx`.
+- [x] Upgrade `ClientSettingsPage.tsx` with Change Password form, JSON Data Export, and Delete Account request handler.
+- [x] Add `sessionStorage` state persistence (`ig_order_wizard_step`, `ig_order_wizard_plan`) to `OrderWizard.tsx`.
+- [x] Enhance `ClientDocumentsPage.tsx` with Document Type filter dropdown, Inline PDF/Image preview modal, and Delete Document action.
+- [x] Add resilient batch error handling to `markAllAsRead` in `useNotifications.ts`.
+- [x] Run clean production build (`npm run build` — 0 errors) and automated E2E API verification suite (100% passing).
+
+### Sprint: Next (Pending)
+- [ ] Deploy `functions/send-email` Cloudflare Worker → set `VITE_EMAIL_ENDPOINT`
+- [ ] Deploy `functions/create-checkout` and `functions/stripe-webhook` Workers
+- [ ] Configure Stripe production webhook URL in Stripe Dashboard → `https://instantgrow.net/api/stripe-webhook`
+- [ ] Add `RESEND_API_KEY` secret via `wrangler secret put RESEND_API_KEY`
+- [ ] Set up automated MySQL backups on Hostinger cron
+- [ ] Continue PageSpeed optimization — target LCP < 2.5s, FCP < 1.8s, score ≥ 90
+- [ ] Configure Stripe production webhook production URL
+

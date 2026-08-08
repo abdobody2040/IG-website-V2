@@ -1,0 +1,35 @@
+# api/.htaccess — Hostinger shared hosting Apache config
+
+# 1. Restrict execution
+Options -Indexes -ExecCGI
+
+# 2. CGIPassAuth: CRITICAL for Hostinger FastCGI/PHP-FPM
+# Without this, Apache strips the Authorization header before PHP sees it.
+# This is the root cause of all 401 errors on CRUD write operations.
+CGIPassAuth On
+
+# 3. Route every request to index.php (REST routing)
+RewriteEngine On
+RewriteBase /api/
+
+# Pass Authorization header to PHP via ALL known mechanisms.
+# Hostinger may use any of these depending on server configuration:
+SetEnvIf Authorization "(.*)" HTTP_AUTHORIZATION=$1
+RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+
+# Route all non-file requests to index.php
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteRule ^(.*)$ index.php [QSA,L]
+
+# 4. CORS headers at Apache level — needed for OPTIONS preflight
+# on Hostinger configs where OPTIONS may not reach PHP.
+# These are safe to have alongside index.php's CORS headers.
+Header always set Access-Control-Allow-Origin "*"
+Header always set Access-Control-Allow-Methods "GET, POST, PUT, PATCH, DELETE, OPTIONS"
+Header always set Access-Control-Allow-Headers "Authorization, Content-Type, X-Admin-Secret, X-Auth-Token, X-Requested-With"
+Header always set Access-Control-Max-Age "86400"
+
+# 5. Block direct access to config.php
+<Files "config.php">
+  Require all denied
+</Files>

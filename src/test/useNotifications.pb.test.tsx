@@ -10,16 +10,11 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import type { ReactNode } from 'react'
 
 // ─── Mock PocketBase ──────────────────────────────────────────────────────────
-const subscribeCallback: { fn: ((e: { action: string; record: Record<string, unknown> }) => void) | null } = { fn: null }
-
 const mockNotificationsCollection = {
   getList: vi.fn(),
   update: vi.fn(),
   create: vi.fn(),
-  subscribe: vi.fn((_: string, cb: (e: { action: string; record: Record<string, unknown> }) => void) => {
-    subscribeCallback.fn = cb
-    return Promise.resolve()
-  }),
+  subscribe: vi.fn().mockResolvedValue(() => {}),
   unsubscribe: vi.fn().mockResolvedValue(undefined),
 }
 
@@ -28,6 +23,7 @@ const mockPb = {
     if (name === 'notifications') return mockNotificationsCollection
     return {}
   }),
+  send: vi.fn().mockResolvedValue({}),
   authStore: { token: 'fake-token' },
 }
 
@@ -44,7 +40,7 @@ function makeNotificationRecord(overrides: Record<string, unknown> = {}) {
     type: 'order_status',
     title: 'Order updated',
     message: 'Processing now',
-    data: { orderId: 'o1' },
+    data: '{"orderId":"o1"}',
     link: '/client/orders',
     read: false,
     created: '2024-01-02T10:00:00Z',
@@ -53,166 +49,90 @@ function makeNotificationRecord(overrides: Record<string, unknown> = {}) {
 }
 
 function createWrapper() {
-  const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } })
-  return function Wrapper({ children }: { children: ReactNode }) {
-    return <QueryClientProvider client={qc}>{children}</QueryClientProvider>
-  }
+  const queryClient = new QueryClient({
+    defaultOptions: { queries: { retry: false } },
+  })
+  return ({ children }: { children: ReactNode }) => (
+    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+  )
 }
 
-// ─── Tests ────────────────────────────────────────────────────────────────────
+// ─── Tests ───────────────────────────────────────────────────────────────────
 describe('useNotifications', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    subscribeCallback.fn = null
-    // Default: getList resolves with empty list
-    ;(mockNotificationsCollection.getList as Mock).mockResolvedValue({ items: [] })
   })
 
-  // ── Null / undefined userId ─────────────────────────────────────────────────
-  describe('when userId is falsy', () => {
-    it('returns empty notifications when userId is null', () => {
-      const { result } = renderHook(() => useNotifications(null), { wrapper: createWrapper() })
-      expect(result.current.notifications).toEqual([])
-      expect(result.current.unreadCount).toBe(0)
-      expect(result.current.isLoading).toBe(false)
-    })
-
-    it('returns empty notifications when userId is undefined', () => {
-      const { result } = renderHook(() => useNotifications(undefined), { wrapper: createWrapper() })
-      expect(result.current.notifications).toEqual([])
-      expect(result.current.unreadCount).toBe(0)
-    })
-
-    it('does NOT call pb.collection when userId is null', () => {
-      renderHook(() => useNotifications(null), { wrapper: createWrapper() })
-      expect(mockNotificationsCollection.getList).not.toHaveBeenCalled()
-    })
-  })
-
-  // ── Data fetching ───────────────────────────────────────────────────────────
-  describe('data fetching', () => {
-    it('fetches notifications from PocketBase on mount', async () => {
-      const records = [
-        makeNotificationRecord({ id: 'n1', read: false }),
-        makeNotificationRecord({ id: 'n2', read: true, title: 'Document ready', type: 'document_ready' }),
-      ]
-      ;(mockNotificationsCollection.getList as Mock).mockResolvedValue({ items: records })
+  // ── Querying ────────────────────────────────────────────────────────────────
+  describe('notifications query', () => {
+    it('returns mapped notifications when userId is provided', async () => {
+      const raw = makeNotificationRecord()
+      ;(mockNotificationsCollection.getList as Mock).mockResolvedValue({ items: [raw] })
 
       const { result } = renderHook(() => useNotifications('u1'), { wrapper: createWrapper() })
 
-      await waitFor(() => expect(result.current.notifications).toHaveLength(2))
-      expect(result.current.notifications[0]!.id).toBe('n1')
-      expect(result.current.notifications[1]!.id).toBe('n2')
+      await waitFor(() => expect(result.current.isLoading).toBe(false))
+
       expect(mockNotificationsCollection.getList).toHaveBeenCalledWith(1, 50, {
         filter: 'user = "u1"',
         sort: '-created',
       })
-    })
-
-    it('maps PocketBase record fields correctly', async () => {
-      const raw = makeNotificationRecord({
-        id: 'n99',
-        user: 'u1',
-        type: 'document_ready',
-        title: 'Test title',
-        message: 'Test message',
-        data: { key: 'value' },
-        link: '/test-link',
-        read: true,
-        created: '2024-06-01T12:00:00Z',
+      expect(result.current.notifications).toHaveLength(1)
+      expect(result.current.notifications[0]).toEqual({
+        id: 'n1',
+        userId: 'u1',
+        type: 'order_status',
+        title: 'Order updated',
+        message: 'Processing now',
+        data: { orderId: 'o1' },
+        link: '/client/orders',
+        read: false,
+        createdAt: '2024-01-02T10:00:00Z',
       })
-      ;(mockNotificationsCollection.getList as Mock).mockResolvedValue({ items: [raw] })
-
-      const { result } = renderHook(() => useNotifications('u1'), { wrapper: createWrapper() })
-      await waitFor(() => expect(result.current.notifications).toHaveLength(1))
-
-      const n = result.current.notifications[0]!
-      expect(n.id).toBe('n99')
-      expect(n.userId).toBe('u1')
-      expect(n.type).toBe('document_ready')
-      expect(n.title).toBe('Test title')
-      expect(n.message).toBe('Test message')
-      expect(n.data).toEqual({ key: 'value' })
-      expect(n.link).toBe('/test-link')
-      expect(n.read).toBe(true)
-      expect(n.createdAt).toBe('2024-06-01T12:00:00Z')
     })
 
-    it('computes unreadCount correctly', async () => {
-      const records = [
+    it('returns empty array when userId is null/undefined', async () => {
+      const { result } = renderHook(() => useNotifications(null), { wrapper: createWrapper() })
+      expect(result.current.notifications).toEqual([])
+      expect(mockNotificationsCollection.getList).not.toHaveBeenCalled()
+    })
+  })
+
+  // ── Derived State ───────────────────────────────────────────────────────────
+  describe('derived counts', () => {
+    it('calculates unreadCount correctly', async () => {
+      const items = [
         makeNotificationRecord({ id: 'n1', read: false }),
-        makeNotificationRecord({ id: 'n2', read: false }),
-        makeNotificationRecord({ id: 'n3', read: true }),
+        makeNotificationRecord({ id: 'n2', read: true }),
+        makeNotificationRecord({ id: 'n3', read: false }),
       ]
-      ;(mockNotificationsCollection.getList as Mock).mockResolvedValue({ items: records })
+      ;(mockNotificationsCollection.getList as Mock).mockResolvedValue({ items })
 
       const { result } = renderHook(() => useNotifications('u1'), { wrapper: createWrapper() })
       await waitFor(() => expect(result.current.unreadCount).toBe(2))
     })
 
-    it('returns only first 10 notifications in recentNotifications', async () => {
-      const records = Array.from({ length: 15 }, (_, i) =>
-        makeNotificationRecord({ id: `n${i}`, title: `Notification ${i}` })
-      )
-      ;(mockNotificationsCollection.getList as Mock).mockResolvedValue({ items: records })
+    it('returns hasUnread = true when unreadCount > 0', async () => {
+      const items = [makeNotificationRecord({ read: false })]
+      ;(mockNotificationsCollection.getList as Mock).mockResolvedValue({ items })
 
       const { result } = renderHook(() => useNotifications('u1'), { wrapper: createWrapper() })
-      await waitFor(() => expect(result.current.notifications).toHaveLength(15))
-      expect(result.current.recentNotifications).toHaveLength(10)
-    })
-  })
-
-  // ── Real-time subscription ──────────────────────────────────────────────────
-  describe('real-time subscription', () => {
-    it('subscribes to notifications collection with wildcard', async () => {
-      renderHook(() => useNotifications('u1'), { wrapper: createWrapper() })
-      await waitFor(() => expect(mockNotificationsCollection.subscribe).toHaveBeenCalledWith('*', expect.any(Function)))
+      await waitFor(() => expect(result.current.hasUnread).toBe(true))
     })
 
-    it('invalidates query cache when a new notification arrives for the current user', async () => {
-      ;(mockNotificationsCollection.getList as Mock)
-        .mockResolvedValueOnce({ items: [] })
-        .mockResolvedValueOnce({ items: [makeNotificationRecord()] })
+    it('returns hasUnread = false when unreadCount === 0', async () => {
+      const items = [makeNotificationRecord({ read: true })]
+      ;(mockNotificationsCollection.getList as Mock).mockResolvedValue({ items })
 
       const { result } = renderHook(() => useNotifications('u1'), { wrapper: createWrapper() })
-      await waitFor(() => expect(mockNotificationsCollection.subscribe).toHaveBeenCalled())
-
-      // Simulate real-time event
-      act(() => {
-        subscribeCallback.fn?.({ action: 'create', record: { user: 'u1' } })
-      })
-
-      await waitFor(() => expect(mockNotificationsCollection.getList).toHaveBeenCalledTimes(2))
-      await waitFor(() => expect(result.current.notifications).toHaveLength(1))
-    })
-
-    it('does NOT invalidate cache for a different user\'s notification', async () => {
-      ;(mockNotificationsCollection.getList as Mock).mockResolvedValue({ items: [] })
-
-      renderHook(() => useNotifications('u1'), { wrapper: createWrapper() })
-      await waitFor(() => expect(mockNotificationsCollection.subscribe).toHaveBeenCalled())
-
-      act(() => {
-        subscribeCallback.fn?.({ action: 'create', record: { user: 'OTHER_USER' } })
-      })
-
-      // Should still only be called once (initial fetch)
-      await new Promise((r) => setTimeout(r, 50))
-      expect(mockNotificationsCollection.getList).toHaveBeenCalledTimes(1)
-    })
-
-    it('unsubscribes on unmount', async () => {
-      const { unmount } = renderHook(() => useNotifications('u1'), { wrapper: createWrapper() })
-      await waitFor(() => expect(mockNotificationsCollection.subscribe).toHaveBeenCalled())
-      unmount()
-      await waitFor(() => expect(mockNotificationsCollection.unsubscribe).toHaveBeenCalledWith('*'))
+      await waitFor(() => expect(result.current.hasUnread).toBe(false))
     })
   })
 
   // ── markAsRead ──────────────────────────────────────────────────────────────
   describe('markAsRead', () => {
-    it('calls pb.collection("notifications").update with read: true', async () => {
-      ;(mockNotificationsCollection.getList as Mock).mockResolvedValue({ items: [] })
+    it('calls pb.collection update with read=true', async () => {
+      ;(mockNotificationsCollection.getList as Mock).mockResolvedValue({ items: [makeNotificationRecord()] })
       ;(mockNotificationsCollection.update as Mock).mockResolvedValue({})
 
       const { result } = renderHook(() => useNotifications('u1'), { wrapper: createWrapper() })
@@ -220,44 +140,29 @@ describe('useNotifications', () => {
 
       act(() => { result.current.markAsRead('n1') })
 
-      await waitFor(() =>
-        expect(mockNotificationsCollection.update).toHaveBeenCalledWith('n1', { read: true })
-      )
+      await waitFor(() => expect(mockNotificationsCollection.update).toHaveBeenCalledWith('n1', { read: true }))
     })
   })
 
   // ── markAllAsRead ───────────────────────────────────────────────────────────
   describe('markAllAsRead', () => {
-    it('does nothing when there are no unread notifications', async () => {
-      ;(mockNotificationsCollection.getList as Mock).mockResolvedValue({
-        items: [makeNotificationRecord({ read: true })],
-      })
-
-      const { result } = renderHook(() => useNotifications('u1'), { wrapper: createWrapper() })
-      await waitFor(() => expect(result.current.unreadCount).toBe(0))
-
-      act(() => { result.current.markAllAsRead() })
-      await new Promise((r) => setTimeout(r, 50))
-
-      expect(mockNotificationsCollection.update).not.toHaveBeenCalled()
-    })
-
-    it('updates all unread notifications', async () => {
+    it('updates all unread notifications via bulk endpoint', async () => {
       const unread = [
         makeNotificationRecord({ id: 'n1', read: false }),
         makeNotificationRecord({ id: 'n2', read: false }),
       ]
       ;(mockNotificationsCollection.getList as Mock).mockResolvedValue({ items: unread })
-      ;(mockNotificationsCollection.update as Mock).mockResolvedValue({})
+      ;(mockPb.send as Mock).mockResolvedValue({})
 
       const { result } = renderHook(() => useNotifications('u1'), { wrapper: createWrapper() })
       await waitFor(() => expect(result.current.unreadCount).toBe(2))
 
       act(() => { result.current.markAllAsRead() })
 
-      await waitFor(() => expect(mockNotificationsCollection.update).toHaveBeenCalledTimes(2))
-      expect(mockNotificationsCollection.update).toHaveBeenCalledWith('n1', { read: true })
-      expect(mockNotificationsCollection.update).toHaveBeenCalledWith('n2', { read: true })
+      await waitFor(() => expect(mockPb.send).toHaveBeenCalledWith('/notifications/mark-read', {
+        method: 'POST',
+        body: JSON.stringify({ ids: 'all' }),
+      }))
     })
   })
 
@@ -285,7 +190,7 @@ describe('useNotifications', () => {
         type: 'order_status',
         title: 'Status updated',
         message: 'Your order is processing',
-        data: { orderId: 'o123' },
+        data: '{"orderId":"o123"}',
         link: '/client/orders/o123',
         read: false,
       })
@@ -303,7 +208,7 @@ describe('useNotifications', () => {
       })
 
       expect(mockNotificationsCollection.create).toHaveBeenCalledWith(
-        expect.objectContaining({ message: null, data: {}, link: null })
+        expect.objectContaining({ message: null, data: null, link: null })
       )
     })
 

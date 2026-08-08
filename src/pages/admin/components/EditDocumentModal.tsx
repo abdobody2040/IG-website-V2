@@ -12,14 +12,13 @@ export function EditDocumentModal({ doc, onClose, onSaved }: { doc: Document; on
   async function handleSave() {
     setSaving(true)
     try {
-      const { error: updateErr } = await pb.collection('documents').update(doc.id, {
+      await pb.collection('documents').update(doc.id, {
         name: form.name,
         doc_type: form.docType,
         file_url: form.fileUrl,
         status: form.status,
         updated_at: new Date().toISOString(),
       })
-      if (updateErr) throw updateErr
       toast.success('Document updated')
       onSaved()
       onClose()

@@ -14,17 +14,16 @@ export function EditUserDrawer({ user, onClose, onSaved }: { user: DBUser; onClo
   })
   const [saving, setSaving] = useState(false)
 
-  async function handleSave() {
+    async function handleSave() {
     setSaving(true)
     try {
-      const { error: updateErr } = await pb.collection('profiles').update(user.id, {
+      await pb.collection('users').update(user.id, {
         display_name: form.displayName,
         email: form.email,
         phone: form.phone,
         role: form.role,
         updated_at: new Date().toISOString(),
       })
-      if (updateErr) throw updateErr
       toast.success('User updated')
       onSaved()
       onClose()

@@ -34,3 +34,8 @@ dist-ssr
 # PocketBase local database
 pocketbase/pb_data/
 
+# Scratch & build archives
+scratch/
+dist.zip
+
+

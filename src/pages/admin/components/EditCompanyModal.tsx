@@ -33,7 +33,7 @@ export function EditCompanyModal({ company, onClose, onSaved }: { company: Compa
   async function handleSave() {
     setSaving(true)
     try {
-      const { error: updateErr } = await pb.collection('companies').update(company.id, {
+      await pb.collection('companies').update(company.id, {
         company_name: form.companyName,
         company_type: form.companyType,
         state: form.state,
@@ -43,7 +43,6 @@ export function EditCompanyModal({ company, onClose, onSaved }: { company: Compa
         status: form.status,
         updated_at: new Date().toISOString(),
       })
-      if (updateErr) throw updateErr
       toast.success('Company updated')
       onSaved()
       onClose()

@@ -13,31 +13,39 @@ export default defineConfig({
     port: 3000,
     strictPort: true,
     proxy: {
-      // Proxy all PocketBase API calls through Vite dev server to avoid
-      // cross-port CORS/shield blocking in browsers like Brave.
-      '/pb-api': {
-        target: 'http://127.0.0.1:8090',
+      '/api': {
+        target: 'http://localhost:8080',
         changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/pb-api/, ''),
+        rewrite: (p) => p.replace(/^\/api/, ''),
       },
     },
   },
   build: {
-    target: 'es2020',
+    target: 'esnext',
     minify: 'esbuild',
     cssCodeSplit: true,
-    chunkSizeWarningLimit: 1000,
+    sourcemap: false,
+    chunkSizeWarningLimit: 600,
     rollupOptions: {
       output: {
         manualChunks(id) {
-          if (id.includes('node_modules')) {
-            if (id.includes('recharts')) return 'vendor-recharts';
-            if (id.includes('framer-motion')) return 'vendor-framer';
-            if (id.includes('pocketbase')) return 'vendor-pocketbase';
-            if (id.includes('lucide-react')) return 'vendor-icons';
-            if (id.includes('@tanstack')) return 'vendor-tanstack';
-            if (id.includes('lenis')) return 'vendor-lenis';
+          if (!id.includes('node_modules')) {
+            // Keep servicesExtendedData out of main bundle (112 KB static data)
+            if (id.includes('servicesExtendedData')) return 'data-services';
+            return;
           }
+          // Recharts — only used in admin pages, never on public pages
+          if (id.includes('recharts') || (id.includes('d3-') && !id.includes('d3-color'))) return 'vendor-recharts';
+          // Framer Motion — needed on homepage
+          if (id.includes('framer-motion')) return 'vendor-framer';
+          // TanStack router + query
+          if (id.includes('@tanstack')) return 'vendor-tanstack';
+          // Lenis smooth scroll
+          if (id.includes('lenis')) return 'vendor-lenis';
+          // DOMPurify — only needed on blog/content pages
+          if (id.includes('dompurify') || id.includes('purify.es')) return 'vendor-purify';
+          // Zod + validation
+          if (id.includes('zod')) return 'vendor-zod';
         },
       },
     },

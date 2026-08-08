@@ -1,6 +1,7 @@
 import { Check } from 'lucide-react'
 import { useLang } from '../../i18n/LanguageContext'
 import { PLANS } from './data'
+import { usePricingConfig, resolvePrice } from '../../hooks/usePricingConfig'
 
 export function StepServicePackage({
   planId, setPlanId
@@ -9,6 +10,7 @@ export function StepServicePackage({
   setPlanId: (id: string) => void
 }) {
   const { t } = useLang()
+  const { pricing } = usePricingConfig()
   const isUk = planId.startsWith('uk')
   const filtered = PLANS.filter(p => p.region === (isUk ? 'uk' : 'us'))
 
@@ -20,6 +22,10 @@ export function StepServicePackage({
       <div className="grid sm:grid-cols-2 gap-4">
         {filtered.map(plan => {
           const selected = planId === plan.id
+          const region = plan.region as 'us' | 'uk'
+          const planType = plan.id.endsWith('premium') ? 'premium' : 'basic'
+          const livePrice = resolvePrice(pricing[region]?.[planType] ?? null, region, planType)
+
           return (
             <button
               key={plan.id}
@@ -40,7 +46,7 @@ export function StepServicePackage({
                   {selected && <Check size={12} className="text-white m-auto mt-0.5" />}
                 </div>
               </div>
-              <p className="text-2xl font-extrabold text-[#0a0f1e] mb-1">${plan.price}</p>
+              <p className="text-2xl font-extrabold text-[#0a0f1e] mb-1">${livePrice}</p>
               <p className="text-xs text-slate-400 mb-3">{t.order.oneTimePayment}</p>
               <ul className="space-y-1.5">
                 {(t.order.plans[plan.id]?.features ?? plan.features).slice(0, 4).map((f: string, i: number) => (

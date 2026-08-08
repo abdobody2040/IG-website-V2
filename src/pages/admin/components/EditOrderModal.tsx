@@ -35,7 +35,7 @@ export function EditOrderModal({ order, onClose, onSaved }: { order: Order; onCl
     setSaving(true)
     try {
       const statusChanged = form.status !== order.status
-      const { error: updateErr } = await pb.collection('orders').update(order.id, {
+      await pb.collection('orders').update(order.id, {
         company_name: form.companyName,
         company_state: form.companyState,
         company_type: form.companyType,
@@ -46,16 +46,14 @@ export function EditOrderModal({ order, onClose, onSaved }: { order: Order; onCl
         notes: form.notes,
         updated_at: new Date().toISOString(),
       })
-      if (updateErr) throw updateErr
       if (statusChanged) {
-        const { error: insertErr } = await pb.collection('order_updates').create({
+        await pb.collection('order_updates').create({
           order_id: order.id,
           status: form.status,
           message: `Status updated to ${form.status} by admin`,
           created_by: 'admin',
           created_at: new Date().toISOString(),
         })
-        if (insertErr) throw insertErr
 
         // Fire webhook to Make/Zapier
         const webhookUrl = import.meta.env.VITE_ORDER_WEBHOOK_URL

@@ -4,8 +4,35 @@
 
 ```
 ┌──────────────────────────────────────────────┐
-│           Static Hosting Provider             │
-│  (Cloudflare Pages / Netlify / Vercel)         │
+│  LIVE: https://instantgrow.net                │
+│  Hostinger Shared Hosting (public_html/)       │
+│  ┌──────────────────────────────────────────┐ │
+│  │  dist/ (Vite build output → dist.zip)         │ │
+│  │  ├── index.html                              │ │
+│  │  ├── assets/*.js / *.css                      │ │
+│  │  ├── api/index.php (PHP 8.2 REST API)         │ │
+│  │  ├── api/config.php (PDO MySQL credentials)   │ │
+│  │  └── .htaccess / _redirects                   │ │
+│  └──────────────────────────────────────────┘ │
+└──────────────────────────────────────────────┘
+
+┌──────────────────────────────────────────────┐
+│              MySQL Database (Hostinger)        │
+│  DB: u238131962_instantgrowllc                  │
+│  ├── users / orders / companies / documents       │
+│  ├── payments / notifications / blogs            │
+│  ├── pricing_config / services / pages           │
+│  └── countries_seo_pages / tracking_*            │
+└──────────────────────────────────────────────┘
+
+┌──────────────────────────────────────────────┐
+│              External Services                 │
+│  ├── Stripe (Payments + Webhooks)              │
+│  ├── Resend (Transactional Email)              │
+│  ├── Cloudflare R2 (File Storage - primary)    │
+│  └── Cloudflare Workers (create-checkout, etc) │
+└──────────────────────────────────────────────┘
+```
 │  ┌──────────────────────────────────────────┐ │
 │  │  dist/ (Vite build output)                │ │
 │  │  ├── index.html                           │ │
@@ -26,38 +53,40 @@
 ┌──────────────────────────────────────────────┐
 │              External Services                 │
 │  ├── Stripe (Payments + Webhooks)              │
-│  ├── Resend (Transactional Email)              │
-│  ├── Cloudflare R2 (File Storage - primary)    │
-│  └── Cloudflare Workers (create-checkout, etc) │
-└──────────────────────────────────────────────┘
+
+## Hostinger Production Deployment (Active Architecture)
+
+### Step 1: Build Frontend
+```bash
+npm run build
+# Output: ./dist/ and ./dist.zip
 ```
 
-## PocketBase Deployment (Hostinger / VPS)
+### Step 2: Upload Frontend to Hostinger
+1. Open **Hostinger hPanel → File Manager → public_html/**
+2. Delete old `assets/` folder inside `public_html/`
+3. Upload `dist.zip` to `public_html/`
+4. Extract it in-place (all files land at `public_html/` root)
+5. Ensure `index.html`, `assets/`, `.htaccess`, `sitemap.xml`, `robots.txt` are at `public_html/` root
 
-PocketBase is a single executable that requires 24/7 uptime to serve the API. On shared or cloud environments (like Hostinger), background processes may be killed periodically by system resource managers, resulting in 502 Bad Gateway errors.
+### Step 3: Upload Backend API
+1. Upload `api/index.php` to `public_html/api/index.php`
+2. Upload `api/config.php` to `public_html/api/config.php`
+3. Upload `api/.htaccess` to `public_html/api/.htaccess`
+4. Verify: `https://instantgrow.net/api/health` returns `{"status":"ok"}`
 
-### Hostinger Web Hosting Deployment Steps:
-1. **Upload Executable**: Upload `pocketbase` to `/home/uXXXXXXX/pocketbase` via FTP or SSH.
-2. **Create Keep-Alive Script**: Create `/home/uXXXXXXX/pocketbase/keep_alive.sh`:
-   ```bash
-   #!/bin/bash
-   PB_DIR="/home/uXXXXXXX/pocketbase"
-   PB_BIN="$PB_DIR/pocketbase"
-   cd "$PB_DIR" || exit 1
+### Step 4: MySQL Database (first-time or after schema changes)
+1. Open **Hostinger hPanel → Databases → phpMyAdmin**
+2. Select database `u238131962_instantgrowllc`
+3. Run `pocketbase/seed-sql/mysql_schema_v2.sql` (creates all tables)
+4. Run `pocketbase/seed-sql/seed_services_clean.sql` (132 services)
+5. Run `pocketbase/seed-sql/seed_blogs_fixed_v3.sql` (blog posts)
+6. To add admin user: run `pocketbase/seed-sql/make_admin.sql` (sets role='admin' for `instantgrow.net@gmail.com`)
 
-   if ! ps aux | grep -v grep | grep -q "pocketbase serve"; then
-       echo "[$(date)] PocketBase stopped. Restarting..." >> "$PB_DIR/crash.log"
-       pkill -9 -f "pocketbase" 2>/dev/null
-       sleep 1
-       nohup "$PB_BIN" serve > "$PB_DIR/pb.log" 2>&1 &
-   fi
-   ```
-3. **Make Executable**: Run `chmod +x /home/uXXXXXXX/pocketbase/keep_alive.sh`.
-4. **Setup 1-Minute Cron Job**:
-   In Hostinger hPanel -> Advanced -> Cron Jobs, set the schedule to `* * * * *` (Every 1 Minute) with the command:
-   ```bash
-   /bin/bash /home/uXXXXXXX/pocketbase/keep_alive.sh
-   ```
+### Step 5: Verify Admin Login
+- Go to `https://instantgrow.net/auth/login`
+- Login with `admin@instantgrow.net`
+- Confirm admin dashboard loads and all CRUD operations work
 
 ## Frontend Deployment
 
@@ -89,12 +118,12 @@ npm run build
 
 ## Environment Variables
 
-### Frontend (Client-Side)
-Must be set in hosting provider dashboard:
+### Frontend (Client-Side via Vite)
+Set before building or in hosting provider dashboard:
 
 | Variable | Required | Description |
 |----------|----------|-------------|
-| VITE_PB_URL | Yes | PocketBase project URL |
+| VITE_API_URL | Yes | PHP API URL (`https://instantgrow.net/api` in production, `/api` in dev proxy) |
 | VITE_CHECKOUT_ENDPOINT | No | Stripe checkout Cloudflare Worker URL |
 | VITE_R2_UPLOAD_ENDPOINT | No | Cloudflare R2 upload proxy URL |
 | VITE_EMAIL_ENDPOINT | No | Email sending Worker URL |

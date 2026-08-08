@@ -11,14 +11,26 @@ interface ForgotForm { email: string }
 export default function ForgotPasswordPage() {
   const { t } = useLang()
   const [sent, setSent] = useState(false)
+  const [cooldown, setCooldown] = useState(0)
   const [serverError, setServerError] = useState('')
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<ForgotForm>()
 
   const onSubmit = async ({ email }: ForgotForm) => {
+    if (cooldown > 0) return
     setServerError('')
     try {
       await pb.collection('users').requestPasswordReset(email)
       setSent(true)
+      setCooldown(60)
+      const timer = setInterval(() => {
+        setCooldown(prev => {
+          if (prev <= 1) {
+            clearInterval(timer)
+            return 0
+          }
+          return prev - 1
+        })
+      }, 1000)
     } catch {
       setServerError(t.auth.forgotError)
     }
@@ -29,9 +41,8 @@ export default function ForgotPasswordPage() {
       <AuthPanel />
       <div className="flex items-center justify-center bg-slate-50 px-6 py-12">
         <div className="w-full max-w-md space-y-8">
-          <div className="flex lg:hidden items-center gap-2.5 mb-2">
-            <div className="w-9 h-9 rounded-xl flex items-center justify-center font-bold text-white text-xs" style={{ background: '#1a56ff' }}>IG</div>
-            <span className="font-semibold text-slate-900">Instant Grow</span>
+          <div className="flex lg:hidden justify-center mb-4">
+            <img src="/logo.png" alt="Instant Grow" className="h-12 w-auto" />
           </div>
 
           {sent ? (

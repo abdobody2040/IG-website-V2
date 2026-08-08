@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import * as Icons from 'lucide-react'
+import { getIcon } from '../lib/iconMap'
 import { User, Mail, Phone, Briefcase, X, CheckCircle, Loader2 } from 'lucide-react'
 import { ServiceRecord } from '../hooks/useServices'
 
@@ -12,7 +12,7 @@ interface PublicOrderModalProps {
 }
 
 export default function PublicOrderModal({ service, isAr, onClose, planName, planPrice }: PublicOrderModalProps) {
-  const IconComponent = (Icons as any)[service.icon] || Icons.HelpCircle
+  const IconComponent = getIcon(service.icon)
   const [form, setForm] = useState({
     name: '',
     email: '',

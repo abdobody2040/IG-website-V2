@@ -10,33 +10,37 @@ import { LanguageProvider } from './i18n/LanguageContext'
 import { lazyImport } from './lib/lazyImport'
 import { waitForAuthReady, getAuthInfo } from './lib/authState'
 import { pb } from './lib/pocketbase'
+import { Suspense, lazy } from 'react'
 import Navbar from './components/Navbar'
 import Hero from './components/Hero'
-import TrustLogos from './components/TrustLogos'
-import Services from './components/Services'
-import HowItWorks from './components/HowItWorks'
-import Features from './components/Features'
-import Timeline from './components/Timeline'
-import Reviews from './components/Reviews'
-import ComparisonTable from './components/ComparisonTable'
-import Pricing from './components/Pricing'
-import FAQ from './components/FAQ'
-import CTASection from './components/CTASection'
-import Footer from './components/Footer'
-import StickyCTABar from './components/StickyCTABar'
 import { MouseGlow, AmbientBackground } from './components/effects'
-import Lenis from 'lenis'
 import { useLang } from './i18n/LanguageContext'
 import { setPageMeta, injectJsonLd, generateOrganizationSchema, generateWebSiteSchema, generateProfessionalServiceSchema, generateFaqSchema, generateHowToSchema, getCanonical } from './lib/seo'
 
-import SupportWidget from './components/SupportWidget'
+// Below-the-fold components lazy-loaded to minimize initial JS bundle
+const TrustLogos = lazyImport(() => import('./components/TrustLogos'))
+const Services = lazyImport(() => import('./components/Services'))
+const HowItWorks = lazyImport(() => import('./components/HowItWorks'))
+const Features = lazyImport(() => import('./components/Features'))
+const Timeline = lazyImport(() => import('./components/Timeline'))
+const Reviews = lazyImport(() => import('./components/Reviews'))
+const ComparisonTable = lazyImport(() => import('./components/ComparisonTable'))
+const Pricing = lazyImport(() => import('./components/Pricing'))
+const FAQ = lazyImport(() => import('./components/FAQ'))
+const CTASection = lazyImport(() => import('./components/CTASection'))
+const Footer = lazyImport(() => import('./components/Footer'))
+const StickyCTABar = lazyImport(() => import('./components/StickyCTABar'))
+
+const SupportWidget = lazyImport(() => import('./components/SupportWidget'))
 
 // Root route — LanguageProvider wraps everything so i18n is available to all pages
 const rootRoute = createRootRoute({
   component: () => (
     <LanguageProvider>
       <Outlet />
-      <SupportWidget />
+      <Suspense fallback={null}>
+        <SupportWidget />
+      </Suspense>
     </LanguageProvider>
   ),
 })
@@ -109,10 +113,18 @@ function LandingPage() {
   }, [s, t])
 
   useEffect(() => {
-    const lenis = new Lenis({ duration: 1.2, easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)) })
-    function raf(time: number) { lenis.raf(time); requestAnimationFrame(raf) }
-    requestAnimationFrame(raf)
-    return () => lenis.destroy()
+    let lenisInstance: any = null
+    const timer = setTimeout(() => {
+      import('lenis').then(({ default: Lenis }) => {
+        lenisInstance = new Lenis({ duration: 1.2, easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)) })
+        function raf(time: number) { lenisInstance?.raf(time); requestAnimationFrame(raf) }
+        requestAnimationFrame(raf)
+      })
+    }, 1000)
+    return () => {
+      clearTimeout(timer)
+      lenisInstance?.destroy()
+    }
   }, [])
 
   useEffect(() => {
@@ -137,30 +149,34 @@ function LandingPage() {
       <main className="relative z-10">
         {/* 2. Hero — 2-col split, world map, mascot, country pins, dashboard overlap */}
         <Hero />
-        {/* 3. Trust Logos — continuous marquee */}
-        <TrustLogos />
-        {/* 5. Services — 5 premium cards */}
-        <Services />
-        {/* 6. How It Works — 4-step horizontal timeline */}
-        <HowItWorks />
-        {/* 7. Why Entrepreneurs Choose — 6 icon cards */}
-        <Features />
-        {/* 8. Timeline — mascot left, 5-day steps */}
-        <Timeline />
-        {/* 9. Reviews — dual marquee */}
-        <Reviews />
-        {/* 10. Comparison Table */}
-        <ComparisonTable />
-        {/* 11. Pricing — 3 cards */}
-        <Pricing />
-        {/* FAQ */}
-        <FAQ />
-        {/* 12. CTA — dark, mascot right */}
-        <CTASection />
+        <Suspense fallback={<div className="min-h-[200px]" />}>
+          {/* 3. Trust Logos — continuous marquee */}
+          <TrustLogos />
+          {/* 5. Services — 5 premium cards */}
+          <Services />
+          {/* 6. How It Works — 4-step horizontal timeline */}
+          <HowItWorks />
+          {/* 7. Why Entrepreneurs Choose — 6 icon cards */}
+          <Features />
+          {/* 8. Timeline — mascot left, 5-day steps */}
+          <Timeline />
+          {/* 9. Reviews — dual marquee */}
+          <Reviews />
+          {/* 10. Comparison Table */}
+          <ComparisonTable />
+          {/* 11. Pricing — 3 cards */}
+          <Pricing />
+          {/* FAQ */}
+          <FAQ />
+          {/* 12. CTA — dark, mascot right */}
+          <CTASection />
+        </Suspense>
       </main>
-      <Footer />
-      {/* 13. Sticky mobile CTA bar */}
-      <StickyCTABar />
+      <Suspense fallback={null}>
+        <Footer />
+        {/* 13. Sticky mobile CTA bar */}
+        <StickyCTABar />
+      </Suspense>
     </div>
   )
 }
@@ -231,35 +247,27 @@ const requireAuthGuard = async () => {
   // Ensure client users have paid and been confirmed by the admin before accessing client pages.
   if (info.role === 'client') {
     const cacheKey = `ig_has_paid_order_${info.userId}`
-    const hasPaidOrder = sessionStorage.getItem(cacheKey) === 'true'
+    const hasPaidOrder = localStorage.getItem(cacheKey) === 'true' || sessionStorage.getItem(cacheKey) === 'true'
 
     if (!hasPaidOrder) {
-      let totalOrders = 0
-      let hasConfirmedOrder = false
       try {
         const orders = await pb.collection('orders').getList(1, 100, {
           filter: `user = "${info.userId}"`,
         })
-        totalOrders = orders.totalItems
-        hasConfirmedOrder = orders.items.some(
+        const hasOrder = orders.totalItems > 0
+        const hasConfirmedOrder = orders.items.some(
           o => o.status !== 'pending' && o.status !== 'cancelled'
         )
-        if (hasConfirmedOrder) {
+        if (hasOrder) {
+          localStorage.setItem(cacheKey, 'true')
           sessionStorage.setItem(cacheKey, 'true')
         }
+        if (!hasConfirmedOrder && orders.items.length > 0 && orders.items.every(o => o.status === 'pending')) {
+          throw redirect({ to: '/auth/pending-confirmation' })
+        }
       } catch (err) {
+        if ((err as any)?.isRedirect) throw err
         console.error('Error verifying user orders:', err)
-        // Graceful degradation: in case of temp db/network error, allow user through
-        totalOrders = 1
-        hasConfirmedOrder = true
-      }
-
-      if (totalOrders === 0) {
-        throw redirect({ to: '/order' })
-      }
-
-      if (!hasConfirmedOrder) {
-        throw redirect({ to: '/auth/pending-confirmation' })
       }
     }
   }
@@ -342,6 +350,13 @@ const clientWorkspaceSettingsRoute = createRoute({
   component: lazyImport(() => import('./pages/client/WorkspaceSettingsPage')),
 })
 
+const clientTrackingRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/client/tracking',
+  beforeLoad: requireAuthGuard,
+  component: lazyImport(() => import('./pages/client/ClientTrackingPage')),
+})
+
 // ── Admin routes ───────────────────────────────────────────────────────────
 const requireAdminGuard = async () => {
   await waitForAuthReady()
@@ -397,6 +412,13 @@ const adminAnalyticsRoute = createRoute({
   path: '/admin/analytics',
   beforeLoad: requireAdminGuard,
   component: lazyImport(() => import('./pages/admin/AdminAnalyticsPage')),
+})
+
+const adminTrackingRoute = createRoute({
+  getParentRoute: () => adminLayoutRoute,
+  path: '/admin/tracking',
+  beforeLoad: requireAdminGuard,
+  component: lazyImport(() => import('./pages/admin/AdminTrackingPage')),
 })
 
 const adminSettingsRoute = createRoute({
@@ -503,6 +525,19 @@ const seoCountryDetailRoute = createRoute({
   component: lazyImport(() => import('./pages/SeoCountryPage')),
 })
 
+// ── MENA country targeting pages (/form-llc/:country) ─────────────────────
+const menaLlcListRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/form-llc',
+  component: lazyImport(() => import('./pages/SeoCountryListPage')),
+})
+
+const menaLlcCountryRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/form-llc/$country',
+  component: lazyImport(() => import('./pages/MenaCountryPage')),
+})
+
 // ── Blog routes ───────────────────────────────────────────────────────────
 const blogListRoute = createRoute({
   getParentRoute: () => rootRoute,
@@ -523,7 +558,11 @@ const sitemapRoute = createRoute({
   component: lazyImport(() => import('./pages/SitemapPage')),
 })
 
-// ── Other routes ───────────────────────────────────────────────────────────
+const aboutRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/about',
+  component: lazyImport(() => import('./pages/AboutPage')),
+})
 const ContactPage = lazyImport(() => import('./pages/ContactPage'))
 const contactRoute = createRoute({
   getParentRoute: () => rootRoute,
@@ -596,6 +635,12 @@ const serviceDetailRoute = createRoute({
   component: lazyImport(() => import('./pages/ServiceDetailPage')),
 })
 
+const serviceDetailDirectRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/services/item/$serviceSlug',
+  component: lazyImport(() => import('./pages/ServiceDetailPage')),
+})
+
 // ── Route tree ─────────────────────────────────────────────────────────────
 
 const adminTree = adminLayoutRoute.addChildren([
@@ -605,6 +650,7 @@ const adminTree = adminLayoutRoute.addChildren([
   adminClientsRoute,
   adminClientDetailRoute,
   adminAnalyticsRoute,
+  adminTrackingRoute,
   adminSettingsRoute,
   adminCompaniesRoute,
   adminDocumentsRoute,
@@ -644,17 +690,22 @@ const routeTree = rootRoute.addChildren([
   clientNotificationsRoute,
   clientSettingsRoute,
   clientWorkspaceSettingsRoute,
+  clientTrackingRoute,
   // Admin
   adminTree,
   // SEO country
   seoCountryListRoute,
   seoCountryDetailRoute,
+  // MENA country targeting
+  menaLlcListRoute,
+  menaLlcCountryRoute,
   // Blog
   blogListRoute,
   blogDetailRoute,
   // Sitemap
   sitemapRoute,
   // Other
+  aboutRoute,
   contactRoute,
   privacyPolicyRoute,
   termsRoute,
@@ -666,6 +717,7 @@ const routeTree = rootRoute.addChildren([
   publicServicesRoute,
   serviceCategoryRoute,
   serviceDetailRoute,
+  serviceDetailDirectRoute,
 ])
 
 export const router = createRouter({ routeTree })

@@ -9,6 +9,8 @@ import { useDocuments } from '../../hooks/useDocuments'
 import { useDocumentUpload } from '../../hooks/useDocumentUpload'
 import { useOrders } from '../../hooks/useOrders'
 import { useLang } from '../../i18n/LanguageContext'
+import { pb } from '../../lib/pocketbase'
+import toast from 'react-hot-toast'
 import type { Order } from '../../types/db'
 
 const DOC_TYPE_LABELS: Record<string, string> = {
@@ -165,6 +167,10 @@ export default function ClientDocumentsPage() {
   const { documents, isLoading } = useDocuments(user?.id)
   const { orders } = useOrders(user?.id)
 
+  const [typeFilter, setTypeFilter] = useState('all')
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null)
+  const [previewTitle, setPreviewTitle] = useState('')
+
   if (authLoading) {
     return (
       <div className="flex items-center justify-center h-screen bg-slate-50">
@@ -173,7 +179,18 @@ export default function ClientDocumentsPage() {
     )
   }
 
-  const readyDocs = documents.filter(d => d.status === 'ready')
+  const filteredDocs = documents.filter(d => typeFilter === 'all' || d.docType === typeFilter)
+  const readyDocs = filteredDocs.filter(d => d.status === 'ready')
+
+  const handleDelete = async (docId: string) => {
+    if (!window.confirm('Are you sure you want to delete this document?')) return
+    try {
+      await pb.collection('documents').delete(docId)
+      toast.success('Document deleted')
+    } catch {
+      toast.error('Failed to delete document')
+    }
+  }
 
   return (
     <ClientLayout currentPath="/client/documents" title={t.client.nav.documents}>
@@ -186,12 +203,30 @@ export default function ClientDocumentsPage() {
           {user && <UploadZone userId={user.id} orders={orders} />}
         </div>
 
+        {/* Filter bar */}
+        <div className="flex items-center justify-between gap-4 mb-4 bg-white p-3 rounded-xl border border-slate-200 shadow-sm">
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Filter:</span>
+            <select
+              value={typeFilter}
+              onChange={e => setTypeFilter(e.target.value)}
+              className="text-xs border border-slate-200 rounded-lg px-2.5 py-1.5 bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#1a56ff]/30"
+            >
+              <option value="all">All Document Types</option>
+              {UPLOAD_DOC_TYPES.map(t => (
+                <option key={t.value} value={t.value}>{t.label}</option>
+              ))}
+            </select>
+          </div>
+          <span className="text-xs text-slate-400 font-medium">{filteredDocs.length} documents</span>
+        </div>
+
         <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
           <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
             <div>
               <h3 className="text-sm font-semibold text-slate-900">{dp.allDocuments}</h3>
-              {documents.length > 0 && (
-                <p className="text-xs text-slate-400 mt-0.5">{readyDocs.length}/{documents.length} {dp.ready}</p>
+              {filteredDocs.length > 0 && (
+                <p className="text-xs text-slate-400 mt-0.5">{readyDocs.length}/{filteredDocs.length} {dp.ready}</p>
               )}
             </div>
           </div>
@@ -208,22 +243,16 @@ export default function ClientDocumentsPage() {
                     <th className="px-5 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide">{dp.documentName}</th>
                     <th className="px-5 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide">{dp.view}</th>
                     <th className="px-5 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide">{dp.download}</th>
+                    <th className="px-5 py-3 text-right text-xs font-semibold text-slate-500 uppercase tracking-wide">Action</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-50">
-                  {documents.length === 0 ? (
-                    <>
-                      <tr>
-                        <td colSpan={3} className="px-5 py-3 text-xs text-slate-400">{dp.noDocuments}</td>
-                      </tr>
-                      <tr className="border-t border-slate-100">
-                        <td className="px-5 py-3 text-xs text-slate-400">{dp.noDocuments}</td>
-                        <td className="px-5 py-3 text-xs text-slate-300">\u2014</td>
-                        <td className="px-5 py-3 text-xs text-slate-300">\u2014</td>
-                      </tr>
-                    </>
+                  {filteredDocs.length === 0 ? (
+                    <tr>
+                      <td colSpan={4} className="px-5 py-8 text-center text-xs text-slate-400">{dp.noDocuments}</td>
+                    </tr>
                   ) : (
-                    documents.map(doc => {
+                    filteredDocs.map(doc => {
                       const isReady = doc.status === 'ready'
                       const label = DOC_TYPE_LABELS[doc.docType] ?? doc.name
                       return (
@@ -241,21 +270,35 @@ export default function ClientDocumentsPage() {
                           </td>
                           <td className="px-5 py-3.5">
                             {isReady && doc.fileUrl ? (
-                              <a href={doc.fileUrl} target="_blank" rel="noopener noreferrer" className="w-7 h-7 inline-flex items-center justify-center rounded-lg bg-slate-100 text-slate-500 hover:bg-[#1a56ff]/10 hover:text-[#1a56ff] transition-colors">
+                              <button
+                                onClick={() => {
+                                  setPreviewUrl(doc.fileUrl)
+                                  setPreviewTitle(doc.name || label)
+                                }}
+                                className="w-7 h-7 inline-flex items-center justify-center rounded-lg bg-slate-100 text-slate-500 hover:bg-[#1a56ff]/10 hover:text-[#1a56ff] transition-colors"
+                              >
                                 <Eye size={13} />
-                              </a>
+                              </button>
                             ) : (
-                              <span className="text-slate-300 text-xs">\u2014</span>
+                              <span className="text-slate-300 text-xs">—</span>
                             )}
                           </td>
                           <td className="px-5 py-3.5">
                             {isReady && doc.fileUrl ? (
-                              <a href={doc.fileUrl} target="_blank" rel="noopener noreferrer" className="w-7 h-7 inline-flex items-center justify-center rounded-lg bg-[#1a56ff]/10 text-[#1a56ff] hover:bg-[#1a56ff]/20 transition-colors">
+                              <a href={doc.fileUrl} target="_blank" rel="noopener noreferrer" download className="w-7 h-7 inline-flex items-center justify-center rounded-lg bg-[#1a56ff]/10 text-[#1a56ff] hover:bg-[#1a56ff]/20 transition-colors">
                                 <Download size={13} />
                               </a>
                             ) : (
-                              <span className="text-slate-300 text-xs">\u2014</span>
+                              <span className="text-slate-300 text-xs">—</span>
                             )}
+                          </td>
+                          <td className="px-5 py-3.5 text-right">
+                            <button
+                              onClick={() => handleDelete(doc.id)}
+                              className="text-xs text-red-500 hover:text-red-700 font-medium px-2 py-1 hover:bg-red-50 rounded transition-colors"
+                            >
+                              Delete
+                            </button>
                           </td>
                         </tr>
                       )
@@ -266,6 +309,23 @@ export default function ClientDocumentsPage() {
             </div>
           )}
         </div>
+
+        {/* Inline Document Preview Modal */}
+        {previewUrl && (
+          <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
+            <div className="bg-white rounded-2xl max-w-3xl w-full h-[80vh] flex flex-col overflow-hidden shadow-2xl">
+              <div className="flex items-center justify-between px-5 py-4 border-b border-slate-200">
+                <h3 className="font-bold text-slate-900 text-sm truncate">{previewTitle}</h3>
+                <button onClick={() => setPreviewUrl(null)} className="text-slate-400 hover:text-slate-700">
+                  <X size={18} />
+                </button>
+              </div>
+              <div className="flex-1 bg-slate-100 p-2 overflow-hidden">
+                <iframe src={previewUrl} className="w-full h-full rounded-xl border border-slate-200" title="Document Preview" />
+              </div>
+            </div>
+          </div>
+        )}
 
         {documents.some(d => d.status !== 'ready') && (
           <div className="mt-4 bg-blue-50 border border-blue-200 rounded-xl p-4 flex items-start gap-3">

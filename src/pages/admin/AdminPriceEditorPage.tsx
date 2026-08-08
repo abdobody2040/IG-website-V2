@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Loader2, Save, Plus, Trash2, DollarSign, CheckCircle, ChevronDown, ChevronUp } from 'lucide-react'
+import { Loader2, Save, Plus, Trash2, DollarSign, CheckCircle, ChevronDown, ChevronUp, AlertTriangle, Wifi } from 'lucide-react'
 import { pb } from '../../lib/pocketbase'
 import { PRICING_DATA } from '../../config/pricing'
 import { invalidatePricingCache } from '../../hooks/usePricingConfig'
@@ -83,6 +83,9 @@ export default function AdminPriceEditorPage() {
     oman_basic: makeDefault('oman_basic'), oman_premium: makeDefault('oman_premium'),
   })
   const [loading, setLoading] = useState(true)
+  const [globalError, setGlobalError] = useState<string | null>(null)
+  const [dbTestResult, setDbTestResult] = useState<string | null>(null)
+  const [dbTesting, setDbTesting] = useState(false)
 
   useEffect(() => {
     void (async () => {
@@ -92,22 +95,48 @@ export default function AdminPriceEditorPage() {
           const next = { ...prev }
           for (const r of records) {
             const key = (r.region + '_' + r.plan) as PlanKey
+            const parseArr = (v: unknown, fallback: string[]) => {
+              if (Array.isArray(v)) return v
+              if (typeof v === 'string' && v.trim().startsWith('[')) {
+                try {
+                  const p = JSON.parse(v)
+                  if (Array.isArray(p)) return p
+                } catch {}
+              }
+              return fallback
+            }
             if (next[key]) {
               next[key] = {
                 ...next[key],
                 id: r.id,
-                price: r.price,
-                features_en: Array.isArray(r.features_en) ? r.features_en : next[key].features_en,
-                features_ar: Array.isArray(r.features_ar) ? r.features_ar : next[key].features_ar
+                price: Number(r.price ?? next[key].price),
+                features_en: parseArr(r.features_en, next[key].features_en),
+                features_ar: parseArr(r.features_ar, next[key].features_ar)
               }
             }
           }
           return next
         })
-      } catch { /* use defaults */ }
+      } catch (e: unknown) {
+        const msg = (e instanceof Error ? e.message : String(e)) || 'Unknown error'
+        setGlobalError(`⚠️ Could not load pricing from DB (using defaults). Error: ${msg}`)
+      }
       setLoading(false)
     })()
   }, [])
+
+  async function testDbConnection() {
+    setDbTesting(true)
+    setDbTestResult(null)
+    try {
+      const res = await pb.collection('pricing_config').getList(1, 1)
+      setDbTestResult(`✅ Connected! pricing_config table exists with ${res.totalItems} row(s).`)
+    } catch (e: unknown) {
+      const msg = (e instanceof Error ? e.message : String(e)) || 'Unknown'
+      setDbTestResult(`❌ FAILED: ${msg}`)
+    }
+    setDbTesting(false)
+  }
 
   function updatePlan(key: PlanKey, patch: Partial<PlanState>) {
     setPlans(prev => ({ ...prev, [key]: { ...prev[key], ...patch } }))
@@ -136,6 +165,7 @@ export default function AdminPriceEditorPage() {
     const plan = plans[key]
     const parts = key.split('_') as [string, string]
     updatePlan(key, { saving: true, saved: false })
+    setGlobalError(null)
     const data = {
       region: parts[0],
       plan: parts[1],
@@ -146,7 +176,12 @@ export default function AdminPriceEditorPage() {
     try {
       let id = plan.id
       if (id) {
-        await pb.collection('pricing_config').update(id, data)
+        try {
+          await pb.collection('pricing_config').update(id, data)
+        } catch {
+          const rec = await pb.collection('pricing_config').create<{ id: string }>(data)
+          id = rec.id
+        }
       } else {
         const rec = await pb.collection('pricing_config').create<{ id: string }>(data)
         id = rec.id
@@ -154,8 +189,13 @@ export default function AdminPriceEditorPage() {
       invalidatePricingCache()
       updatePlan(key, { saving: false, saved: true, id })
       setTimeout(() => updatePlan(key, { saved: false }), 2500)
-    } catch (err) {
-      console.error('Save failed', err)
+    } catch (e: unknown) {
+      const msg = (e instanceof Error ? e.message : String(e)) || 'Unknown error'
+      // Try to extract a more specific API message
+      const apiMsg = (e as { data?: { message?: string } })?.data?.message
+      const displayMsg = apiMsg || msg
+      setGlobalError(`❌ Save failed for ${key}: ${displayMsg}`)
+      console.error('Save failed', e)
       updatePlan(key, { saving: false })
     }
   }
@@ -168,12 +208,45 @@ export default function AdminPriceEditorPage() {
 
   return (
     <div className="max-w-5xl mx-auto space-y-6">
+      {/* Global error banner */}
+      {globalError && (
+        <div className="bg-red-50 border border-red-300 rounded-xl px-5 py-4 flex items-start gap-3">
+          <AlertTriangle size={18} className="text-red-600 flex-shrink-0 mt-0.5" />
+          <div className="flex-1">
+            <p className="text-sm font-semibold text-red-800">Save Error</p>
+            <p className="text-xs text-red-700 mt-0.5 font-mono break-all">{globalError}</p>
+            <p className="text-xs text-red-600 mt-1">→ Run the diagnostic SQL below in phpMyAdmin, then re-try.</p>
+          </div>
+          <button onClick={() => setGlobalError(null)} className="text-red-400 hover:text-red-600 text-lg font-bold leading-none">×</button>
+        </div>
+      )}
+
+      {/* DB connection test */}
+      <div className="bg-slate-50 border border-slate-200 rounded-xl px-5 py-3 flex items-center gap-3 flex-wrap">
+        <button
+          onClick={() => void testDbConnection()}
+          disabled={dbTesting}
+          className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-700 text-white text-xs font-semibold rounded-lg hover:bg-slate-900 disabled:opacity-60 transition-colors"
+        >
+          {dbTesting ? <Loader2 size={12} className="animate-spin" /> : <Wifi size={12} />}
+          Test DB Connection
+        </button>
+        {dbTestResult && (
+          <span className={`text-xs font-mono ${dbTestResult.startsWith('✅') ? 'text-green-700' : 'text-red-700'}`}>
+            {dbTestResult}
+          </span>
+        )}
+        {!dbTestResult && !dbTesting && (
+          <span className="text-xs text-slate-500">Click to verify the pricing_config table exists in your MySQL DB</span>
+        )}
+      </div>
+
       <div className="bg-amber-50 border border-amber-200 rounded-xl px-5 py-4 flex items-start gap-3">
         <DollarSign size={18} className="text-amber-600 flex-shrink-0 mt-0.5" />
         <div>
-          <p className="text-sm font-semibold text-amber-800">Live Pricing & Package Editor</p>
+          <p className="text-sm font-semibold text-amber-800">Live Pricing &amp; Package Editor</p>
           <p className="text-xs text-amber-700 mt-0.5">
-            Changes save to the database instantly and reflect on the landing page pricing section & order wizard for all 4 countries (US, UK, UAE, Oman).
+            Changes save to the database instantly and reflect on the landing page pricing section &amp; order wizard for all 4 countries (US, UK, UAE, Oman).
           </p>
         </div>
       </div>

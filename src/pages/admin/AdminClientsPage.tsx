@@ -47,18 +47,18 @@ function EditUserDrawer({
   const handleSave = async () => {
     setSaving(true)
     try {
-      const { error: updateErr } = await pb.collection('profiles').update(user.id, {
+      await pb.collection('users').update(user.id, {
         display_name: displayName,
         email,
         phone,
         role,
-        updated_at: new Date().toISOString(),
+        // `updated` is set automatically by the PHP API via NOW(3)
       })
-      if (updateErr) throw updateErr
       toast.success('User updated successfully')
       onSaved()
-    } catch {
-      toast.error('Failed to update user')
+    } catch (err) {
+      console.error('Failed to update user:', err)
+      toast.error(err instanceof Error ? err.message : 'Failed to update user')
     } finally {
       setSaving(false)
     }
@@ -238,7 +238,7 @@ export default function AdminClientsPage() {
       } else {
         await pb.collection('users').delete(deletingUser.id)
       }
-      await queryClient.invalidateQueries({ queryKey: ['admin', 'users'] })
+      await queryClient.invalidateQueries({ queryKey: ['admin'] })
       toast.success('User deleted')
       setDeletingUser(null)
     } catch (err) {
@@ -249,7 +249,7 @@ export default function AdminClientsPage() {
   }
 
   const handleSaved = async () => {
-    await queryClient.invalidateQueries({ queryKey: ['admin', 'users'] })
+    await queryClient.invalidateQueries({ queryKey: ['admin'] })
     setEditingUser(null)
   }
 

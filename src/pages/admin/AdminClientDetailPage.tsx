@@ -170,7 +170,7 @@ export default function AdminClientDetailPage() {
     qc.invalidateQueries({ queryKey: ['admin', 'user-companies', userId] })
     qc.invalidateQueries({ queryKey: ['admin', 'user-documents', userId] })
     qc.invalidateQueries({ queryKey: ['admin', 'user-payments', userId] })
-    qc.invalidateQueries({ queryKey: ['admin', 'users'] })
+    qc.invalidateQueries({ queryKey: ['admin'] })
   }
 
   async function handleDelete() {

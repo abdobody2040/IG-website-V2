@@ -47,7 +47,7 @@ export function EditCompanyModal({
   const handleSave = async () => {
     setSaving(true)
     try {
-      const { error: updateErr } = await pb.collection('companies').update(company.id, {
+      await pb.collection('companies').update(company.id, {
         company_name: companyName,
         company_type: companyType,
         state,
@@ -63,7 +63,6 @@ export function EditCompanyModal({
         compliance_notes: complianceNotes || null,
         updated_at: new Date().toISOString(),
       })
-      if (updateErr) throw updateErr
       logAdminAction({ action: 'update', tableName: 'companies', recordId: company.id });
       toast.success('Company updated successfully')
       onSaved()

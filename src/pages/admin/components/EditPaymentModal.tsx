@@ -11,14 +11,13 @@ export function EditPaymentModal({ payment, onClose, onSaved }: { payment: any; 
   async function handleSave() {
     setSaving(true)
     try {
-      const { error: updateErr } = await pb.collection('payments').update(payment.id, {
+      await pb.collection('payments').update(payment.id, {
         service: form.service,
         amount: parseFloat(form.amount) || 0,
         status: form.status,
         currency: form.currency,
         updated_at: new Date().toISOString(),
       })
-      if (updateErr) throw updateErr
       toast.success('Payment updated')
       onSaved()
       onClose()

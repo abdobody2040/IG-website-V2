@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react'
 import { pb } from '../lib/pocketbase'
 import { useAuth } from './useAuth'
-import type { RecordModel } from 'pocketbase'
+type RecordModel = Record<string, unknown> & { id: string; created: string; updated: string; expand?: Record<string, unknown> }
 
 export interface Workspace {
   id: string
@@ -40,13 +40,13 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
       // 1. Fetch from workspace_members junction table
       let list: Workspace[] = []
       try {
-        const members = await pb.collection('workspace_members').getFullList({
+        const members = await pb.collection('workspace_members').getFullList<RecordModel>({
           filter: `user = "${userId}"`,
           expand: 'workspace',
         })
         list = members
           .map(m => {
-            const ws = m.expand?.workspace as RecordModel | undefined
+            const ws = m.expand?.['workspace'] as RecordModel | undefined
             if (!ws) return null
             return {
               id: ws.id,
@@ -65,7 +65,7 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
       // 2. Also check if user is the direct owner of any workspace
       let ownedWorkspaces: Workspace[] = []
       try {
-        const owned = await pb.collection('workspaces').getFullList({
+        const owned = await pb.collection('workspaces').getFullList<RecordModel>({
           filter: `owner = "${userId}"`,
         })
         ownedWorkspaces = owned.map(ws => ({
@@ -89,12 +89,12 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
 
       // 3. Auto-provision a default Personal Workspace if they have none
       if (combined.length === 0) {
-        const defaultWs = await pb.collection('workspaces').create({
+        const defaultWs = await pb.collection('workspaces').create<RecordModel>({
           name: 'Personal Workspace',
           owner: userId,
         })
         
-        await pb.collection('workspace_members').create({
+        await pb.collection('workspace_members').create<RecordModel>({
           workspace: defaultWs.id,
           user: userId,
           role: 'admin',
@@ -153,13 +153,13 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
     if (!user?.id) throw new Error('Unauthenticated')
     
     // Create workspaces record
-    const wsRecord = await pb.collection('workspaces').create({
+    const wsRecord = await pb.collection('workspaces').create<RecordModel>({
       name,
       owner: user.id,
     })
 
     // Create junction member record
-    await pb.collection('workspace_members').create({
+    await pb.collection('workspace_members').create<RecordModel>({
       workspace: wsRecord.id,
       user: user.id,
       role: 'admin',

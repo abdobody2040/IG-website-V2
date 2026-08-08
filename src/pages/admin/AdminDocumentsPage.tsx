@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { FileText, Search, Edit2, Trash2, X, Loader2, ExternalLink } from 'lucide-react'
+import { FileText, Search, Edit2, Trash2, X, Loader2, ExternalLink, Plus } from 'lucide-react'
 import { DeleteConfirmModal } from '../../components/DeleteConfirmModal'
 import { useQueryClient } from '@tanstack/react-query'
 import { useDocuments } from '../../hooks/useAdminData'
@@ -9,6 +9,7 @@ import toast from 'react-hot-toast'
 import type { Document } from '../../types/db'
 import { logAdminAction } from '../../hooks/useAdminAuditLog'
 import { PaginationBar } from '../../components/PaginationBar'
+import { AddDocumentModal } from './components/AddDocumentModal'
 
 const DOC_TYPE_OPTIONS = [
   { value: 'articles_of_org', label: 'Articles of Organization' },
@@ -82,8 +83,9 @@ function EditDocumentModal({
       logAdminAction({ action: 'update', tableName: 'documents', recordId: document.id });
       toast.success('Document updated successfully')
       onSaved()
-    } catch {
-      toast.error('Failed to update document')
+    } catch (err) {
+      console.error('Failed to update document:', err)
+      toast.error(err instanceof Error ? err.message : 'Failed to update document')
     } finally {
       setSaving(false)
     }
@@ -237,6 +239,7 @@ export default function AdminDocumentsPage() {
   const [editingDoc, setEditingDoc] = useState<Document | null>(null)
   const [deletingDoc, setDeletingDoc] = useState<Document | null>(null)
   const [deleteLoading, setDeleteLoading] = useState(false)
+  const [showAdd, setShowAdd] = useState(false)
 
   const { data, isLoading } = useDocuments({
     page,
@@ -256,18 +259,19 @@ export default function AdminDocumentsPage() {
     try {
       await pb.collection('documents').delete(deletingDoc.id)
       logAdminAction({ action: 'delete', tableName: 'documents', recordId: deletingDoc.id });
-      await queryClient.invalidateQueries({ queryKey: ['admin', 'documents'] })
+      await queryClient.invalidateQueries({ queryKey: ['admin'] })
       toast.success('Document deleted')
       setDeletingDoc(null)
-    } catch {
-      toast.error('Failed to delete document')
+    } catch (err) {
+      console.error('Failed to delete document:', err)
+      toast.error(err instanceof Error ? err.message : 'Failed to delete document')
     } finally {
       setDeleteLoading(false)
     }
   }
 
   const handleSaved = async () => {
-    await queryClient.invalidateQueries({ queryKey: ['admin', 'documents'] })
+    await queryClient.invalidateQueries({ queryKey: ['admin'] })
     setEditingDoc(null)
   }
 
@@ -275,12 +279,20 @@ export default function AdminDocumentsPage() {
     <>
       {/* Header */}
       <div className="mb-6">
-        <div className="flex items-center gap-2 mb-0.5">
-          <FileText className="h-5 w-5 text-[#1a56ff]" />
-          <h2 className="text-xl font-bold text-slate-900">All Documents</h2>
-          <span className="bg-slate-100 text-slate-600 text-xs font-medium px-2 py-0.5 rounded-full">{data?.totalItems || 0}</span>
+        <div className="flex items-center justify-between mb-1">
+          <div className="flex items-center gap-2">
+            <FileText className="h-5 w-5 text-[#1a56ff]" />
+            <h2 className="text-xl font-bold text-slate-900">All Documents</h2>
+            <span className="bg-slate-100 text-slate-600 text-xs font-medium px-2 py-0.5 rounded-full">{data?.totalItems || 0}</span>
+          </div>
+          <button
+            onClick={() => setShowAdd(true)}
+            className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-[#1a56ff] text-white text-sm font-semibold hover:bg-blue-700 transition-colors shadow-sm"
+          >
+            <Plus size={15} /> Add Document
+          </button>
         </div>
-        <p className="text-slate-500 text-sm mt-0.5">Manage client documents and formation files</p>
+        <p className="text-slate-500 text-sm">Manage client documents and formation files</p>
       </div>
 
       {/* Filters */}
@@ -402,6 +414,17 @@ export default function AdminDocumentsPage() {
             label="documents"
           />
         </div>
+      )}
+
+      {/* Add Modal */}
+      {showAdd && (
+        <AddDocumentModal
+          onClose={() => setShowAdd(false)}
+          onSaved={async () => {
+            await queryClient.invalidateQueries({ queryKey: ['admin'] })
+            setShowAdd(false)
+          }}
+        />
       )}
 
       {/* Edit Modal */}

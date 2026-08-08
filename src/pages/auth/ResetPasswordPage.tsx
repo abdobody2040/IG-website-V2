@@ -43,7 +43,7 @@ export default function ResetPasswordPage() {
     try {
       const params = new URLSearchParams(window.location.search)
       const token = params.get('token') ?? ''
-      await pb.collection('users').confirmPasswordReset(token, password, password)
+      await pb.collection('users').confirmPasswordReset(token, password)
       pb.authStore.clear()
       navigate({ to: '/auth/login' })
     } catch {
@@ -56,9 +56,8 @@ export default function ResetPasswordPage() {
       <AuthPanel />
       <div className="flex items-center justify-center bg-slate-50 px-6 py-12">
         <div className="w-full max-w-md space-y-8">
-          <div className="flex lg:hidden items-center gap-2.5 mb-2">
-            <div className="w-9 h-9 rounded-xl flex items-center justify-center font-bold text-white text-xs" style={{ background: '#1a56ff' }}>IG</div>
-            <span className="font-semibold text-slate-900">Instant Grow</span>
+          <div className="flex lg:hidden justify-center mb-4">
+            <img src="/logo.png" alt="Instant Grow" className="h-12 w-auto" />
           </div>
 
           {!ready && !error ? (

@@ -14,10 +14,10 @@ const VH = 480
 
 /* ── Map node positions (scaled to VW × VH) ───────────────────────────────── */
 const NODES: NodeDef[] = [
-  { id: 'usa', x: 105,  y: 195, flagSrc: 'https://flagcdn.com/w40/us.png', label: 'USA',  sub: 'LLC Formation',  color: '#2563EB' },
-  { id: 'uk',  x: 390,  y: 100, flagSrc: 'https://flagcdn.com/w40/gb.png', label: 'UK',   sub: 'LTD Company',    color: '#7C3AED' },
-  { id: 'uae', x: 580,  y: 205, flagSrc: 'https://flagcdn.com/w40/ae.png', label: 'UAE',  sub: 'Business Setup', color: '#059669' },
-  { id: 'aus', x: 665,  y: 295, flagSrc: 'https://flagcdn.com/w40/om.png', label: 'Oman', sub: 'Company Setup',  color: '#DC2626' },
+  { id: 'usa', x: 105,  y: 195, flagSrc: 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 30"%3E%3Crect width="60" height="30" fill="%23b22234"/%3E%3Cpath d="M0 4.6h60M0 11.5h60M0 18.4h60M0 25.3h60" stroke="%23fff" stroke-width="2.3"/%3E%3Crect width="24" height="16.1" fill="%233c3b6e"/%3E%3C/svg%3E', label: 'USA',  sub: 'LLC Formation',  color: '#2563EB' },
+  { id: 'uk',  x: 390,  y: 100, flagSrc: 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 30"%3E%3CclipPath id="s"%3E%3Cpath d="M0 0v30h60V0z"/%3E%3C/clipPath%3E%3Cg clip-path="url(%23s)"%3E%3Cpath d="M0 0v30h60V0z" fill="%23012169"/%3E%3Cpath d="M0 0l60 30M60 0L0 30" stroke="%23fff" stroke-width="6"/%3E%3Cpath d="M0 0l60 30M60 0L0 30" stroke="%23c8102e" stroke-width="2"/%3E%3Cpath d="M30 0v30M0 15h60" stroke="%23fff" stroke-width="10"/%3E%3Cpath d="M30 0v30M0 15h60" stroke="%23c8102e" stroke-width="6"/%3E%3C/g%3E%3C/svg%3E', label: 'UK',   sub: 'LTD Company',    color: '#7C3AED' },
+  { id: 'uae', x: 580,  y: 205, flagSrc: 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 30"%3E%3Crect width="60" height="10" fill="%2300732f"/%3E%3Crect y="10" width="60" height="10" fill="%23fff"/%3E%3Crect y="20" width="60" height="10" fill="%23000"/%3E%3Crect width="15" height="30" fill="%23ff0000"/%3E%3C/svg%3E', label: 'UAE',  sub: 'Business Setup', color: '#059669' },
+  { id: 'aus', x: 665,  y: 295, flagSrc: 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 30"%3E%3Crect width="60" height="10" fill="%23c8102e"/%3E%3Crect y="10" width="60" height="10" fill="%23fff"/%3E%3Crect y="20" width="60" height="10" fill="%23007a3d"/%3E%3Crect width="15" height="30" fill="%23c8102e"/%3E%3C/svg%3E', label: 'Oman', sub: 'Company Setup',  color: '#DC2626' },
 ]
 
 // Oman is SE of UAE on the Arabian Peninsula — positioned correctly relative to VW/VH

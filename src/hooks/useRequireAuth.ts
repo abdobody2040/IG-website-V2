@@ -21,19 +21,25 @@ export function useRequireAuth() {
 
 /**
  * Redirects non-admins to /client/dashboard.
+ * Uses a short grace period to allow authStore.model to hydrate from localStorage.
  */
 export function useRequireAdmin() {
   const auth = useAuth()
   const navigate = useNavigate()
 
   useEffect(() => {
-    if (!auth.isLoading) {
-      if (!auth.isAuthenticated) {
-        navigate({ to: '/auth/login' })
-      } else if (auth.user?.role !== 'admin') {
-        navigate({ to: '/client/dashboard' })
+    // Give the auth store a brief moment to hydrate from localStorage
+    // before deciding the user isn't logged in on a hard refresh.
+    const timer = setTimeout(() => {
+      if (!auth.isLoading) {
+        if (!auth.isAuthenticated) {
+          navigate({ to: '/auth/login' })
+        } else if (auth.user?.role !== 'admin') {
+          navigate({ to: '/client/dashboard' })
+        }
       }
-    }
+    }, 50)
+    return () => clearTimeout(timer)
   }, [auth.isLoading, auth.isAuthenticated, auth.user?.role, navigate])
 
   return auth

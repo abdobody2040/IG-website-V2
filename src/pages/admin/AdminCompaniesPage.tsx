@@ -43,18 +43,19 @@ export default function AdminCompaniesPage() {
     try {
       await pb.collection('companies').delete(deletingCompany.id)
       logAdminAction({ action: 'delete', tableName: 'companies', recordId: deletingCompany.id });
-      await queryClient.invalidateQueries({ queryKey: ['admin', 'companies'] })
+      await queryClient.invalidateQueries({ queryKey: ['admin'] })
       toast.success('Company deleted')
       setDeletingCompany(null)
-    } catch {
-      toast.error('Failed to delete company')
+    } catch (err) {
+      console.error('Failed to delete company:', err)
+      toast.error(err instanceof Error ? err.message : 'Failed to delete company')
     } finally {
       setDeleteLoading(false)
     }
   }
 
   const handleSaved = async () => {
-    await queryClient.invalidateQueries({ queryKey: ['admin', 'companies'] })
+    await queryClient.invalidateQueries({ queryKey: ['admin'] })
     setEditingCompany(null)
   }
 

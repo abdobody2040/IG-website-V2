@@ -128,7 +128,7 @@ export default function AdminSettingsPage() {
         await pb.collection('notification_preferences').update(prefId, data)
       } else {
         const record = await pb.collection('notification_preferences').create(data)
-        setPrefId(record.id)
+        setPrefId((record as Record<string, unknown>)['id'] as string)
       }
 
       toast.custom(t => (

@@ -42,11 +42,13 @@ export function UpdateStatusModal({ order, onClose }: Props) {
       const userId = (order as any).user || (order as any).userId
       if (sendEmail && userId) {
         try {
-          const p = await pb.collection('users').getOne(userId)
-          if (p?.email) {
+          const p = await pb.collection('users').getOne<Record<string, unknown>>(userId)
+          const userEmail = (p?.['email'] as string) || ''
+          const userName = (p?.['display_name'] as string) || (p?.['name'] as string) || userEmail.split('@')[0] || ''
+          if (userEmail) {
             await sendStatusUpdateEmail({
-              toEmail: p.email,
-              toName: p.display_name || p.email.split('@')[0],
+              toEmail: userEmail,
+              toName: userName,
               orderNumber: order.orderNumber,
               companyName: order.companyName,
               newStatus: status,

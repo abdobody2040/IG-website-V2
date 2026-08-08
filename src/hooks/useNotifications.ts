@@ -1,8 +1,13 @@
-import { useEffect, useCallback } from 'react'
+// src/hooks/useNotifications.ts
+// ──────────────────────────────────────────────────────────────────
+// Notification hook — no SSE. Uses react-query with 30s refetch
+// interval instead of PocketBase real-time subscriptions.
+// ──────────────────────────────────────────────────────────────────
+
+import { useCallback } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { pb } from '../lib/pocketbase'
 import toast from 'react-hot-toast'
-import type { RecordModel } from 'pocketbase'
 
 export interface AppNotification {
   id: string
@@ -16,16 +21,22 @@ export interface AppNotification {
   createdAt: string
 }
 
-function mapNotification(raw: RecordModel): AppNotification {
+function mapNotification(raw: Record<string, unknown>): AppNotification {
   return {
     id: raw['id'] as string,
     userId: raw['user'] as string,
     type: raw['type'] as string,
     title: raw['title'] as string,
     message: raw['message'] as string | null,
-    data: (raw['data'] as Record<string, unknown>) ?? {},
+    data: (() => {
+      const d = raw['data']
+      if (!d) return {}
+      if (typeof d === 'string') { try { return JSON.parse(d) } catch { return {} } }
+      if (typeof d === 'object') return d as Record<string, unknown>
+      return {}
+    })(),
     link: raw['link'] as string | null,
-    read: raw['read'] as boolean,
+    read: Boolean(raw['read']),
     createdAt: raw['created'] as string,
   }
 }
@@ -44,25 +55,11 @@ export function useNotifications(userId: string | undefined | null) {
       return result.items.map(mapNotification)
     },
     enabled: !!userId,
+    refetchInterval: 30_000, // poll every 30 seconds
   })
 
-  const unreadCount = notifications.filter((n) => !n.read).length
+  const unreadCount       = notifications.filter((n) => !n.read).length
   const recentNotifications = notifications.slice(0, 10)
-
-  // Real-time subscription via PocketBase SSE
-  useEffect(() => {
-    if (!userId) return
-
-    pb.collection('notifications').subscribe('*', (e) => {
-      if (e.action === 'create' && e.record['user'] === userId) {
-        qc.invalidateQueries({ queryKey: ['notifications', userId] })
-      }
-    }).catch(console.error)
-
-    return () => {
-      pb.collection('notifications').unsubscribe('*').catch(() => {})
-    }
-  }, [userId, qc])
 
   const markAsReadMutation = useMutation({
     mutationFn: async (id: string) => {
@@ -75,10 +72,18 @@ export function useNotifications(userId: string | undefined | null) {
 
   const markAllAsReadMutation = useMutation({
     mutationFn: async () => {
-      const unread = notifications.filter((n) => !n.read)
-      await Promise.all(
-        unread.map((n) => pb.collection('notifications').update(n.id, { read: true }))
-      )
+      try {
+        await pb.send('/notifications/mark-read', {
+          method: 'POST',
+          body: JSON.stringify({ ids: 'all' }),
+        })
+      } catch {
+        // Fallback: batch update unread items
+        const unreadItems = notifications.filter(n => !n.read)
+        await Promise.all(
+          unreadItems.map(n => pb.collection('notifications').update(n.id, { read: true }))
+        )
+      }
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['notifications', userId] })
@@ -100,16 +105,17 @@ export function useNotifications(userId: string | undefined | null) {
           type: params.type,
           title: params.title,
           message: params.message ?? null,
-          data: params.data ?? {},
+          data: params.data ? JSON.stringify(params.data) : null,
           link: params.link ?? null,
           read: false,
         })
+        qc.invalidateQueries({ queryKey: ['notifications', userId] })
       } catch (err) {
         console.error('Failed to create notification:', err)
         toast.error('Failed to create notification')
       }
     },
-    [userId]
+    [userId, qc]
   )
 
   const markAsRead = useCallback(
@@ -126,6 +132,7 @@ export function useNotifications(userId: string | undefined | null) {
     notifications,
     recentNotifications,
     unreadCount,
+    hasUnread: unreadCount > 0,
     isLoading,
     markAsRead,
     markAllAsRead,

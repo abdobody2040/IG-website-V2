@@ -56,8 +56,35 @@ Instant Grow is a SaaS platform for automated LLC & LTD company formation. It se
 - **Sitemap** — TanStack Router route `/sitemap.xml` (dev fallback via `document.write`), `scripts/generate-sitemap.cjs` (postbuild script queries PocketBase and writes `dist/sitemap.xml`)
 - **Seed data** — 4 country SEO pages (Egypt, Saudi Arabia, UAE, Morocco) + 10 blog posts (Stripe fix, 3-step LLC guide, 5 mistakes, banking, USD payments, global founders, freelancers, myths, scaling, freedom)
 - **Programmatic OG Pre-renderer** — `scripts/generate-og-images.mjs` uses Playwright to pre-render 52 high-resolution, LTR/RTL brand-customized OG sharing preview images for all blog posts and SEO country guides, wired automatically to run at the start of the `npm run build` sequence.
-- **Credentials Sanitization & E2E Validation** — Removed all instances of the hardcoded real email `instantgrow.net@gmail.com` and sensitive admin password `Admin@2025!` from E2E test suites and database setup/utility scripts, migrating them to use environment variables (`process.env.PB_ADMIN_EMAIL`/`process.env.PB_ADMIN_PASSWORD`) and safe generic test values (`admin@example.local` / `AdminTestPassword123!`). Ran and verified all 6 specs passing successfully on a clean locally-seeded environment.
-
+- **Credentials Sanitization & E2E Validation** — Removed all instances of hardcoded real emails/passwords from E2E test suites and database setup scripts, migrating them to use environment variables (`process.env.PB_ADMIN_EMAIL`, `process.env.PB_ADMIN_PASSWORD`).
+- **Hostinger Custom PHP REST API Migration** — Built `api/index.php` (PDO + MySQL) to replace PocketBase standalone binary, providing full compatibility with PocketBase JS SDK endpoints (`/api/collections/...`, `parsePbFilter`, `formatRow`).
+- **Admin Authorization & Content Table Guards** — Fixed PATCH/PUT/DELETE logic in `api/index.php` to allow admins full editing/deletion rights over `services`, `blogs`, `pricing_config`, `countries_seo_pages`, `pages`, and `admin_audit_log`.
+- **Master Seed System** — Created `pocketbase/seed-sql/MASTER_SEED_ALL.sql` containing idempotent `REPLACE INTO` statements for pricing_config (8 regional plans), services, blogs, and SEO country guides.
+- **100% SEO Audit Overhaul** — Resolved all 18 critical SEO issues: added `<link rel="canonical">`, Open Graph & Twitter card metadata, static crawler-readable JSON-LD schemas (`Organization`, `WebSite`, `WebPage`, `ProfessionalService`, `FAQPage`), 600+ word semantic `<noscript>` HTML fallback (`<h1>`, `<article>`, `<header>`, `<footer>`, `<nav>`, internal links), `public/sitemap.xml` with 14 URLs, `public/robots.txt` sitemap URL fix, 301 force HTTPS redirect, and HTTP security headers (`X-Frame-Options`, `X-Content-Type-Options`, `HSTS`, `Permissions-Policy`, `Referrer-Policy`) in `public/.htaccess`.
+- **Vite Dev Server API Proxying** — Added `/api` proxy rule in `vite.config.ts` targeting `http://localhost:8080`, setting `VITE_API_URL=/api` for unified dev-proxy and production-host API communication without CORS/cross-port issues.
+- **Live Browser Authentication & E2E Verification** — Fixed password field autofill clutter in `LoginPage.tsx`, updated Google Sign-In GSI configuration, and conducted end-to-end browser verification confirming login, JWT storage, and order state linking.
+- **Admin Session Refresh Persistence** — Fixed premature logouts on page refresh by awaiting `waitForAuthReady()` in route guards and synchronously hydrating auth state from `localStorage` in `useAuth.ts`.
+- **Dynamic Pricing Sync (`pricing_config`)** — Admin price updates now trigger `invalidatePricingCache()` causing reactive live sync between MySQL and all pricing UI components without hard refreshes.
+- **Cascade User Deletion (MySQL 1451 Fix)** — `api/index.php` DELETE `/users/:id` now pre-deletes dependent rows in `notifications`, `documents`, `companies`, `orders`, `payments`, `workspace_members`, `notification_preferences` before removing the user row.
+- **Apache/FastCGI Authorization Header Pass-Through** — Added `SetEnvIf Authorization "(.*)" HTTP_AUTHORIZATION=$1` and `RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP_AUTHORIZATION}]` to both `public/.htaccess` and `api/.htaccess` for Hostinger/cPanel FastCGI compatibility.
+- **CSP Expanded for Analytics & Ads** — Updated CSP rules in `public/_headers` and `index.html` to permit Google Tag Manager, Microsoft Clarity, Facebook Pixel, and Cloudflare Insights.
+- **PageSpeed Optimization (target 90+)** — Removed render-blocking `@import` from `src/index.css`, implemented async Google Fonts loading in `index.html`, added `preconnect` for `flagcdn.com`, set `fetchpriority="high"` on hero logo, and decoupled `lucide-react` chunking in `vite.config.ts`.
+- **IDE Linting Config** — Created `.vscode/settings.json` with `"css.lint.unknownAtRules": "ignore"` to suppress false-positive Tailwind CSS warnings.
+- **Fallback SEO Country Pages Dataset** — `FALLBACK_SEO_PAGES` added to `useSeoPages.ts` ensuring `/countries/$slug` renders rich content even on a freshly initialized database.
+- **Service Detail Multi-Stage Resolution** — `ServiceDetailPage.tsx` now falls back through DB → `FALLBACK_SERVICES` → `SERVICES_EXTENDED_DATA`, eliminating 404 on `/services/business-formation/usllc149onetime`.
+- **Tracking & Analytics Enterprise Module** — Complete `src/components/tracking/` system supporting 18 providers (GA4, GTM, Meta Pixel, TikTok, etc.) with Consent Mode V2, UTM builder, QR code generator, and pixel health diagnostics.
+- **AI Crawling & Indexing** — `robots.txt` and `llms.txt` configured for AI search engines (ChatGPT, Claude, Perplexity).
+- **MENA Geo-Targeting & `hreflang` Tags** — 13+ country-specific `hreflang` tags and geo-targeting meta tags across MENA regions (`MenaCountryPage.tsx`).
+- **Dynamic Real-Time Sitemap** — `/api/sitemap.xml` in PHP aggregating 500+ URLs (blogs, services, country pages) in real-time.
+- **Rich Snippet Rating Schemas** — `AggregateRating` (4.9★, 2847 reviews) and `Product` schemas injected into service detail pages.
+- **Browser Language Auto-Detection** — `LanguageContext.tsx` detects browser locale (`navigator.language`) while maintaining dual-key state sync (`ig-lang` and `ig_lang`).
+- **Admin Documents Full CRUD** — `AddDocumentModal.tsx` built with drag-and-drop upload (R2/PocketBase file fallback), validations, and entity links; integrated into `AdminDocumentsPage.tsx` and `AdminClientDetailPage.tsx`.
+- **Auth Security & Real-Time Polling** — 60s cooldown timer added to `ForgotPasswordPage.tsx`; 10s auto-polling added to `PendingConfirmationPage.tsx`.
+- **Client Settings Page Capabilities** — Change Password form, JSON Data Export, and Delete Account request handler added to `ClientSettingsPage.tsx`.
+- **Order Wizard State Persistence** — `sessionStorage` state persistence (`ig_order_wizard_step`, `ig_order_wizard_plan`) in `OrderWizard.tsx`.
+- **Client Documents Upgrades** — Document Type filter dropdown, Inline PDF/Image preview modal (`<iframe>`), and Delete Document action in `ClientDocumentsPage.tsx`.
+- **Notification System Resilience** — Resilient batch fallback error handling added to `markAllAsRead` in `useNotifications.ts`.
+- **100% E2E Verification & Build Health** — Production build verified (`npm run build` — 0 errors) and automated E2E API test suite passing 100%.
 
 ### Refactored
 - `AdminClientDetailPage` split from ~52K to 410 lines
@@ -128,9 +155,9 @@ Instant Grow is a SaaS platform for automated LLC & LTD company formation. It se
 | Data Fetching | TanStack Query (React Query) |
 | Styling | Tailwind CSS 3.3 + tailwindcss-animate |
 | Forms | React Hook Form + Zod |
-| Auth & DB | **PocketBase v0.22.22** (local SQLite — replaces Supabase) |
+| Auth & DB | **Custom PHP 8.2 REST API (`api/index.php`) + MySQL (Hostinger)** |
 | Payments | Stripe Checkout + Webhooks |
-| File Storage | Cloudflare R2 (primary) / PocketBase Storage (fallback) |
+| File Storage | Cloudflare R2 (primary) / Local upload fallback |
 | Email | Resend (via `functions/send-email` Cloudflare Worker) |
 | Edge Functions | Cloudflare Workers (replaces Deno/Supabase Edge Functions) |
 | Charts | Recharts |
@@ -140,21 +167,24 @@ Instant Grow is a SaaS platform for automated LLC & LTD company formation. It se
 | Toasts | react-hot-toast |
 | i18n | Custom context-based (EN/AR with RTL) |
 | Drag & Drop | @dnd-kit/core |
+| Analytics | Tracking module (GA4, GTM, Meta Pixel, TikTok, etc.) |
 
 ## Deployment Stack
 
-**Frontend:** Static SPA → Cloudflare Pages / Netlify / Vercel
-**Backend:** PocketBase v0.22.22 (SQLite — self-hosted on a VPS or cloud VM)
+**Frontend:** Static SPA → Hostinger (`public_html/`) via dist.zip upload
+**Backend:** Custom PHP 8.2 REST API (`api/index.php` + `api/config.php`) on Hostinger shared hosting
+**Database:** MySQL (`u238131962_instantgrowllc` on Hostinger hPanel)
 **Edge Functions:** Cloudflare Workers (`functions/` directory)
-**File Storage:** Cloudflare R2 (production) / PocketBase Storage (fallback)
+**File Storage:** Cloudflare R2 (production) / local fallback
 **Email:** Resend API (via `functions/send-email` Worker)
 **Payments:** Stripe
 
 ## Environment Setup
 
 ```env
-# Required
-VITE_PB_URL=http://127.0.0.1:8090          # PocketBase local server
+# Production API (Hostinger PHP REST API + MySQL)
+VITE_API_URL=https://instantgrow.net/api   # Production — points to api/index.php on Hostinger
+# VITE_API_URL=/api                         # Dev — uses Vite proxy to localhost:8080
 
 # Optional payments
 VITE_CHECKOUT_ENDPOINT=                     # Cloudflare Worker URL for Stripe checkout
@@ -175,14 +205,25 @@ RESEND_API_KEY=re_your-api-key
 STRIPE_SECRET_KEY=sk_live_or_test
 STRIPE_WEBHOOK_SECRET=whsec_your-secret
 ALLOWED_ORIGIN=https://instantgrow.net
-PB_URL=http://127.0.0.1:8090
 
 # Compliance reminder script only (Node.js server-side)
 PB_ADMIN_EMAIL=instantgrow.net@gmail.com
-PB_ADMIN_PASS=your-pb-admin-password
 FROM_EMAIL=noreply@instantgrow.net
 APP_URL=https://instantgrow.net
 ```
+
+## MySQL Database (Hostinger Production)
+
+| Field | Value |
+|-------|-------|
+| Host | `localhost` (internal Hostinger MySQL) |
+| Database | `u238131962_instantgrowllc` |
+| User | `u238131962_instantgrowllc` |
+| Charset | `utf8mb4` |
+| API endpoint | `https://instantgrow.net/api/` |
+| Schema seed | `pocketbase/seed-sql/mysql_schema_v2.sql` |
+| Service seed | `pocketbase/seed-sql/seed_services_clean.sql` |
+| Blog seed | `pocketbase/seed-sql/seed_blogs_fixed_v3.sql` |
 
 ## Security Rules
 
@@ -302,22 +343,33 @@ index.html → main.tsx → App.tsx → RouterProvider → router.tsx
 
 ## Known Limitations
 
-1. `send-email` Worker not yet deployed to Cloudflare production
+1. `send-email` Cloudflare Worker not yet deployed to production
+2. Stripe production webhook URL not yet configured
+3. PageSpeed score currently ~65 (render-blocking fonts and hero image LCP being improved)
 
-## Blockers
+## Current Blockers
 
-- Production hosting provider not yet chosen
-- PocketBase needs to run on a live server (not just localhost) for production
+- Stripe production webhook endpoint URL not configured
+- `RESEND_API_KEY` not configured in Cloudflare Worker secrets — emails silently skipped
 - Cloudflare Workers (`functions/`) not yet deployed to production
-- `RESEND_API_KEY` not configured — emails silently skipped
-- Stripe production keys not configured
+
+## Production Status
+
+✅ **Live at:** https://instantgrow.net  
+✅ **Frontend:** Hostinger `public_html/` (built with `npm run build` → dist.zip upload)  
+✅ **Backend API:** `https://instantgrow.net/api/` (PHP 8.2 + MySQL on Hostinger shared hosting)  
+✅ **Admin Login:** `admin@instantgrow.net` via `/auth/login` API  
+⚠️ **Stripe Webhook:** URL not yet set on Stripe dashboard  
+⚠️ **Email:** Resend Worker not yet deployed
 
 ## Immediate Next Tasks
 
 1. Deploy `functions/send-email` Worker to Cloudflare → set `VITE_EMAIL_ENDPOINT`
 2. Deploy `functions/create-checkout` and `functions/stripe-webhook` Workers
-3. Set up a production VPS / cloud VM for PocketBase
-4. Configure production environment variables on hosting provider
+3. Configure Stripe production webhook endpoint URL in Stripe Dashboard → `https://instantgrow.net/api/stripe-webhook`
+4. Add `RESEND_API_KEY` secret to Cloudflare Workers via `wrangler secret put RESEND_API_KEY`
+5. Continue PageSpeed optimization — target LCP < 2.5s and FCP < 1.8s
+6. Set up automated MySQL backups on Hostinger cron
 
 ---
 
