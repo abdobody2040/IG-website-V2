@@ -257,6 +257,7 @@ export default function Navbar() {
     { label: n.blog, href: '/blog' }
   ]
 
+
   return (
     <>
       <header

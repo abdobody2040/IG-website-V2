@@ -454,7 +454,7 @@ export default function Hero() {
             <motion.div variants={childV}>
               <span className="inline-flex items-center gap-2 bg-blue-50 border border-blue-100 text-blue-600 text-[11px] sm:text-xs font-semibold px-3 sm:px-4 py-2 rounded-full mb-5 sm:mb-6 max-w-[90vw] text-center">
                 <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse shrink-0" />
-                {isAr ? 'تأسيس LLC في 1-2 يوم عمل' : '#1 Online LLC Formation Service for Global Entrepreneurs'}
+                {isAr ? 'تأسيس شركات موثوق لرواد الأعمال حول العالم' : 'Trusted Corporate Formation for Global Founders'}
               </span>
             </motion.div>
 
@@ -513,22 +513,24 @@ export default function Hero() {
               ))}
             </motion.div>
 
-            {/* Rating */}
+            {/* Real Sourced Rating */}
             <motion.div variants={childV} className="flex flex-wrap items-center justify-center lg:justify-start gap-4 mb-8 sm:mb-0">
-              <div className="flex items-center gap-2">
+              <a
+                href="https://www.trustpilot.com/review/instantgrow.net"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2.5 bg-slate-50 hover:bg-slate-100 border border-slate-200 px-3.5 py-1.5 rounded-full transition-all group"
+              >
                 <div className="flex gap-0.5">
                   {[...Array(5)].map((_, i) => (
-                    <Star key={i} size={16} className="fill-amber-400 text-amber-400" />
+                    <Star key={i} size={14} className="fill-[#00B67A] text-[#00B67A]" />
                   ))}
                 </div>
-                <span className="text-base font-bold text-slate-800">4.9</span>
-                <span className="text-xs text-slate-400">/ 5 from 500+ reviews</span>
-              </div>
-              <div className="flex items-center gap-1.5 text-xs text-slate-400">
-                <span className="text-slate-600 font-medium">⭐ Trustpilot</span>
-                <span>·</span>
-                <span className="text-emerald-600 font-semibold">Excellent</span>
-              </div>
+                <span className="text-xs font-bold text-slate-800">5.0 / 5</span>
+                <span className="text-xs text-slate-500 group-hover:text-blue-600 transition-colors">
+                  {isAr ? 'على Trustpilot (5 تقييمات موثقة)' : 'on Trustpilot (5 verified reviews)'}
+                </span>
+              </a>
             </motion.div>
 
             {/* World Map for mobile viewports (centered single column) */}

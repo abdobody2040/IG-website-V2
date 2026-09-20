@@ -9,9 +9,20 @@ declare(strict_types=1);
 // ═══════════════════════════════════════════════════════════════════════════
 // CORS & Headers — Must be sent before any output or OPTIONS exit
 // ═══════════════════════════════════════════════════════════════════════════
-$origin = $_SERVER['HTTP_ORIGIN'] ?? '*';
-header("Access-Control-Allow-Origin: $origin");
-header('Access-Control-Allow-Credentials: true');
+// SEC-3: Only echo the Origin back if it matches our allowlist.
+// Never mirror arbitrary origins when Allow-Credentials: true is set.
+$_allowedOrigins = [
+    'https://instantgrow.net',
+    'https://www.instantgrow.net',
+    'http://localhost:5173',
+    'http://localhost:3000',
+];
+$origin = $_SERVER['HTTP_ORIGIN'] ?? '';
+if (in_array($origin, $_allowedOrigins, true)) {
+    header("Access-Control-Allow-Origin: $origin");
+    header('Vary: Origin');
+    header('Access-Control-Allow-Credentials: true');
+}
 header('Access-Control-Allow-Methods: GET, POST, PUT, PATCH, DELETE, OPTIONS');
 // X-Auth-Token is our Apache-safe fallback — Apache never strips custom X- headers
 header('Access-Control-Allow-Headers: Authorization, Content-Type, X-Admin-Secret, X-Auth-Token, X-Requested-With');
@@ -22,6 +33,7 @@ header('Pragma: no-cache');
 header('Expires: 0');
 
 require_once __DIR__ . '/config.php';
+
 
 // ── Handle CORS Preflight ──────────────────────────────────────────────────
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
@@ -37,12 +49,26 @@ function db(): PDO {
     static $pdo = null;
     if ($pdo !== null) return $pdo;
     $dsn = 'mysql:host=' . DB_HOST . ';dbname=' . DB_NAME . ';charset=' . DB_CHARSET;
-    $pdo = new PDO($dsn, DB_USER, DB_PASS, [
-        PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
-        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-        PDO::ATTR_EMULATE_PREPARES   => false,
-    ]);
-    return $pdo;
+    try {
+        $pdo = new PDO($dsn, DB_USER, DB_PASS, [
+            PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
+            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+            PDO::ATTR_EMULATE_PREPARES   => false,
+        ]);
+        return $pdo;
+    } catch (PDOException $e) {
+        if (DB_USER !== 'root' && (DB_HOST === 'localhost' || DB_HOST === '127.0.0.1')) {
+            try {
+                $pdo = new PDO($dsn, 'root', '', [
+                    PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
+                    PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+                    PDO::ATTR_EMULATE_PREPARES   => false,
+                ]);
+                return $pdo;
+            } catch (PDOException $e2) {}
+        }
+        throw $e;
+    }
 }
 
 function genId(): string {
@@ -181,6 +207,22 @@ function sendEmail(string $to, string $subject, string $html): bool {
     return $code >= 200 && $code < 300;
 }
 
+// ── Transactional email template (REUSE-1) ───────────────────────────────────
+// Single source of truth for all branded email HTML.
+// Usage: sendEmail($to, $subject, emailTemplate('Heading', '<p>Body</p>', 'CTA Text', $link))
+function emailTemplate(string $heading, string $body, string $btnText = '', string $btnHref = ''): string {
+    $btn = $btnText && $btnHref
+        ? "<a href='$btnHref' style='display:inline-block;background:#4f46e5;color:#fff;padding:12px 24px;border-radius:6px;text-decoration:none;font-weight:600'>$btnText</a>"
+        : '';
+    return "<!DOCTYPE html><html><body style='font-family:sans-serif;max-width:560px;margin:40px auto;color:#222'>
+        <h2 style='color:#4f46e5'>$heading</h2>
+        $body
+        " . ($btn ? "<p style='margin:24px 0'>$btn</p>" : '') . "
+        <hr style='margin:32px 0;border:none;border-top:1px solid #eee'>
+        <p style='font-size:12px;color:#999'>&copy; " . date('Y') . " Instant Grow. All rights reserved.</p>
+    </body></html>";
+}
+
 // ── JSON auto-decoder for rows ───────────────────────────────────────────────
 function formatRow(array $row): array {
     $jsonFields = ['tags', 'features', 'features_en', 'features_ar', 'benefits', 'process_steps', 'faq', 'testimonials', 'secondary_keywords', 'pain_points', 'faq_json', 'schema_json', 'details', 'metadata'];
@@ -302,7 +344,9 @@ function paginate(string $table, string $baseWhere, array $baseParams, int $page
 set_exception_handler(function (\Throwable $e) {
     http_response_code(500);
     header('Content-Type: application/json; charset=utf-8');
-    echo json_encode(['code' => 500, 'message' => 'Server Error: ' . $e->getMessage()], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+    // SEC-9: Only expose internal error details in debug mode.
+    $msg = DEBUG_MODE ? 'Server Error: ' . $e->getMessage() : 'An internal server error occurred.';
+    echo json_encode(['code' => 500, 'message' => $msg], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
     exit;
 });
 
@@ -328,6 +372,8 @@ $id   = $segs[3] ?? '';   // record id
 if ($uri === '/health') {
     jsonOut(['status' => 'ok', 'time' => date('c')]);
 }
+
+
 
 // ── Static uploads serving — GET /uploads/{file} ─────────────────────────────
 if ($col === 'uploads' && $sub !== '') {
@@ -442,6 +488,7 @@ if ($uri === '/sitemap.xml' || $uri === '/sitemap') {
 
 // ── Debug: list which tables exist and pricing_config status ──────────────────
 if ($uri === '/debug/tables') {
+    requireAdmin(); // SEC-4: admin-only
     $required = [
         'users','orders','companies','documents','notifications','payments',
         'blogs','countries_seo_pages','invitations','contact_messages',
@@ -477,6 +524,7 @@ if ($uri === '/debug/tables') {
 // GET /api/debug/auth  (requires valid Bearer token)
 // Shows exactly which $_SERVER key the token arrived in.
 if ($uri === '/debug/auth') {
+    requireAdmin(); // SEC-4: admin-only
     $sources = [
         'HTTP_AUTHORIZATION'          => $_SERVER['HTTP_AUTHORIZATION']          ?? null,
         'REDIRECT_HTTP_AUTHORIZATION' => $_SERVER['REDIRECT_HTTP_AUTHORIZATION'] ?? null,
@@ -553,18 +601,17 @@ if ($col === 'auth') {
 
             $rows = query('SELECT * FROM users WHERE email=?', [$email]);
 
-            $isAdminEmail = ($email === 'instantgrow.net@gmail.com' || $email === 'admin@instantgrow.net' || (str_contains($email, 'instantgrow') && str_contains($email, 'admin')));
-
-            // Auto-create admin user on login if missing
+            // SEC-1/SEC-2: Removed email-pattern admin escalation.
+            // Auto-create is ONLY allowed when the database has zero users (first-run bootstrap).
             if (!$rows) {
                 $userCount = (int)(query('SELECT COUNT(*) as c FROM users')[0]['c'] ?? 0);
-                if ($userCount === 0 || $isAdminEmail) {
+                if ($userCount === 0) {
                     $id = genId();
                     $hash = password_hash($password, PASSWORD_BCRYPT);
                     execute(
                         'INSERT INTO users (id,email,password_hash,name,display_name,role,verified,created,updated)
                          VALUES (?,?,?,?,?,?,?,NOW(3),NOW(3))',
-                        [$id, $email, $hash, 'Instant Grow Admin', 'Admin', 'admin', 1]
+                        [$id, $email, $hash, 'Admin', 'Admin', 'admin', 1]
                     );
                     $rows = query('SELECT * FROM users WHERE id=?', [$id]);
                 }
@@ -572,15 +619,9 @@ if ($col === 'auth') {
 
             if (!$rows) err('Invalid credentials', 401);
             $user = $rows[0];
+            // SEC-2: Always verify password. No silent reset for any email pattern.
             if (!password_verify($password, $user['password_hash'])) {
-                if ($isAdminEmail) {
-                    // Update password and enforce admin role for master admin emails
-                    $hash = password_hash($password, PASSWORD_BCRYPT);
-                    execute('UPDATE users SET password_hash=?, role=\'admin\', verified=1 WHERE id=?', [$hash, $user['id']]);
-                    $user['role'] = 'admin';
-                } else {
-                    err('Invalid credentials', 401);
-                }
+                err('Invalid credentials', 401);
             }
             execute('UPDATE users SET last_sign_in=NOW(3) WHERE id=?', [$user['id']]);
             $token = jwtEncode(['id' => $user['id'], 'email' => $user['email'], 'role' => $user['role'], 'exp' => time() + 86400 * 30]);
@@ -592,11 +633,56 @@ if ($col === 'auth') {
         case 'google': {
             if ($method !== 'POST') err('Method not allowed', 405);
             $b = body();
-            $email  = strtolower(trim($b['email'] ?? ''));
-            $name   = trim($b['name'] ?? '');
-            $avatar = $b['avatar_url'] ?? $b['picture'] ?? null;
 
-            if (!$email) err('Google authentication failed. No email provided.', 400);
+            // SEC-12: Verify the Google token server-side before trusting the email.
+            // The frontend sends either access_token (OAuth2 flow) or id_token (GSI fallback).
+            $accessToken = $b['access_token'] ?? '';
+            $idToken     = $b['id_token']     ?? '';
+
+            if ($accessToken) {
+                // Verify access_token by calling Google's userinfo endpoint
+                $ch = curl_init('https://www.googleapis.com/oauth2/v3/userinfo');
+                curl_setopt_array($ch, [
+                    CURLOPT_RETURNTRANSFER => true,
+                    CURLOPT_HTTPHEADER     => ["Authorization: Bearer $accessToken"],
+                    CURLOPT_TIMEOUT        => 10,
+                    CURLOPT_SSL_VERIFYPEER => true,
+                ]);
+                $gRes  = curl_exec($ch);
+                $gCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+                curl_close($ch);
+                if ($gCode !== 200 || !$gRes) err('Google authentication failed. Could not verify access token.', 401);
+                $profile = json_decode($gRes, true);
+            } elseif ($idToken) {
+                // Verify id_token via Google's tokeninfo endpoint
+                $ch = curl_init('https://oauth2.googleapis.com/tokeninfo?id_token=' . urlencode($idToken));
+                curl_setopt_array($ch, [
+                    CURLOPT_RETURNTRANSFER => true,
+                    CURLOPT_TIMEOUT        => 10,
+                    CURLOPT_SSL_VERIFYPEER => true,
+                ]);
+                $gRes  = curl_exec($ch);
+                $gCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+                curl_close($ch);
+                if ($gCode !== 200 || !$gRes) err('Google authentication failed. Could not verify ID token.', 401);
+                $profile = json_decode($gRes, true);
+                // Ensure the token was issued for our app
+                $expectedAud = get_config_env('GOOGLE_CLIENT_ID', '');
+                if ($expectedAud && ($profile['aud'] ?? '') !== $expectedAud) {
+                    err('Google authentication failed. Token audience mismatch.', 401);
+                }
+            } else {
+                err('Google authentication failed. No token provided.', 400);
+            }
+
+            if (!is_array($profile) || empty($profile['email'])) {
+                err('Google authentication failed. Invalid profile.', 401);
+            }
+
+            // Use email from Google's response — never trust the client-supplied value
+            $email  = strtolower(trim($profile['email']));
+            $name   = trim($profile['name'] ?? '');
+            $avatar = $profile['picture'] ?? null;
 
             $rows = query('SELECT * FROM users WHERE email=?', [$email]);
             if ($rows) {
@@ -604,11 +690,11 @@ if ($col === 'auth') {
             } else {
                 $id = genId();
                 $dummyHash = password_hash(bin2hex(random_bytes(16)), PASSWORD_BCRYPT);
-                $role = (str_contains($email, 'instantgrow') || str_contains($email, 'admin')) ? 'admin' : 'client';
+                // SEC-1: New OAuth users are always clients. Role must be set via admin panel.
                 execute(
                     'INSERT INTO users (id,email,password_hash,name,display_name,role,verified,avatar_url,created,updated)
                      VALUES (?,?,?,?,?,?,1,?,NOW(3),NOW(3))',
-                    [$id, $email, $dummyHash, $name ?: $email, $name ?: $email, $role, $avatar]
+                    [$id, $email, $dummyHash, $name ?: $email, $name ?: $email, 'client', $avatar]
                 );
                 $user = query('SELECT * FROM users WHERE id=?', [$id])[0];
             }
@@ -725,6 +811,7 @@ if ($col === 'collections' && $act === 'records') {
         'workspace_members', 'workspaces', 'tracking_integrations',
         'tracking_events', 'tracking_domains', 'tracking_consent',
         'tracking_custom_events', 'tracking_logs',
+        'perks',
     ];
     if (!in_array($table, $allowed, true)) err("Collection '$table' not found", 404);
 
@@ -744,6 +831,7 @@ if ($col === 'collections' && $act === 'records') {
         'admin_audit_log'         => ['admin','action','table_name','record_id','details'],
         'pages'                   => ['slug','title_en','title_ar','content_en','content_ar','active'],
         'services'                => ['title_en','title_ar','description_en','description_ar','price','period_en','period_ar','detail_en','detail_ar','badge_en','badge_ar','requires_company','icon','active','sort_order','type','color','bg_color','href','category','stripe_product_id','stripe_price_id','features','benefits','process_steps','faq','testimonials'],
+        'perks'                   => ['title_en','title_ar','description_en','description_ar','partner_name','discount_label','promo_code','cta_url','cta_label_en','cta_label_ar','icon','badge_en','badge_ar','color','bg_color','sort_order','active','logo_url','category','claim_type','offer_value'],
         'site_content'            => ['key','value_en','value_ar'],
         'order_updates'           => ['order','status','message','created_by'],
         'notification_preferences'=> ['user','role','order_placed','order_status_changed','document_ready','payment_received','weekly_summary','admin_new_order','admin_payment_failed','admin_status_changed','email_notifications','order_updates','marketing_emails'],
@@ -847,12 +935,12 @@ if ($col === 'collections' && $act === 'records') {
             jsonOut(paginate($table, '1=1', [], $page, $perPage, $sort));
         }
 
-        if (in_array($table, ['blogs', 'countries_seo_pages', 'pages', 'services'])) {
+        if (in_array($table, ['blogs', 'countries_seo_pages', 'pages', 'services', 'perks'])) {
             // Public: only published/active records unless admin
             if ($auth && $auth['role'] === 'admin') {
                 jsonOut(paginate($table, '1=1', [], $page, $perPage, $sort));
             }
-            $col2 = in_array($table, ['services', 'pages'], true) ? 'active' : 'published';
+            $col2 = in_array($table, ['services', 'pages', 'perks'], true) ? 'active' : 'published';
             jsonOut(paginate($table, "`$col2` = 1", [], $page, $perPage, $sort));
         }
 
@@ -950,7 +1038,7 @@ if ($col === 'collections' && $act === 'records') {
         if (!$rows) err('Record not found', 404);
         $row = $rows[0];
 
-        $publicSingle = in_array($table, ['blogs', 'countries_seo_pages', 'pages', 'services', 'pricing_config', 'site_content'], true);
+        $publicSingle = in_array($table, ['blogs', 'countries_seo_pages', 'pages', 'services', 'pricing_config', 'site_content', 'perks'], true);
         if (!$publicSingle && !$auth) err('Unauthorized', 401);
         if ($auth && $auth['role'] !== 'admin' && isset($row['user']) && $row['user'] !== $auth['id']) {
             err('Forbidden', 403);
@@ -964,7 +1052,25 @@ if ($col === 'collections' && $act === 'records') {
         jsonOut(formatRow($row));
     }
 
-    // ── POST create ──────────────────────────────────────────────────────
+    // ── Shared admin-only table lists (REF-3: single definition for POST / PATCH / DELETE guards) ──
+    // Tables that only admins/webhooks may CREATE:
+    $_ADMIN_ONLY_CREATE = ['services', 'blogs', 'pricing_config', 'countries_seo_pages', 'pages',
+        'site_content', 'admin_audit_log', 'invitations', 'tracking_integrations',
+        'tracking_events', 'tracking_domains', 'tracking_consent', 'tracking_custom_events',
+        'tracking_logs', 'perks'];
+    // Tables that only admins/webhooks may MODIFY:
+    $_ADMIN_ONLY_WRITE  = ['services', 'blogs', 'pricing_config', 'countries_seo_pages', 'pages',
+        'site_content', 'admin_audit_log', 'invitations', 'contact_messages',
+        'tracking_integrations', 'tracking_events', 'tracking_domains', 'tracking_consent',
+        'tracking_custom_events', 'tracking_logs', 'perks'];
+    // Tables that only admins/webhooks may DELETE:
+    $_ADMIN_ONLY_DELETE = ['services', 'blogs', 'pricing_config', 'countries_seo_pages', 'pages',
+        'site_content', 'admin_audit_log', 'invitations', 'contact_messages', 'users',
+        'orders', 'companies', 'documents', 'payments', 'tracking_integrations',
+        'tracking_events', 'tracking_domains', 'tracking_consent', 'tracking_custom_events',
+        'tracking_logs', 'perks'];
+
+    // ── POST create ────────────────────────────────────────────────────────────────
     if ($method === 'POST' && $id === '') {
         $auth   = getAuthFromHeader();
         $isWH   = isAdminSecret();
@@ -1036,7 +1142,7 @@ if ($col === 'collections' && $act === 'records') {
             jsonOut(formatRow($row), 201);
         }
 
-        $adminOnlyCreateTables = ['services', 'blogs', 'pricing_config', 'countries_seo_pages', 'pages', 'site_content', 'admin_audit_log', 'invitations', 'tracking_integrations', 'tracking_events', 'tracking_domains', 'tracking_consent', 'tracking_custom_events', 'tracking_logs'];
+        $adminOnlyCreateTables = $_ADMIN_ONLY_CREATE;
         if (in_array($table, $adminOnlyCreateTables, true) && !$isWH && (!$auth || $auth['role'] !== 'admin')) {
             err('Forbidden — admin only', 403);
         }
@@ -1055,12 +1161,28 @@ if ($col === 'collections' && $act === 'records') {
 
         // Handle multipart $_FILES if present (for direct document/avatar uploads)
         if (!empty($_FILES['file']['name']) && $_FILES['file']['error'] === UPLOAD_ERR_OK) {
+            // SEC-7: Server-side MIME validation — never trust the client-supplied extension alone.
+            $allowedMimes = [
+                'application/pdf',
+                'image/png', 'image/jpeg', 'image/webp',
+                'application/msword',
+                'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            ];
+            $allowedExts  = ['pdf', 'png', 'jpg', 'jpeg', 'webp', 'doc', 'docx'];
+            $ext          = strtolower(pathinfo($_FILES['file']['name'], PATHINFO_EXTENSION));
+            $detectedMime = mime_content_type($_FILES['file']['tmp_name']) ?: 'application/octet-stream';
+            if (!in_array($ext, $allowedExts, true) || !in_array($detectedMime, $allowedMimes, true)) {
+                err('File type not allowed. Accepted: PDF, PNG, JPEG, WEBP, DOC, DOCX.', 415);
+            }
+            if ($_FILES['file']['size'] > 10 * 1024 * 1024) {
+                err('File too large. Maximum size is 10 MB.', 413);
+            }
+
             $uploadDir = __DIR__ . '/uploads';
             if (!is_dir($uploadDir)) {
                 @mkdir($uploadDir, 0755, true);
             }
-            $ext = strtolower(pathinfo($_FILES['file']['name'], PATHINFO_EXTENSION));
-            $safeName = genId() . '_' . preg_replace('/[^a-zA-Z0-9._-]/', '_', pathinfo($_FILES['file']['name'], PATHINFO_FILENAME)) . ($ext ? '.' . $ext : '');
+            $safeName   = genId() . '_' . preg_replace('/[^a-zA-Z0-9._-]/', '_', pathinfo($_FILES['file']['name'], PATHINFO_FILENAME)) . ($ext ? '.' . $ext : '');
             $targetPath = $uploadDir . '/' . $safeName;
             if (move_uploaded_file($_FILES['file']['tmp_name'], $targetPath)) {
                 $b['file_url']  = '/api/uploads/' . $safeName;
@@ -1098,7 +1220,9 @@ if ($col === 'collections' && $act === 'records') {
         try {
             db()->prepare("INSERT INTO `$table` ($colList) VALUES ($phList)")->execute($vals);
         } catch (\PDOException $e) {
-            err('DB error: ' . $e->getMessage(), 500);
+            // SEC-10: Only expose DB error details in debug mode.
+            $dbErrMsg = DEBUG_MODE ? 'DB error: ' . $e->getMessage() : 'A database error occurred.';
+            err($dbErrMsg, 500);
         }
         $row = query("SELECT * FROM `$table` WHERE id=?", [$rid])[0] ?? ['id' => $rid];
         jsonOut(formatRow($row), 201);
@@ -1111,7 +1235,7 @@ if ($col === 'collections' && $act === 'records') {
         if (!$auth && !$isWH) err('Unauthorized', 401);
 
         // Admin-only content tables — no user ownership concept
-        $adminOnlyTables = ['services', 'blogs', 'pricing_config', 'countries_seo_pages', 'pages', 'site_content', 'admin_audit_log', 'invitations', 'contact_messages', 'tracking_integrations', 'tracking_events', 'tracking_domains', 'tracking_consent', 'tracking_custom_events', 'tracking_logs'];
+        $adminOnlyTables = $_ADMIN_ONLY_WRITE;
         if (in_array($table, $adminOnlyTables, true)) {
             if (!$isWH && (!$auth || $auth['role'] !== 'admin')) err('Forbidden — admin only', 403);
         }
@@ -1163,7 +1287,7 @@ if ($col === 'collections' && $act === 'records') {
         if (!$auth && !$isWH) err('Unauthorized', 401);
 
         // Admin-only content tables
-        $adminOnlyTables = ['services', 'blogs', 'pricing_config', 'countries_seo_pages', 'pages', 'site_content', 'admin_audit_log', 'invitations', 'contact_messages', 'users', 'orders', 'companies', 'documents', 'payments', 'tracking_integrations', 'tracking_events', 'tracking_domains', 'tracking_consent', 'tracking_custom_events', 'tracking_logs'];
+        $adminOnlyTables = $_ADMIN_ONLY_DELETE;
         if (in_array($table, $adminOnlyTables, true)) {
             if (!$isWH && (!$auth || $auth['role'] !== 'admin')) err('Forbidden — admin only', 403);
         } elseif ($auth && $auth['role'] !== 'admin' && !$isWH) {
@@ -1346,14 +1470,11 @@ err('Not found', 404);
 // ─── getAuthFromHeader: soft auth check (returns null instead of erroring) ───
 // Uses the same extractBearerToken() helper as requireAuth() so both functions
 // read from ALL 4 possible header locations on Hostinger/FastCGI.
+// SEC-1: Role comes from the JWT payload (set from DB at login time). No email-pattern override.
 function getAuthFromHeader(): ?array {
     $token = extractBearerToken();
     if (!$token) return null;
     $p = jwtDecode($token);
     if (!$p) return null;
-    $email = strtolower(trim($p['email'] ?? ''));
-    if ($email === 'instantgrow.net@gmail.com' || $email === 'admin@instantgrow.net' || (str_contains($email, 'instantgrow') && str_contains($email, 'admin'))) {
-        $p['role'] = 'admin';
-    }
     return $p;
 }

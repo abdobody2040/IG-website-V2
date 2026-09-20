@@ -23,8 +23,9 @@ export default function OrderWizard() {
   const { user, isLoading: authLoading } = useAuth()
   const navigate = useNavigate()
 
-  const search = useSearch({ strict: false }) as { plan?: string }
-  const preselect = search?.plan ?? 'us-premium'
+  const search = useSearch({ strict: false }) as { plan?: string; companyName?: string; jurisdiction?: string }
+  const preselect = search?.plan ?? (search?.jurisdiction === 'UK' ? 'uk-basic' : 'us-premium')
+  const prefilledName = search?.companyName ?? ''
 
   const [step, setStep] = useState(() => {
     const saved = sessionStorage.getItem('ig_order_wizard_step')
@@ -59,11 +60,13 @@ export default function OrderWizard() {
   const { register, getValues, trigger, setValue, formState: { errors } } = useForm<WizardData>({
     defaultValues: {
       planId: preselect,
+      companyName: prefilledName,
       companyType: preselect.startsWith('uk') ? 'LTD' : 'LLC',
       email: user?.email ?? '',
       fullName: user?.displayName ?? '',
     }
   })
+
 
   const handleSetPlanId = (id: string) => {
     setPlanId(id)
@@ -248,6 +251,7 @@ export default function OrderWizard() {
                   planId={planId}
                   setPlanId={handleSetPlanId}
                   onStateFeeChange={setStateFee}
+                  prefilledJurisdiction={search?.jurisdiction}
                 />
               )}
               {step === 1 && (

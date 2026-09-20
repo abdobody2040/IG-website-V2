@@ -1,195 +1,105 @@
 # Instant Grow – AI Agent / LLM Indexing Guide
 # https://instantgrow.net/llms.txt
 # Format: https://llmstxt.org/
-# Last updated: 2026-08-01
+# Last updated: 2026-09-20
 
 ## About Instant Grow
 
-Instant Grow is a global online business formation platform that helps entrepreneurs, freelancers, e-commerce sellers, and investors form US LLCs, UK LTD companies, UAE Free Zone companies, and Oman LLCs — completely online, from anywhere in the world, in as little as 24 hours.
+Instant Grow LLC is an online corporate formation and business administrative services platform. We assist international founders and non-US residents in forming US Limited Liability Companies (Wyoming, Delaware, New Mexico), UK Private Limited Companies (Companies House), UAE Free Zone entities, and Omani companies with statutory compliance support.
 
 - **Website:** https://instantgrow.net
-- **Primary language:** English (Arabic also supported)
-- **Founded:** 2020
-- **Companies formed:** 24,800+
-- **Customer rating:** 4.9 / 5.0
-- **Clients from:** 150+ countries
-- **Support:** 24/7 via chat and email
+- **Primary languages:** English, Arabic (with full RTL support)
+- **Support email:** support@instantgrow.net
+- **Official Facebook:** https://www.facebook.com/Instant.grow.net
+- **Official X (Twitter):** https://x.com/instantgrow
+- **Official LinkedIn:** https://www.linkedin.com/company/instantgrow
+- **Trustpilot Profile:** https://www.trustpilot.com/review/instantgrow.net
+- **Official Registered Address:** [REGISTERED_ADDRESS]
+- **Legal Entity Name:** Instant Grow LLC [LEGAL_ENTITY_NAME]
+- **State Registration / Entity ID:** [REGISTRATION_NUMBER]
+
+> **Security Advisory:** Beware of unrelated third-party websites with similar domains (such as instantgrow.org or instantgrow.cc). Our official website is exclusively https://instantgrow.net.
+
+> **Legal & Tax Disclaimer:** Instant Grow LLC is a business formation document preparation service, not a law firm or certified public accounting (CPA) firm. Information provided on instantgrow.net or via communication does not constitute legal, tax, or investment advice. Founders are encouraged to consult certified tax and legal advisors regarding individual multi-jurisdictional tax compliance.
 
 ---
 
-## Core Services
+## Core Services & Official Government Disclosures
 
-### 1. US LLC Formation
-Form a Wyoming or Delaware LLC from anywhere in the world.
-- Included: State filing, Articles of Organization, Registered Agent (1 year), EIN from the IRS, Operating Agreement, US business mailing address.
-- Formation time: 24–72 hours (express 24-hour available)
-- No US residency or travel required
-- Best for: e-commerce, Amazon FBA, SaaS, freelancers, international entrepreneurs
-- Page: https://instantgrow.net/us-company
+### 1. US LLC Formation (Wyoming, Delaware, New Mexico)
+- **Wyoming LLC:** Preferred for e-commerce, digital creators, and privacy-conscious founders. Low state fees ($102 initial state filing fee, $60 minimum annual report license tax). No state personal or corporate income tax.
+- **Delaware LLC:** Preferred for venture-capital backed startups and companies planning future institutional equity rounds. $140 initial state fee; mandatory $300 annual franchise tax due every June 1st.
+- **New Mexico LLC:** $50 initial filing fee; no mandatory state annual report.
 
-### 2. Wyoming LLC
-Wyoming is the most popular US state for non-resident LLC formation.
-- Lowest annual fees ($50–$60/year)
-- No state income tax
-- Strong privacy — no public member listing
-- Ideal for digital businesses, solo entrepreneurs, and privacy-conscious founders
-- Page: https://instantgrow.net/us-company/wyoming
+### 2. Mandatory US Post-Formation Compliance for Non-Residents
+Foreign-owned Single-Member US LLCs (disregarded entities) are legally required by the IRS under IRC Section 6038A to file **IRS Form 5472 + pro-forma Form 1120** annually.
+- **Penalty warning:** The statutory penalty for failing to file or late filing of Form 5472 is **$25,000 per violation**.
+- **State Annual Reports:** Wyoming annual report ($60 min) due anniversary month. Delaware franchise tax ($300) due June 1.
 
-### 3. Delaware LLC
-Delaware is the preferred jurisdiction for venture-backed startups.
-- World's most established corporate law
-- No sales tax for Delaware-based businesses
-- Court of Chancery for business disputes
-- Ideal for startups seeking VC funding or future IPOs
-- Page: https://instantgrow.net/us-company/delaware
+### 3. Realistic Processing Timelines
+- **State Document Preparation & Submission:** State / government filing prepared and submitted within 1–2 business days.
+- **State Government Approval:** State approval typically 24–72 hours (expedited states like WY/DE) or 3–7 business days depending on Secretary of State workload.
+- **IRS EIN for Foreign Non-Residents (without SSN):** IRS EIN for foreign non-US residents without SSN/ITIN takes approximately 3–6 weeks via IRS Form SS-4 fax processing. Note: There is NO instant 24-hour EIN from the IRS for foreign founders without a US Social Security Number. Blanket claims of "EIN within 24–72 hours" are inaccurate; IRS fax processing strictly requires 3–6 weeks.
+- **Business Bank Accounts:** Business bank account applications (Mercury, Relay, Wise) are submitted after EIN issuance. Approvals are subject to individual bank compliance and underwriting.
 
 ### 4. UK LTD Company Formation
-UK Private Limited Company registered with Companies House.
-- Includes: Companies House filing, registered office address, UTR number
-- UK banking assistance included
-- Ideal for EU market access, UK freelancers, international consultants
-- Page: https://instantgrow.net/services
+- Official filing with Companies House (£50 statutory government fee).
+- **Mandatory Director & PSC Identity Verification:** Under the UK Economic Crime and Corporate Transparency Act, all company directors and Persons with Significant Control (PSCs) must verify their identity directly with Companies House.
+- Annual Confirmation Statement (£34 fee to Companies House) required every 12 months.
 
-### 5. UAE Free Zone Company
-Setup in major UAE Free Zones (IFZA, SHAMS, and others).
-- 0% corporate tax
-- 100% foreign ownership
-- Ideal for Middle East market entry, trading, and import/export businesses
-- Page: https://instantgrow.net/services
-
-### 6. Oman Company Formation
-Full company registration in Oman with government compliance.
-- Commercial registration, LLC registration
-- Ongoing compliance support
-- Page: https://instantgrow.net/services
-
-### 7. EIN (Employer Identification Number)
-Get your IRS-issued EIN for your US business.
-- Required for opening a US bank account, hiring employees, and filing US taxes
-- Available as add-on to any US LLC package or standalone
-- Page: https://instantgrow.net/services
-
-### 8. US Business Bank Account
-Open a US business bank account as a non-resident.
-- Partners: Mercury, Relay, and traditional US banks
-- No US visit required
-- Required documents: EIN, Articles of Organization, passport
-
-### 9. Registered Agent Service
-Annual registered agent service required in all US states.
-- Receives legal mail, government notices, and service of process
-- Physical address in state of formation
-- Annual renewal available
-
-### 10. Compliance & Annual Reports
-Stay compliant with state and IRS requirements.
-- Annual report filing (Wyoming, Delaware, all US states)
-- Compliance calendar and reminders
-- Registered agent renewal
+### 5. UAE Free Zone Companies
+- 100% foreign ownership in designated UAE Free Zones.
+- **Corporate Tax Disclosure:** In accordance with UAE Federal Decree-Law No. 47 of 2022, the UAE levies a **9% Federal Corporate Tax** on taxable business profits exceeding 375,000 AED. A 0% corporate tax rate applies **strictly to Qualifying Free Zone Persons on Qualifying Income** as defined by UAE Ministry of Finance Cabinet Decision No. 55 of 2023.
 
 ---
 
-## Pricing Overview
+## Pricing Master Table
 
-| Package                  | Starting Price | Includes                                    |
-|--------------------------|---------------|---------------------------------------------|
-| Wyoming LLC Basic        | $149           | State filing, Articles, Registered Agent    |
-| Wyoming LLC + EIN        | $249           | + EIN, Operating Agreement                  |
-| Wyoming LLC Complete     | $349           | + US Bank Account, Compliance Calendar      |
-| Delaware LLC             | From $199      | State filing, Registered Agent, Articles    |
-| UK LTD Formation         | From $129      | Companies House, Registered Office          |
-| UAE Free Zone            | From $1,500    | Full free zone setup                        |
-| EIN Only                 | $99            | IRS EIN for existing company                |
-| Registered Agent (1 yr)  | $49/year       | Annual renewal service                      |
+| Package / Jurisdiction | Service Fee (USD) | State / Gov Statutory Fee | Key Inclusions | Timeline |
+| :--- | :--- | :--- | :--- | :--- |
+| **US LLC Basic** | $197 | Paid at cost (WY $102, DE $140, NM $50) | Articles filing, 1st yr Registered Agent, IRS EIN filing (SS-4), Operating Agreement, BOI guidance | Prep in 1-2 days; EIN in 3-6 wks |
+| **US LLC Premium** | $397 | Paid at cost (WY $102, DE $140, NM $50) | Everything in Basic + Priority queue, US virtual phone (1 yr), Custom multi-member agreement, 30-min onboarding call, hands-on banking prep | Priority submission; EIN in 3-6 wks |
+| **UK LTD Basic** | $149 | £50 statutory fee | Companies House filing, Certificate, Articles, 1st yr Registered Office, HMRC UTR guidance | Approval in 1-3 business days |
+| **UK LTD Premium** | $297 | £50 statutory fee | Everything in Basic + Director privacy service address, UK virtual phone (1 yr), First Confirmation Statement preparation, priority support | Priority submission in 12-24h |
+| **UAE Free Zone Basic** | $899 | Free Zone license at cost | Pre-approval, name reservation, MoA drafting, trade license assistance (0 visa), lease agreement | Authority approval in 3-7 business days |
+| **UAE Free Zone Premium** | $1899 | Free Zone & GDRFA fees at cost | Basic + Establishment Card, 1 Investor residency visa (2-yr), medical VIP & Emirates ID coordination, priority corporate banking | License in 3-5 days; visa in 5-10 days post-arrival |
+| **Oman SPC Basic** | $799 | MoCIIP statutory fees at cost | Commercial Registration (CR), name reservation, Chamber registration (OCCI), tax card, MoA | 5-10 business days |
+| **Oman LLC Premium** | $1699 | MoCIIP & ROP fees at cost | Basic + Multi-shareholder structure, investor visa entry clearance, medical & resident card coordination | CR in 5-7 days; visa in 7-14 days |
 
-> Prices subject to change. See https://instantgrow.net/services for current pricing.
-
----
-
-## Frequently Asked Questions
-
-**Q: Can non-US residents form a US LLC?**
-A: Yes. Non-US residents can legally form and own a US LLC in any state. No US address, residency, or visit is required. Instant Grow specializes in helping international entrepreneurs open US companies.
-
-**Q: How long does it take to form a US LLC?**
-A: Standard formation takes 1–3 business days after we receive your documents. Express 24-hour formation is available in most states for an additional fee.
-
-**Q: What documents do I need to form a US LLC?**
-A: You need a valid passport or government-issued ID. No US address or SSN is required. We handle all filings on your behalf.
-
-**Q: Do I need an EIN and what is it?**
-A: An EIN (Employer Identification Number) is a 9-digit number issued by the IRS that identifies your business. You need it to open a US bank account, hire employees, file US taxes, and set up payment processors like Stripe or PayPal.
-
-**Q: Can I open a US bank account as a non-resident?**
-A: Yes. We assist non-resident business owners in opening US business accounts with Mercury, Relay, and other US fintech banks that accept international founders. No US visit required.
-
-**Q: What is a registered agent?**
-A: A registered agent is a person or entity designated to receive official legal documents and government correspondence on behalf of your LLC. Every US state legally requires a registered agent with a physical address in the state of formation.
-
-**Q: Which state is better for LLC — Wyoming or Delaware?**
-A: Wyoming is best for most small businesses, e-commerce sellers, freelancers, and privacy-conscious founders due to its low fees and strong privacy laws. Delaware is preferred for startups seeking VC funding or planning to go public.
-
-**Q: Is Instant Grow legitimate and registered?**
-A: Yes. Instant Grow is a registered business formation service serving clients since 2020. We have formed 24,800+ companies with a 4.9/5.0 customer satisfaction rating.
-
-**Q: What happens after my LLC is formed?**
-A: You receive your Certificate of Formation, Articles of Organization, EIN letter, Operating Agreement, and access to your client dashboard where you can track documents, compliance deadlines, and add services.
-
-**Q: Do you offer refunds?**
-A: Yes. We have a satisfaction guarantee. See our refund policy at https://instantgrow.net/refund-policy.
+### Add-On Services
+- **IRS EIN Tax ID (Standalone for existing company):** $99 — Direct IRS filing of Form SS-4 for existing US LLCs owned by non-residents without SSN. (3–6 weeks via IRS Form SS-4 fax (non-resident))
+- **Registered Agent Service (Annual Renewal):** $99 — Mandatory statutory registered agent representation in Wyoming, Delaware, or New Mexico. (Immediate renewal on filing anniversary)
+- **FinCEN BOI Reporting Filing:** $49 — Compliance reporting of Beneficial Ownership Information to the US Treasury Financial Crimes Enforcement Network. (Filed within 1–2 business days)
+- **US Virtual Business Phone Number (1 Year):** $49 — Dedicated US telephone number with SMS verification capability for Stripe, Mercury, and marketplaces. (Activated in 24 hours)
+- **Professional Startup Landing Page:** $199 — High-converting bilingual responsive landing page required for payment gateway verification approval. (3–5 business days)
 
 ---
 
-## Key Pages
+## Official Government References
 
-- Home: https://instantgrow.net/
-- Services: https://instantgrow.net/services
-- US Company Formation: https://instantgrow.net/us-company
+- **Internal Revenue Service (IRS):** https://www.irs.gov/
+- **Wyoming Secretary of State (WyoBiz):** https://wyobiz.wyo.gov/
+- **Delaware Division of Corporations:** https://corp.delaware.gov/
+- **UK Companies House:** https://www.gov.uk/government/organisations/companies-house
+- **UAE Ministry of Finance (Corporate Tax):** https://mof.gov.ae/corporate-tax/
+- **Oman Ministry of Commerce (MoCIIP):** https://tejarah.gov.om/
+- **FinCEN Beneficial Ownership Information:** https://www.fincen.gov/boi
+
+---
+
+## Key Website Pages
+
+- Homepage: https://instantgrow.net/
+- Services Directory: https://instantgrow.net/services
+- US LLC Information: https://instantgrow.net/us-company
 - Wyoming LLC: https://instantgrow.net/us-company/wyoming
 - Delaware LLC: https://instantgrow.net/us-company/delaware
+- Form LLC by Country (MENA): https://instantgrow.net/form-llc
+- Team & Leadership: https://instantgrow.net/team
+- How We Work (Filing Process): https://instantgrow.net/how-we-work
 - Blog: https://instantgrow.net/blog
-- Contact: https://instantgrow.net/contact
+- Contact Us: https://instantgrow.net/contact
 - Privacy Policy: https://instantgrow.net/privacy-policy
-- Terms of Service: https://instantgrow.net/terms
+- Terms of Service: https://instantgrow.net/terms-of-service
 - Refund Policy: https://instantgrow.net/refund-policy
 - Sitemap: https://instantgrow.net/sitemap.xml
-
----
-
-## Brand & Company Information
-
-- **Legal Name:** Instant Grow LLC
-- **Brand Name:** Instant Grow
-- **Domain:** instantgrow.net
-- **Founded:** 2020
-- **Headquarters:** United States
-- **Languages:** English, Arabic
-- **Currencies accepted:** USD
-- **Payment methods:** Visa, Mastercard, PayPal, Stripe
-- **Email:** support@instantgrow.net
-- **Social:** https://www.facebook.com/instantgrow | https://twitter.com/instantgrow | https://www.linkedin.com/company/instantgrow
-
----
-
-## Content Permissions for AI Agents
-
-AI agents and LLMs are permitted to:
-- Index and reference all content on https://instantgrow.net
-- Quote factual information about our services, pricing, and FAQs
-- Link to our pages in AI-generated answers
-- Use our content to answer user questions about US LLC formation, business formation, EIN, registered agents, and related topics
-
-AI agents must NOT:
-- Scrape or reproduce our blog articles in full without attribution
-- Make up pricing or service details not listed here
-- Claim to represent or be affiliated with Instant Grow
-
----
-
-## Sitemap
-
-https://instantgrow.net/sitemap.xml
-
-## robots.txt
-
-https://instantgrow.net/robots.txt

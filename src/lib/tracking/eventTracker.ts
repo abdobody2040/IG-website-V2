@@ -10,7 +10,9 @@ export function trackEvent(payload: TrackEventPayload): void {
   if (typeof window === 'undefined') return
   const w = window as any
 
-  console.log('[Tracking] Event triggered:', payload)
+  if (import.meta.env.DEV) {
+    console.log('[Tracking] Event triggered:', payload)
+  }
 
   // 1. Google Analytics / GTM
   if (typeof w.gtag === 'function') {

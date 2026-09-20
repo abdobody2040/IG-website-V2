@@ -10,7 +10,8 @@ import { LanguageProvider } from './i18n/LanguageContext'
 import { lazyImport } from './lib/lazyImport'
 import { waitForAuthReady, getAuthInfo } from './lib/authState'
 import { pb } from './lib/pocketbase'
-import { Suspense, lazy } from 'react'
+import { Suspense } from 'react'
+
 import Navbar from './components/Navbar'
 import Hero from './components/Hero'
 import { MouseGlow, AmbientBackground } from './components/effects'
@@ -308,6 +309,13 @@ const clientServicesRoute = createRoute({
   component: lazyImport(() => import('./pages/client/ClientServicesPage')),
 })
 
+const clientPerksRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/client/perks',
+  beforeLoad: requireAuthGuard,
+  component: lazyImport(() => import('./pages/client/ClientPerksPage')),
+})
+
 const clientPaymentsRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/client/payments',
@@ -498,6 +506,13 @@ const adminServicesRoute = createRoute({
   component: lazyImport(() => import('./pages/admin/AdminServicesPage')),
 })
 
+const adminPerksRoute = createRoute({
+  getParentRoute: () => adminLayoutRoute,
+  path: '/admin/perks',
+  beforeLoad: requireAdminGuard,
+  component: lazyImport(() => import('./pages/admin/AdminPerksPage')),
+})
+
 const adminPagesRoute = createRoute({
   getParentRoute: () => adminLayoutRoute,
   path: '/admin/pages',
@@ -511,6 +526,8 @@ const adminPageEditorRoute = createRoute({
   beforeLoad: requireAdminGuard,
   component: lazyImport(() => import('./pages/admin/AdminPageEditorPage')),
 })
+
+
 
 // ── SEO country routes ─────────────────────────────────────────────────────
 const seoCountryListRoute = createRoute({
@@ -558,6 +575,8 @@ const sitemapRoute = createRoute({
   component: lazyImport(() => import('./pages/SitemapPage')),
 })
 
+
+
 const aboutRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/about',
@@ -579,6 +598,26 @@ const privacyPolicyRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/privacy-policy',
   component: lazyImport(() => import('./pages/PrivacyPolicyPage')),
+})
+
+const teamRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/team',
+  component: lazyImport(() => import('./pages/TeamPage')),
+})
+
+const howWeWorkRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/how-we-work',
+  component: lazyImport(() => import('./pages/HowWeWorkPage')),
+})
+
+const termsRedirectRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/terms',
+  beforeLoad: () => {
+    throw redirect({ to: '/terms-of-service' })
+  },
 })
 
 const termsRoute = createRoute({
@@ -662,6 +701,7 @@ const adminTree = adminLayoutRoute.addChildren([
   adminHomeEditorRoute,
   adminPriceEditorRoute,
   adminServicesRoute,
+  adminPerksRoute,
   adminPagesRoute,
   adminPageEditorRoute,
 ])
@@ -684,6 +724,7 @@ const routeTree = rootRoute.addChildren([
   clientCompanyRoute,
   clientDocumentsRoute,
   clientServicesRoute,
+  clientPerksRoute,
   clientPaymentsRoute,
   clientMailInboxRoute,
   clientVerificationsRoute,
@@ -706,8 +747,11 @@ const routeTree = rootRoute.addChildren([
   sitemapRoute,
   // Other
   aboutRoute,
+  teamRoute,
+  howWeWorkRoute,
   contactRoute,
   privacyPolicyRoute,
+  termsRedirectRoute,
   termsRoute,
   refundRoute,
   disclaimerRoute,

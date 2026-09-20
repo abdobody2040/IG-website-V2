@@ -4,9 +4,11 @@
 > **Migration Notice:** The database has been migrated from PocketBase (SQLite) to **Hostinger MySQL (MariaDB)** using a custom PDO PHP API backend (`api/index.php`).
 > The schema definition is in [mysql_schema_v2.sql](file:///g:/Vibe%20coding/IG%20website%20V2/pocketbase/seed-sql/mysql_schema_v2.sql). Clean seed scripts are located in `pocketbase/seed-sql/`:
 > - `MASTER_SEED_ALL.sql` (Master seed file: pricing_config + core services + blogs + SEO pages)
+> - `company_name_checker.sql` (Tables: company_name_checks, company_name_config)
 > - `seed_services_clean.sql` (132 complete services)
 > - `seed_blogs_clean.sql` (Full blog posts collection)
 > - `seed_seo_countries_clean_mysql.sql` (52 country SEO pages)
+
 
 ## Schema Overview
 
@@ -160,6 +162,14 @@
 - **Fields:** `slug`, `title_en`, `title_ar`, `content_en`, `content_ar`, `active`
 - **Status:** active (bool)
 - **RLS:** Admins can manage, public can view
+
+### perks
+- **Purpose:** Member exclusive perks, discounts, and software startup credits (F6S catalog) for users with confirmed/active company formations
+- **PK:** `id` (string 50)
+- **Key Fields:** `title_en`, `title_ar`, `description_en`, `description_ar`, `partner_name`, `discount_label`, `promo_code`, `cta_url`, `cta_label_en`, `cta_label_ar`, `icon`, `badge_en`, `badge_ar`, `color`, `bg_color`, `sort_order`, `active`, `logo_url`, `category`, `claim_type`, `offer_value`
+- **Status:** active (bool)
+- **Seed Script:** `pocketbase/seed-sql/seed_f6s_perks.sql` (824 verified startup deals)
+- **RLS/Guard:** Public read (active=1), Admin full CRUD; Client UI gated by user having active/completed company
 
 ## Relations Summary
 

@@ -24,9 +24,8 @@
   SetEnvIf Authorization "(.*)" HTTP_AUTHORIZATION=$1
   RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP_AUTHORIZATION}]
 
-  # ── Dynamic sitemap → PHP API (serves all 500+ URLs from DB) ─────
-  RewriteRule ^sitemap\.xml$ api/index.php [L,QSA]
-  RewriteRule ^sitemap$ api/index.php [L,QSA]
+  # ── Redirect /terms to /terms-of-service (301) ───────────────────
+  RewriteRule ^terms/?$ /terms-of-service [R=301,L]
 
   # ── llms.txt → serve static file ──────────────────────────────────
   RewriteRule ^llms\.txt$ /llms.txt [L]

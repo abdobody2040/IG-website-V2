@@ -68,14 +68,16 @@ export default function Reviews() {
               </p>
             </div>
           </div>
-          {/* LinkedIn icon */}
+          {/* Trustpilot source link */}
           <a
-            href="#"
-            onClick={(e) => e.preventDefault()}
-            className="text-[#0A66C2] hover:opacity-80 transition-opacity"
-            aria-label="LinkedIn"
+            href="https://www.trustpilot.com/review/instantgrow.net"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-[#00B67A] hover:opacity-80 transition-opacity flex items-center gap-1 text-[11px] font-semibold"
+            aria-label="View on Trustpilot"
           >
-            <ExternalLink size={14} />
+            <span>Trustpilot</span>
+            <ExternalLink size={12} />
           </a>
         </div>
       </div>
@@ -102,14 +104,17 @@ export default function Reviews() {
                 <Star key={i} size={20} className="fill-[#00B67A] text-[#00B67A] sm:w-6 sm:h-6" />
               ))}
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3">
               <span className="text-xl sm:text-2xl font-bold text-[#0F172A]">5.0</span>
-              <span className="text-slate-400 text-xs sm:text-sm">/ 5</span>
+              <span className="text-slate-400 text-xs sm:text-sm">/ 5.0</span>
+              <span className="text-slate-300 hidden sm:inline">•</span>
+              <span className="text-xs sm:text-sm text-slate-700 font-medium">5 Verified Reviews</span>
+              <span className="text-slate-300 hidden sm:inline">•</span>
               <a
                 href="https://www.trustpilot.com/review/instantgrow.net"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-xs sm:text-sm text-slate-400 hover:text-blue-500 transition-colors"
+                className="text-xs sm:text-sm font-semibold text-blue-600 hover:underline transition-colors"
               >
                 {r.viewAll}
               </a>
@@ -118,8 +123,18 @@ export default function Reviews() {
         </div>
       </div>
 
-      {/* Dual marquee */}
-      <div className="space-y-6">
+      {/* Dual marquee with edge fade masks */}
+      <div className="relative overflow-hidden space-y-6">
+        {/* Fade edges */}
+        <div
+          className="absolute left-0 top-0 bottom-0 w-16 sm:w-32 z-10 pointer-events-none"
+          style={{ background: 'linear-gradient(90deg, #F8FAFC 0%, transparent 100%)' }}
+        />
+        <div
+          className="absolute right-0 top-0 bottom-0 w-16 sm:w-32 z-10 pointer-events-none"
+          style={{ background: 'linear-gradient(270deg, #F8FAFC 0%, transparent 100%)' }}
+        />
+
         <InfiniteMarquee duration={45}>
           {r.items.map((review, i) => (
             <ReviewCard key={i} review={review} i={i} />
@@ -132,6 +147,7 @@ export default function Reviews() {
           ))}
         </InfiniteMarquee>
       </div>
+
 
       {/* Trustpilot CTA */}
       <div className="text-center mt-10">

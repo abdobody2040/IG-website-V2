@@ -1,170 +1,38 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { Check, Phone } from 'lucide-react'
+import { Check, Phone, Info, ShieldAlert } from 'lucide-react'
 import { useLang } from '../i18n/LanguageContext'
 import { useMagneticButton } from '../hooks/useMagneticButton'
 import { usePricingConfig, resolvePrice } from '../hooks/usePricingConfig'
 import { injectJsonLd, generateProductSchema } from '../lib/seo'
+import { MASTER_PRICING, MASTER_TIMELINES } from '../config/pricingMaster'
 
 /* ─── US LLC features ──────────────────────────────────────────────────────── */
-const usBasicFeatures = [
-  'Wyoming LLC formation',
-  'Registered Agent – first year',
-  'EIN (US Tax ID from IRS)',
-  'All formation documents',
-  'BOI report filing (free)',
-  'US mailing address',
-  'Stripe bank account guidance',
-  'Email support',
-]
-const usPremiumFeatures = [
-  'Everything in Basic',
-  'Priority / fast processing',
-  'Virtual US phone number',
-  'Custom Operating Agreement',
-  'Full Mercury/Relay account setup',
-  'Stripe activation assistance',
-  'WhatsApp + phone support',
-  '30-min onboarding call',
-]
+const usBasicFeatures = MASTER_PRICING.us.basic.inclusions
+const usPremiumFeatures = MASTER_PRICING.us.premium.inclusions
 
 /* ─── UK LTD features ──────────────────────────────────────────────────────── */
-const ukBasicFeatures = [
-  'UK LTD (Companies House)',
-  'Registered office – first year',
-  'Certificate of Incorporation',
-  'All company documents',
-  'Wise business account referral',
-  'Stripe UK setup guidance',
-  'Email support',
-]
-const ukPremiumFeatures = [
-  'Everything in Basic',
-  "Director's service address (privacy)",
-  'Virtual UK phone number',
-  'First Confirmation Statement',
-  'Full Wise account setup',
-  'Stripe UK activation assistance',
-  'WhatsApp + phone support',
-  '30-min onboarding call',
-]
+const ukBasicFeatures = MASTER_PRICING.uk.basic.inclusions
+const ukPremiumFeatures = MASTER_PRICING.uk.premium.inclusions
 
 /* ─── UAE features ─────────────────────────────────────────────────────────── */
-const uaeBasicFeatures = [
-  'UAE Freezone company formation',
-  'Business license for 1 year',
-  'Virtual office address',
-  'Pre-approval & name reservation',
-  'Wise business bank guidance',
-  'Email support',
-]
-const uaePremiumFeatures = [
-  'Everything in Basic',
-  'Mainland or premium Freezone company',
-  'Investor visa & residency assistance',
-  'Corporate bank account opening assistance',
-  'Physical address / desk lease (1 year)',
-  'PRO services support',
-  'WhatsApp + phone support',
-  '30-min onboarding call',
-]
+const uaeBasicFeatures = MASTER_PRICING.uae.basic.inclusions
+const uaePremiumFeatures = MASTER_PRICING.uae.premium.inclusions
 
 /* ─── Oman features ────────────────────────────────────────────────────────── */
-const omanBasicFeatures = [
-  'Oman SPC (Single Person Company)',
-  'Commercial Register (CR) & tax card',
-  'Chamber of Commerce registration',
-  'Registered office address – 1 year',
-  'Bank account application guidance',
-  'Email support',
-]
-const omanPremiumFeatures = [
-  'Everything in Basic',
-  'Oman LLC (multiple shareholders)',
-  'Investor visa & residency assistance',
-  'Corporate bank account opening assistance',
-  'Local office address setup',
-  'Custom corporate bylaws (MoA)',
-  'WhatsApp + phone support',
-  '30-min onboarding call',
-]
+const omanBasicFeatures = MASTER_PRICING.oman.basic.inclusions
+const omanPremiumFeatures = MASTER_PRICING.oman.premium.inclusions
 
 /* ─── Arabic features ─────────────────────────────────────────────────────── */
-const usBasicFeaturesAr = [
-  'تأسيس Wyoming LLC',
-  'Registered Agent — أول سنة',
-  'EIN (رقم ضريبي أمريكي من IRS)',
-  'جميع مستندات التأسيس',
-  'BOI report filing (مجاني)',
-  'عنوان بريدي أمريكي',
-  'إرشاد فتح حساب بنكي + Stripe',
-  'دعم عبر البريد الإلكتروني',
-]
-const usPremiumFeaturesAr = [
-  'كل ما في الأساسية',
-  'معالجة أولوية / سريعة',
-  'رقم هاتف أمريكي افتراضي',
-  'عقد تشغيل مخصص',
-  'إعداد كامل لحساب Mercury/Relay',
-  'مساعدة تفعيل Stripe',
-  'دعم واتساب + هاتف',
-  'مكالمة تأهيلية 30 دقيقة',
-]
-const ukBasicFeaturesAr = [
-  'تأسيس UK LTD (Companies House)',
-  'عنوان مكتب مسجل — أول سنة',
-  'شهادة التأسيس',
-  'جميع مستندات الشركة',
-  'إحالة حساب Wise للأعمال',
-  'إرشاد إعداد Stripe UK',
-  'دعم عبر البريد الإلكتروني',
-]
-const ukPremiumFeaturesAr = [
-  'كل ما في الأساسية',
-  'عنوان خدمة للمدير',
-  'رقم هاتف بريطاني افتراضي',
-  'تقديم أول Confirmation Statement',
-  'إعداد كامل لحساب Wise',
-  'مساعدة تفعيل Stripe UK',
-  'دعم واتساب + هاتف',
-  'مكالمة تأهيلية 30 دقيقة',
-]
-const uaeBasicFeaturesAr = [
-  'تأسيس شركة منطقة حرة في الإمارات',
-  'رخصة تجارية لمدة سنة',
-  'عنوان مكتب افتراضي',
-  'الموافقة المسبقة وحجز الاسم',
-  'إرشاد فتح حساب بنكي للأعمال',
-  'دعم عبر البريد الإلكتروني',
-]
-const uaePremiumFeaturesAr = [
-  'كل ما في الباقة الأساسية',
-  'تأسيس شركة بر رئيسي أو منطقة حرة مميزة',
-  'مساعدة في تأشيرة المستثمر والإقامة',
-  'مساعدة في فتح الحساب البنكي للشركة',
-  'موقع مكتب حقيقي / عقد إيجار مكتب',
-  'خدمات PRO معتمدة',
-  'دعم واتساب + هاتف',
-  'مكالمة تأهيلية 30 دقيقة',
-]
-const omanBasicFeaturesAr = [
-  'تأسيس شركة الشخص الواحد (SPC) في عمان',
-  'السجل التجاري والبطاقة الضريبية',
-  'التسجيل في غرفة التجارة والصناعة',
-  'عنوان مكتب مسجل — أول سنة',
-  'إرشاد فتح حساب بنكي للشركة',
-  'دعم عبر البريد الإلكتروني',
-]
-const omanPremiumFeaturesAr = [
-  'كل ما في الباقة الأساسية',
-  'تأسيس شركة ذات مسؤولية محدودة (LLC) بعمان',
-  'مساعدة في تأشيرة المستثمر والإقامة',
-  'مساعدة في فتح الحساب البنكي للشركة',
-  'إعداد موقع مكتب حقيقي',
-  'صياغة عقد التأسيس واللوائح التجارية',
-  'دعم واتساب + هاتف',
-  'مكالمة تأهيلية 30 دقيقة',
-]
+const usBasicFeaturesAr = MASTER_PRICING.us.basic.inclusionsAr
+const usPremiumFeaturesAr = MASTER_PRICING.us.premium.inclusionsAr
+const ukBasicFeaturesAr = MASTER_PRICING.uk.basic.inclusionsAr
+const ukPremiumFeaturesAr = MASTER_PRICING.uk.premium.inclusionsAr
+const uaeBasicFeaturesAr = MASTER_PRICING.uae.basic.inclusionsAr
+const uaePremiumFeaturesAr = MASTER_PRICING.uae.premium.inclusionsAr
+const omanBasicFeaturesAr = MASTER_PRICING.oman.basic.inclusionsAr
+const omanPremiumFeaturesAr = MASTER_PRICING.oman.premium.inclusionsAr
+
 
 export default function Pricing() {
   const { t, lang } = useLang()
@@ -534,11 +402,58 @@ export default function Pricing() {
           </motion.div>
         </div>
 
+        {/* ── All-In Pricing & Statutory Fees Transparency Section ── */}
+        <div className="mt-12 bg-white rounded-3xl border border-slate-200 p-6 sm:p-8 shadow-sm">
+          <div className="flex items-center gap-2.5 mb-4 text-[#0F172A]">
+            <Info size={20} className="text-blue-600 shrink-0" />
+            <h4 className="text-lg font-bold" style={{ fontFamily: 'Sora, Inter, sans-serif' }}>
+              {isAr ? 'تفاصيل الرسوم الحكومية وتكاليف التجديد بشفافية' : 'All-In Fee Transparency & Statutory Costs'}
+            </h4>
+          </div>
+          <p className="text-sm text-slate-500 mb-6">
+            {isAr
+              ? 'نحن نؤمن بالشفافية الكاملة بدون أي رسوم خفية. أدناه تفاصيل الرسوم الإلزامية التي تفرضها الجهات الحكومية ومواعيد تجديدها السنوية.'
+              : 'We believe in 100% price transparency with zero hidden surprises. Below is the statutory breakdown of mandatory government fees and recurring renewal costs.'}
+          </p>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+            {MASTER_PRICING[region].governmentFees.map((gov, idx) => (
+              <div key={idx} className="bg-slate-50 rounded-2xl p-4 border border-slate-200/80 text-xs text-slate-600 space-y-2">
+                <div className="font-bold text-slate-900 text-sm">{isAr ? gov.nameAr : gov.name}</div>
+                <div>
+                  <span className="font-semibold text-slate-700">{isAr ? 'رسوم التسجيل الأولى: ' : 'Initial Filing: '}</span>
+                  {isAr ? gov.initialFeeAr : gov.initialFee}
+                </div>
+                <div>
+                  <span className="font-semibold text-slate-700">{isAr ? 'رسوم التجديد السنوية: ' : 'Annual Renewal: '}</span>
+                  {isAr ? gov.annualRenewalFeeAr : gov.annualRenewalFee}
+                </div>
+                <div className="text-slate-500 pt-1 border-t border-slate-200">
+                  {isAr ? gov.deadlineInfoAr : gov.deadlineInfo}
+                </div>
+                <div className="pt-1">
+                  <a href={gov.officialUrl} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline inline-flex items-center gap-1 font-medium">
+                    {isAr ? 'الموقع الرسمي للجهة الحكومية ↗' : 'Official Government Source ↗'}
+                  </a>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="p-4 bg-amber-50/70 border border-amber-200 rounded-2xl flex items-start gap-3 text-xs text-amber-900">
+            <ShieldAlert size={16} className="text-amber-600 shrink-0 mt-0.5" />
+            <div>
+              <span className="font-bold">{isAr ? 'تنويه هام حول الجداول الزمنية: ' : 'Official Processing Timelines: '}</span>
+              {isAr ? MASTER_TIMELINES.einNonResident.ar : MASTER_TIMELINES.einNonResident.en}
+            </div>
+          </div>
+        </div>
+
         {/* Bottom note */}
         <p className="text-center text-slate-400 text-sm mt-10">
-          {isAr ? 'غير متأكد؟ ' : 'Not sure which plan? '}
-          <a href="mailto:info@instantgrow.net" className="text-blue-500 hover:underline font-medium">
-            {isAr ? 'تحدث مع فريقنا ←' : 'Talk to our team →'}
+          {isAr ? 'غير متأكد من الولاية أو الباقة المناسبة؟ ' : 'Not sure which plan or jurisdiction fits your business? '}
+          <a href="mailto:support@instantgrow.net" className="text-blue-500 hover:underline font-medium">
+            {isAr ? 'تحدث مع فريقنا عبر support@instantgrow.net ←' : 'Contact our team at support@instantgrow.net →'}
           </a>
         </p>
       </div>

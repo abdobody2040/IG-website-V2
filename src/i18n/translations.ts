@@ -197,39 +197,34 @@ export const translations = {
       heading: 'Frequently Asked Questions',
       items: [
         {
-          question: 'How long does it take to form an LLC?',
+          question: 'How long does it take to form an LLC and get an EIN without an SSN?',
           answer:
-            'Processing times vary by state, but most LLCs are approved within 5-10 business days. Instant Grow offers expedited filing options that can get your LLC formed in as little as 1-2 business days.',
+            'State LLC approval typically takes 2 to 5 business days depending on state processing (e.g., Wyoming, Delaware, New Mexico). However, for international applicants without an SSN, obtaining an EIN requires manual IRS processing of Form SS-4 via fax, which realistically takes 3 to 6 weeks depending on IRS workload. Blanket claims of 24-72 hours for non-resident EINs are inaccurate. We file immediately upon state approval and monitor your application closely.',
         },
         {
-          question: 'What is included in the Premium Formation package?',
+          question: 'What mandatory filings must I complete after LLC formation?',
           answer:
-            'The Premium Formation package includes preparation and filing of Articles of Organization, unlimited name searches, free registered agent service for the first year, a free operating agreement template, your federal EIN/Tax ID number, banking resolution, lifetime company alerts, and email support.',
+            'Foreign-owned single-member US LLCs must file annual information return IRS Form 5472 along with a pro-forma Form 1120. Missing or late filing carries an IRS statutory penalty of up to $25,000 per violation. Additionally, states require ongoing annual maintenance: Delaware charges a flat $300 Annual Franchise Tax (due June 1); Wyoming requires an Annual Report fee starting at $60 (due the first day of your anniversary month); New Mexico has no annual report fee. Registered agent service must also be renewed annually.',
         },
         {
-          question: 'Do I need an EIN for my LLC?',
+          question: 'What are the rules for UK LTD formation and director verification?',
           answer:
-            'Yes, in most cases you will need an EIN (Employer Identification Number) for your LLC. An EIN is required to open a business bank account, file business taxes, hire employees, and establish business credit. We include EIN obtainment in all our packages.',
+            'UK LTD incorporation is £199 + £50 statutory Companies House filing fee. Under the UK Economic Crime and Corporate Transparency Act, all company directors and Persons with Significant Control (PSCs) are required to complete mandatory identity verification directly with Companies House. Companies must also file an annual Confirmation Statement (£34 fee) and company accounts.',
         },
         {
-          question: 'What is a registered agent and do I need one?',
+          question: 'How does corporate tax work for UAE companies?',
           answer:
-            'A registered agent is a person or business designated to receive legal and government documents on behalf of your LLC. Most states require LLCs to have a registered agent with a physical address in the state of formation. Instant Grow includes free registered agent service for the first year with all packages.',
+            'The UAE enforces a 9% federal corporate tax on taxable business profits exceeding AED 375,000 (~$102,000 USD). A 0% rate applies strictly to Qualifying Free Zone Persons (QFZPs) on their Qualifying Income meeting substance and compliance criteria. Blanket claims of "0% corporate tax for all UAE businesses" are inaccurate under UAE Ministry of Finance regulations.',
         },
         {
-          question: 'Can I form an LLC in any state?',
+          question: 'Can non-US residents open a US business bank account remotely?',
           answer:
-            'Yes, Instant Grow can help you form an LLC in all 50 states. Many businesses choose to form in Delaware, Wyoming, or New Mexico for their business-friendly laws, but you can choose any state that best suits your needs.',
+            'Yes. Through our digital banking partners (such as Mercury, Relay, and Wise Business), international founders can apply remotely for US business bank accounts without visiting the United States. Please note that account approval is determined independently by each regulated banking institution based on their compliance policies.',
         },
         {
-          question: 'Can I form a UK Limited Company (LTD) too?',
+          question: 'Is Instant Grow a law firm or CPA firm?',
           answer:
-            'Yes! Instant Grow supports both US LLC and UK Limited Company (LTD) formation. UK LTD formation starts from £199 + £50 Companies House fee. This is ideal for entrepreneurs who want a European presence or primarily serve UK/EU clients.',
-        },
-        {
-          question: 'I am not a US resident — can I still form an LLC?',
-          answer:
-            'Absolutely. Instant Grow specializes in helping international entrepreneurs — especially from the MENA region (Egypt, UAE, KSA, Jordan) — form US LLCs without requiring in-country residency. You do not need to be a US resident or citizen to form an LLC.',
+            'No. Instant Grow LLC is a corporate formation and document filing service. We do not provide formal legal, tax, or accounting advice. For personalized tax planning, consult a licensed CPA or tax attorney. We provide direct links to official government sources (IRS.gov, state SOS portals, Companies House UK, UAE Ministry of Finance) for authoritative guidelines.',
         },
       ],
     },
@@ -258,6 +253,7 @@ export const translations = {
       tryDifferentSearch: 'Try different search terms',
       checkBackSoon: 'Check back soon for new articles',
       read: 'Read',
+      readArticle: 'Read Article',
       moreArticles: 'More Articles',
       shareThisArticle: 'Share this article',
       backToBlog: 'Back to Blog',
@@ -278,9 +274,9 @@ export const translations = {
         'Instant Grow is not a law firm and does not provide legal advice. Formation services are provided for informational purposes only.',
       company: [
         { label: 'About Us', href: '/about' },
-        { label: 'Careers', href: '#' },
+        { label: 'Our Team', href: '/team' },
+        { label: 'How We Work', href: '/how-we-work' },
         { label: 'Blog', href: '/blog' },
-        { label: 'Partners', href: '#' },
         { label: 'Contact Us', href: '/contact' },
       ],
       services: [
@@ -546,6 +542,7 @@ export const translations = {
         documents: 'Documents',
         mailInbox: 'Mail Inbox',
         services: 'Services',
+        memberPerks: 'Member Perks',
         verifications: 'Verifications',
         notifications: 'Notifications',
         settings: 'Settings',
@@ -757,6 +754,7 @@ export const translations = {
     },
   },
 
+
   ar: {
     seo: {
       landing: {
@@ -953,39 +951,34 @@ export const translations = {
       heading: 'أسئلة يطرحها العملاء كثيرًا',
       items: [
         {
-          question: 'كم من الوقت يستغرق تأسيس شركة LLC؟',
+          question: 'كم من الوقت يستغرق تأسيس شركة LLC واستخراج الرقم الضريبي EIN لغير المقيمين؟',
           answer:
-            'تتفاوت أوقات المعالجة حسب الولاية، لكن معظم شركات LLC تُعتمد في غضون 5-10 أيام عمل. تقدم Instant Grow خيارات تقديم سريعة يمكنها تأسيس شركتك في 1-2 يوم عمل فقط.',
+            'يستغرق اعتماد عقد تأسيس الشركة لدى الولاية عادة من يومين إلى 5 أيام عمل (حسب الولاية مثل وايومنغ أو ديلاوير أو نيو مكسيكو). أما استخراج الرقم الضريبي الفيدرالي EIN للأجانب غير الحاملين لرقم تأميني أمريكي (SSN)، فيتطلب معالجة يدوية لنموذج SS-4 لدى مصلحة الضرائب الأمريكية (IRS) عبر الفاكس، وهو ما يستغرق في الواقع من 3 إلى 6 أسابيع حسب ضغط العمل لدى IRS. أي وعود باستخراج EIN في 24-72 ساعة لغير حاملي SSN غير دقيقة. نحن نقدم طلبك فور اعتماد الشركة ونتابعه مباشرة.',
         },
         {
-          question: 'ماذا يشمل باقة التأسيس المميز؟',
+          question: 'ما هي الإقرارات والالتزامات السنوية الإلزامية بعد التأسيس؟',
           answer:
-            'تشمل باقة التأسيس المميز: إعداد وتقديم عقد التأسيس، بحث غير محدود عن الأسماء، خدمة وكيل مسجل مجانية للسنة الأولى، نموذج اتفاقية تشغيل مجاني، رقم EIN/الرقم الضريبي الفيدرالي، قرار بنكي، تنبيهات مدى الحياة للشركة، ودعم عبر البريد الإلكتروني.',
+            'يتعين على الشركات الأمريكية ذات المالك الواحد الأجنبي تقديم إقرار المعلومات السنوي IRS Form 5472 مع نموذج 1120 المبدئي. عدم التقديم أو التأخر فيه يترتب عليه غرامة فيدرالية تصل إلى 25,000 دولار أمريكي. بالإضافة إلى ذلك، تشترط كل ولاية متطلبات سنوية: تفرض ديلاوير ضريبة امتياز سنوية مقطوعة قدرها 300 دولار (تستحق بحلول 1 يونيو)، وتطلب وايومنغ تقريرًا سنويًا يبدأ من 60 دولارًا، بينما لا تفرض نيو مكسيكو رسوم تقرير سنوي. كما يجب تجديد خدمة الوكيل المسجل سنويًا.',
         },
         {
-          question: 'هل أحتاج إلى رقم EIN لشركتي LLC؟',
+          question: 'ما هي شروط تأسيس شركة بريطانية LTD والتحقق من الهوية؟',
           answer:
-            'نعم، في معظم الحالات ستحتاج إلى رقم EIN (رقم تعريف صاحب العمل) لشركتك LLC. يُطلب رقم EIN لفتح حساب بنكي للأعمال، وتقديم الضرائب التجارية، وتوظيف الموظفين، وبناء الائتمان التجاري. نشمل الحصول على رقم EIN في جميع باقاتنا.',
+            'تكلفة تأسيس شركة بريطانية محدودة LTD هي 199 جنيه إسترليني + 50 جنيه رسوم السجل التجاري البريطاني Companies House. بموجب قانون الجرائم الاقتصادية والشفافية المؤسسية البريطاني، يتعين على جميع مديري الشركات والأشخاص ذوي السيطرة الفعلية (PSCs) إتمام التحقق الإلزامي من الهوية مباشرة لدى Companies House. كما يجب تقديم بيان التأكيد السنوي (Confirmation Statement برسم 34 جنيه) وإيداع الحسابات السنوية.',
         },
         {
-          question: 'ما هو الوكيل المسجل وهل أحتاج إليه؟',
+          question: 'كيف تطبق ضريبة الشركات في دولة الإمارات العربية المتحدة؟',
           answer:
-            'الوكيل المسجل هو شخص أو شركة مُعيَّنة لاستلام الوثائق القانونية والحكومية نيابةً عن شركتك LLC. تشترط معظم الولايات أن يكون لدى شركات LLC وكيل مسجل بعنوان فعلي في ولاية التأسيس. تشمل Instant Grow خدمة وكيل مسجل مجانية للسنة الأولى مع جميع الباقات.',
+            'تفرض دولة الإمارات ضريبة اتحادية على الشركات بنسبة 9% على الأرباح الصافية الخاضعة للضريبة التي تتجاوز 375,000 درهم إماراتي (حوالي 102,000 دولار). وتطبق نسبة 0% حصريًا على الشخص القائم في منطقة حرة مؤهلة (QFZP) فيما يتعلق بالدخل المؤهل وضمن معايير التواجد الواقعي، وليس كإعفاء عام وشامل لجميع الشركات.',
         },
         {
-          question: 'هل يمكنني تأسيس شركة LLC في أي ولاية؟',
+          question: 'هل يمكن لغير المقيمين في أمريكا فتح حساب بنكي تجاري عن بُعد؟',
           answer:
-            'نعم، تستطيع Instant Grow مساعدتك في تأسيس شركة LLC في جميع الولايات الخمسين. يختار كثيرون دولاوير أو وايومنغ أو نيو مكسيكو لقوانينها الملائمة للأعمال، لكن يمكنك اختيار أي ولاية تناسب احتياجاتك.',
+            'نعم، من خلال شركائنا في البنوك الرقمية والتكنولوجيا المالية (مثل Mercury و Relay و Wise Business)، يستطيع المؤسسون الدوليون التقدم بطلب لفتح حساب بنكي تجاري أمريكي بالكامل عن بُعد دون الحاجة للسفر. مع العلم أن قرار الموافقة يخضع لسياسات الامتثال والفحص الخاصة بكل مؤسسة مالية.',
         },
         {
-          question: 'هل يمكنني أيضًا تأسيس شركة بريطانية محدودة LTD؟',
+          question: 'هل Instant Grow مكتب محاماة أو محاسبة قانونية؟',
           answer:
-            'بالتأكيد! تدعم Instant Grow تأسيس شركات LLC الأمريكية وشركات LTD البريطانية المحدودة. يبدأ تأسيس LTD البريطانية من £199 + £50 رسوم Companies House. وهذا مثالي للمبادرين الذين يريدون حضورًا أوروبيًا أو يخدمون في المقام الأول عملاء في المملكة المتحدة أو الاتحاد الأوروبي.',
-        },
-        {
-          question: 'لست مقيمًا في الولايات المتحدة — هل يمكنني تأسيس شركة LLC؟',
-          answer:
-            'بالطبع. تتخصص Instant Grow في مساعدة رواد الأعمال الدوليين — ولا سيما من منطقة الشرق الأوسط وشمال أفريقيا (مصر، الإمارات، السعودية، الأردن) — في تأسيس شركات LLC أمريكية دون الحاجة إلى الإقامة داخل البلاد. لا تحتاج إلى أن تكون مقيمًا أو مواطنًا أمريكيًا لتأسيس شركة LLC.',
+            'كلا. شركة Instant Grow LLC هي شركة خدمات إدارية متخصصة في إعداد وثائق التأسيس والإيداع بالتعاون مع وكلاء مسجلين مرخصين. نحن لا نقدم استشارات قانونية أو ضريبية معتمدة. للتخطيط الضريبي المخصص ننصح باستشارة محاسب قانوني (CPA) أو محامٍ معتمد. ونوفر روابط للجهات الحكومية الرسمية (IRS.gov، سكرتير الولاية، Companies House) للتحقق المباشر.',
         },
       ],
     },
@@ -1014,6 +1007,7 @@ export const translations = {
       tryDifferentSearch: 'جرب مصطلحات بحث أخرى',
       checkBackSoon: 'ترقب المقالات الجديدة قريبًا',
       read: 'قراءة',
+      readArticle: 'قراءة المقال',
       moreArticles: 'المزيد من المقالات',
       shareThisArticle: 'شارك هذا المقال',
       backToBlog: 'العودة إلى المدونة',
@@ -1034,9 +1028,9 @@ export const translations = {
         'Instant Grow ليست شركة محاماة ولا تقدم استشارات قانونية. خدمات التأسيس مقدمة لأغراض إعلامية فقط.',
       company: [
         { label: 'من نحن', href: '/about' },
-        { label: 'الوظائف', href: '#' },
+        { label: 'فريق العمل', href: '/team' },
+        { label: 'كيف نعمل', href: '/how-we-work' },
         { label: 'المدونة', href: '/blog' },
-        { label: 'الشركاء', href: '#' },
         { label: 'اتصل بنا', href: '/contact' },
       ],
       services: [
@@ -1302,6 +1296,7 @@ export const translations = {
         documents: 'المستندات',
         mailInbox: 'صندوق البريد',
         services: 'الخدمات',
+        memberPerks: 'مزايا الأعضاء',
         verifications: 'التحقق',
         notifications: 'الإشعارات',
         settings: 'الإعدادات',
@@ -1513,3 +1508,4 @@ export const translations = {
     },
   },
 } as const
+

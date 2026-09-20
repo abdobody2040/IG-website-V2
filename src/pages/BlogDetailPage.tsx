@@ -16,17 +16,26 @@ export default function BlogDetailPage() {
   const content = post ? ((isRTL && post.contentAr) || post.content) : ''
   const title = post && (isRTL && post.titleAr ? post.titleAr : post.title)
 
+  const postCover = post
+    ? ((post.coverImage && !post.coverImage.startsWith('/og/')) ? post.coverImage : `/og/blog-${post.slug}-${isRTL ? 'ar' : 'en'}.png`)
+    : ''
+
   useEffect(() => {
     if (!post) return
     const excerpt = (isRTL && post.excerptAr) ? post.excerptAr : post.excerpt
+    const currentOgImage = `https://instantgrow.net/og/blog-${post.slug}-${lang}.png`
+
     setPageMeta({
       title: `${title} | Instant Grow`,
       description: excerpt || '',
       keywords: post.tags,
-      ogImage: post.coverImage || `/og/blog-${post.slug}-${lang}.png`,
+      ogImage: currentOgImage,
       canonical: getCanonical(`/blog/${post.slug}`),
     })
-    injectJsonLd(generateArticleSchema(post, isRTL))
+    injectJsonLd(generateArticleSchema({
+      ...post,
+      coverImage: currentOgImage,
+    }, isRTL))
     injectBreadcrumb([
       { name: isRTL ? 'الرئيسية' : 'Home', url: getCanonical('/') },
       { name: isRTL ? 'المدونة' : 'Blog', url: getCanonical('/blog') },
@@ -83,9 +92,9 @@ export default function BlogDetailPage() {
           {isRTL ? <ArrowRight size={16} /> : <ArrowLeft size={16} />} {b.backToBlog}
         </Link>
 
-        {post.coverImage && (
-          <div className="rounded-2xl overflow-hidden mb-8">
-            <img src={post.coverImage} alt={title} className="w-full h-56 sm:h-72 object-cover" />
+        {postCover && (
+          <div className="rounded-2xl overflow-hidden mb-8 shadow-md border border-slate-200/60 bg-slate-900">
+            <img src={postCover} alt={title} className="w-full h-auto object-cover max-h-[440px]" />
           </div>
         )}
 

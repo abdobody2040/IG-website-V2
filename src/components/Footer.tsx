@@ -19,7 +19,7 @@ export default function Footer() {
   const socialLinks = [
     { 
       title: 'Facebook', 
-      href: 'https://www.facebook.com/profile.php?id=61577661225593',
+      href: 'https://www.facebook.com/Instant.grow.net',
       svg: (
         <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
           <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" />
@@ -162,6 +162,7 @@ export default function Footer() {
             </ul>
           </div>
 
+
           {/* Column 5 — Legal */}
           <div className="flex flex-col items-center sm:items-start">
             <h4 className="font-bold text-white/80 mb-5 text-sm uppercase tracking-wider">{f.legalHeading}</h4>
@@ -172,6 +173,32 @@ export default function Footer() {
             </ul>
           </div>
 
+        </div>
+
+        {/* Company Details Block & Security Notice (B.4, B.5) */}
+        <div className="border-t border-white/10 pt-8 pb-4 mb-6 grid grid-cols-1 md:grid-cols-2 gap-6 text-xs text-white/60">
+          <div className="space-y-2 text-center sm:text-left rtl:sm:text-right">
+            <h5 className="font-semibold text-white/90 uppercase tracking-wider text-[11px]">
+              {lang === 'ar' ? 'بيانات الشركة الرسمية' : 'Official Entity Details'}
+            </h5>
+            <p><span className="text-white/40">{lang === 'ar' ? 'الاسم القانوني:' : 'Legal Entity:'}</span> Instant Grow LLC</p>
+            <p><span className="text-white/40">{lang === 'ar' ? 'رقم التسجيل / الملف:' : 'Registration/File ID:'}</span> [REGISTRATION_NUMBER]</p>
+            <p><span className="text-white/40">{lang === 'ar' ? 'العنوان المسجل المعتمد:' : 'Official Registered Address:'}</span> [REGISTERED_ADDRESS]</p>
+            <p><span className="text-white/40">{lang === 'ar' ? 'البريد الرسمي للدعم:' : 'Support Email:'}</span> <a href="mailto:support@instantgrow.net" className="text-blue-400 hover:underline">support@instantgrow.net</a></p>
+            <p><span className="text-white/40">{lang === 'ar' ? 'الهاتف:' : 'Phone:'}</span> [PHONE]</p>
+          </div>
+
+          <div className="bg-white/5 rounded-xl p-4 border border-white/10 space-y-2 text-center sm:text-left rtl:sm:text-right">
+            <h5 className="font-semibold text-amber-300 uppercase tracking-wider text-[11px] flex items-center justify-center sm:justify-start rtl:sm:justify-start gap-1.5">
+              <span>⚠️</span>
+              <span>{lang === 'ar' ? 'تنبيه أمني: احذر المواقع المشابهة' : 'Security Alert: Beware of Similar Domains'}</span>
+            </h5>
+            <p className="text-white/50 leading-relaxed text-[11px]">
+              {lang === 'ar'
+                ? 'موقعنا الرسمي الوحيد هو instantgrow.net. احذر من أي مواقع غير تابعة لنا تستخدم أسماء مشابهة (مثل instantgrow.org أو instantgrow.cc). لا ترسل مستندات أو مدفوعات إلا عبر نطاقنا الرسمي instantgrow.net وبريدنا support@instantgrow.net.'
+                : 'Instant Grow LLC operates exclusively via instantgrow.net. Beware of unaffiliated third-party sites using similar brand names (such as instantgrow.org or instantgrow.cc). All authentic correspondence and billing are conducted solely via instantgrow.net and support@instantgrow.net.'}
+            </p>
+          </div>
         </div>
 
         {/* Divider + Bottom bar */}

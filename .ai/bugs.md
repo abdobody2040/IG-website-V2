@@ -2,6 +2,53 @@
 
 ## Known Bugs
 
+### B-045: Security Audit & Privilege Escalation Vulnerabilities Resolution
+**Severity:** CRITICAL
+**Status:** Fixed
+**Filed:** 2026-08-15 | **Closed:** 2026-08-15
+**Description:** 
+1. `api/make-admin.php` allowed unauthenticated elevation of any account to admin.
+2. Email pattern match (`instantgrow.net@gmail.com` / `@instantgrow.net`) automatically granted admin privileges and reset passwords on login.
+3. Insecure CORS headers allowed wildcard origins with credentials enabled.
+4. `/debug/tables` and `/debug/auth` exposed table schemas and tokens without authentication.
+5. `api/config.php` provided fallback secrets when environment variables were missing.
+6. Uploads lacked server-side MIME verification and execution protection.
+7. Google OAuth trusted client-provided email without backend token verification.
+**Root Cause:** Legacy development conveniences and rapid prototyping shortcuts left in place after transitioning to the custom PHP REST API.
+**Fix Applied:** Deleted `api/make-admin.php`; removed all email pattern privilege checks; enforced strict CORS allowlist; gated debug routes behind `requireAdmin()`; added server-side Google token verification; added server-side MIME validation and Apache execution denial; enforced mandatory environment variables for secrets; patched dependencies to 0 vulnerabilities.
+
+---
+
+### B-044: Local Development 500 Errors Due to MySQL Hostinger Credential Mismatch
+**Severity:** HIGH
+**Status:** Fixed
+**Filed:** 2026-08-11 | **Closed:** 2026-08-11
+**Description:** API endpoints (`/collections/services/records`, `/collections/pricing_config/records`, `/company-name/check`) returned `500 Server Error: Access denied for user 'u238131962_instantgrowllc'@'localhost'` when running locally.
+**Root Cause:** `api/config.php` defaulted `DB_USER` to Hostinger's production username (`u238131962_instantgrowllc`). On local Windows, MySQL runs under user `root` with empty password (`""`), causing PDO connection failure.
+**Fix Applied:** Updated `db()` in `api/index.php` to attempt a fallback connection as `root` with `""` password on `localhost` whenever the primary `DB_USER` connection fails with access denied.
+
+---
+
+### B-043: Company Name Checker Restricted Terms Bypass, Admin 401 & Order Wizard State Unset
+**Severity:** HIGH
+**Status:** Fixed
+**Filed:** 2026-08-11 | **Closed:** 2026-08-11
+**Description:** 
+1. US company name checks containing restricted terms (`BANK`, `TRUST`, `INSURANCE`, etc.) returned "Likely Available" without warning the user.
+2. `AdminNameCheckerPage.tsx` returned `401 Unauthorized` on load and toggle because `fetch()` omitted `Authorization` and `X-Auth-Token` headers.
+3. Redirecting from `/company-name-checker` to `/order?jurisdiction=DE` pre-filled the company name but left the US State selection unselected.
+**Root Cause:**
+1. `$hasRestricted` was calculated in `USRegistryProvider::check` but never checked in the `$status` conditional.
+2. Raw `fetch('/api/admin/company-name/config')` was used instead of `pb.send()`.
+3. `StepCompanyInfo.tsx` did not parse `jurisdiction` from URL search parameters to pre-fill `selectedState` and state fee.
+**Fix Applied:**
+1. Added `$matchedRestricted` checks in `USRegistryProvider::check` to flag restricted words as `similar_name` with state/banking approval requirement notices.
+2. Replaced `fetch` with `pb.send()` in `AdminNameCheckerPage.tsx` and `CompanyNameCheckerPage.tsx`.
+3. Added `prefilledJurisdiction` prop and auto-selection in `StepCompanyInfo.tsx` & `OrderWizard.tsx`.
+4. Added `ensureTablesExist()` in `CompanyNameCheckerService` for DB table auto-initialization.
+
+---
+
 ### B-040: Stale HTTP Response Caching Causing Admin Edits & Deletions to Appear Unsaved
 **Severity:** CRITICAL
 **Status:** Fixed

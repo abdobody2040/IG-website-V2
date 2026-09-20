@@ -76,18 +76,28 @@
 - [x] Test document upload errors
 
 
-### Phase 8: Security Hardening (High)
-- [x] Full security audit (14 findings fixed)
-- [x] CSP headers
-- [x] File upload validation
-- [x] CORS origin validation
-- [x] Stripe webhook signature verification
-- [x] Auth tokens on external API calls
-- [x] Password strength policy
-- [x] Login error sanitization
-- [x] Enable HTTPS-only deployment (enforced via fly.toml force_https and CSP upgrade-insecure-requests)
-- [x] Review RLS policies manually (confirmed secure, all collections owner-locked or admin-restricted)
-- [x] Remove SetupPage before production (confirmed deleted, B-006 closed)
+### Phase 8: Security Hardening & Zero-Vulnerability Audit (High)
+- [x] Full codebase security audit (12 vulnerabilities identified and resolved)
+- [x] SEC-1 & SEC-2: Eliminate admin email pattern escalation & silent password reset
+- [x] SEC-3: Enforce strict CORS allowlist in PHP API & remove wildcard from `.htaccess`
+- [x] SEC-4: Auth-gate `/debug/tables` and `/debug/auth` with `requireAdmin()`
+- [x] SEC-5: Permanently delete `api/make-admin.php` backdoor script
+- [x] SEC-6: Remove hardcoded fallback secrets in `api/config.php` (fail-safe 500 on missing env vars)
+- [x] SEC-7: Server-side MIME validation on file uploads & Apache execution denial in `api/uploads/`
+- [x] SEC-9 & SEC-10: Suppress database & PHP exception disclosures when `DEBUG_MODE` is disabled
+- [x] SEC-11 & Dependencies: Patch `dompurify` (^3.4.13), `brace-expansion` (^5.0.9), `fast-uri` (^3.1.5) (`npm audit` → 0 vulnerabilities)
+- [x] SEC-12: Server-side Google OAuth token verification against Google userinfo/tokeninfo APIs
+- [x] SEC-13: Add Strict-Transport-Security (HSTS) and X-Content-Type-Options: nosniff to `api/.htaccess`
+- [x] SEC-14: Replace legacy localhost URL fallback in `functions/delete-user/index.ts` with dynamic `API_URL`
+- [x] DUP-A: Standardize `formatCurrency()` and `formatDate()` utilities in `src/lib/utils.ts`
+- [x] DUP-B: Remove redundant duplicate `scripts/extract_seed.js`
+- [x] REUSE-A: Create reusable `<StatusBadge />` component in `src/components/ui/StatusBadge.tsx`
+- [x] Update minor/patch dependencies across 14 packages
+- [x] REF-2: Gate analytics console.log in `eventTracker.ts` behind `import.meta.env.DEV`
+- [x] REF-3: Consolidate admin-only table arrays into shared constants
+- [x] REUSE-1: Implement centralized `emailTemplate()` helper
+- [x] CSP headers & HTTPS-only deployment
+- [x] Review database queries & parameterization (100% PDO prepared statements)
 
 - [x] SEO metadata via DOM injection (setPageMeta, injectJsonLd, injectBreadcrumb)
 - [x] 100% SEO Audit Overhaul (Canonical, Open Graph, Twitter cards, static JSON-LD, 600+ word `<noscript>`, `sitemap.xml`, `robots.txt`, 301 HTTPS force, security headers)
@@ -102,6 +112,16 @@
 - [x] Sitemap XML (dev route + build-time generation + static sitemap.xml)
 - [x] Social media sharing images for blog posts & site (`og-image.png` + Playwright script)
 - [x] Schema markup for landing page (FAQPage, ProfessionalService, Organization, ItemList)
+
+### Phase 10B: Member Perks & Startup Deals (High)
+- [x] Define `perks` schema in `mysql_schema_v2.sql` and API whitelist in `api/index.php`
+- [x] Ingest 824 F6S software perks catalog from `f6s_software_full_859.xlsx` with brand logos
+- [x] Build `ClientPerksPage.tsx` with confirmed company gate (`active` | `completed`)
+- [x] Add search, category pills, pagination, and direct claim URLs
+- [x] Build `AdminPerksPage.tsx` with full CRUD, search, category filter, and active/inactive toggles
+- [x] Add `usePerks.ts` hook with offline/zero-DB fallback to full catalog
+- [x] Add bilingual navigation links to `ClientLayout` and `AdminLayout`
+- [x] Generate MySQL seed file `pocketbase/seed-sql/seed_f6s_perks.sql`
 
 ### Phase 11: Production Launch (Critical)
 - [x] Choose hosting provider (Hostinger Web Hosting + Custom PHP 8.2 MySQL API)
@@ -323,7 +343,27 @@ See `bugs.md` for detailed bug tracking.
 - [x] Add resilient batch error handling to `markAllAsRead` in `useNotifications.ts`.
 - [x] Run clean production build (`npm run build` — 0 errors) and automated E2E API verification suite (100% passing).
 
+### Sprint: Company Name Checker & Full User Onboarding E2E (2026-08-11)
+- [x] Create SQL database migration `pocketbase/seed-sql/company_name_checker.sql` defining `company_name_checks` and `company_name_config` tables.
+- [x] Implement PHP backend service abstraction `CompanyNameCheckerService` in `api/name-checker.php` with name normalization, IP rate limiting, and log tracking.
+- [x] Integrate UK Companies House REST API in `UKCompaniesHouseProvider` with `COMPANIES_HOUSE_API_KEY` HTTP Basic Auth and local database fallback.
+- [x] Implement US Delaware, Wyoming, New Mexico state name availability search engine in `USRegistryProvider` with restricted terms filtering.
+- [x] Register API routes `POST /api/company-name/check`, `GET/POST /api/admin/company-name/config` in `api/index.php`.
+- [x] Build public name checker tool page `src/pages/CompanyNameCheckerPage.tsx` at `/company-name-checker`.
+- [x] Build result card component `src/components/company-name-checker/ResultCard.tsx` handling States A, B, and C with disclaimers and CTAs.
+- [x] Add Admin Name Checker configuration panel `src/pages/admin/AdminNameCheckerPage.tsx` at `/admin/name-checker`.
+- [x] Connect prefilled company name and jurisdiction params from `/company-name-checker` into `/order` wizard (`OrderWizard.tsx`).
+- [x] Add English and Arabic (RTL) translations to `src/i18n/translations.ts`.
+- [x] Fix local MySQL PDO credential fallback in `api/index.php` (`db()`) to handle `root` user connection on `localhost`.
+- [x] Launch local PHP API server process on port 8080 (`php -S localhost:8080 -t api api/index.php`).
+- [x] Update restricted terms handling in `USRegistryProvider::check` for banking/restricted words (`BANK`, `TRUST`, `INSURANCE`, etc.).
+- [x] Add `pb.send()` authentication headers to `AdminNameCheckerPage.tsx` resolving 401 Unauthorized errors.
+- [x] Auto-select US State and filing fee in `StepCompanyInfo.tsx` when prefilled from `/company-name-checker`.
+- [x] Create unit tests in `src/test/companyNameChecker.test.tsx` (100% passing — 86/86 total tests).
+- [x] Execute complete end-to-end user onboarding E2E verification (Name Search → Wizard Step 0-6 → Invoice Payment → Client Portal Dashboard).
+
 ### Sprint: Next (Pending)
+
 - [ ] Deploy `functions/send-email` Cloudflare Worker → set `VITE_EMAIL_ENDPOINT`
 - [ ] Deploy `functions/create-checkout` and `functions/stripe-webhook` Workers
 - [ ] Configure Stripe production webhook URL in Stripe Dashboard → `https://instantgrow.net/api/stripe-webhook`

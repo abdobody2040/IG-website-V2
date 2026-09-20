@@ -40,23 +40,47 @@ function mapBlog(raw: Record<string, unknown>): Blog {
   }
 }
 
+import { BLOGS_CATALOG } from '../data/blogsData'
+
 export function useBlogs(filters?: { published?: boolean; featured?: boolean; limit?: number; language?: string }) {
   return useQuery({
     queryKey: ['blogs', filters],
     queryFn: async () => {
-      const filterParts: string[] = []
-      if (filters?.published !== undefined) filterParts.push(`published = ${filters.published}`)
-      if (filters?.featured) filterParts.push('featured = true')
-      // Allowlist: only 'en' and 'ar' are valid language values
-      if (filters?.language && ['en', 'ar'].includes(filters.language)) {
-        filterParts.push(`language = "${filters.language}"`)
+      try {
+        const filterParts: string[] = []
+        if (filters?.published !== undefined) filterParts.push(`published = ${filters.published}`)
+        if (filters?.featured) filterParts.push('featured = true')
+        if (filters?.language && ['en', 'ar'].includes(filters.language)) {
+          filterParts.push(`language = "${filters.language}"`)
+        }
+
+        const result = await pb.collection('blogs').getList(1, filters?.limit ?? 200, {
+          filter: filterParts.join(' && ') || undefined,
+          sort: '-created',
+        })
+        
+        if (result.items.length > 0) {
+          return result.items.map(item => {
+            const b = mapBlog(item as unknown as Record<string, unknown>)
+            return {
+              ...b,
+              coverImage: b.coverImage || `/og/blog-${b.slug}-en.png`,
+            }
+          })
+        }
+      } catch (err) {
+        console.warn('useBlogs: DB fetch failed, falling back to static catalog', err)
       }
 
-      const result = await pb.collection('blogs').getList(1, filters?.limit ?? 200, {
-        filter: filterParts.join(' && ') || undefined,
-        sort: '-created',
-      })
-      return result.items.map(item => mapBlog(item as unknown as Record<string, unknown>))
+      // Fallback to rich pre-built catalog
+      let list = [...BLOGS_CATALOG]
+      if (filters?.published !== undefined) {
+        list = list.filter(b => b.published === filters.published)
+      }
+      if (filters?.featured) {
+        list = list.filter(b => b.featured)
+      }
+      return list.slice(0, filters?.limit ?? 200)
     },
   })
 }
@@ -66,11 +90,24 @@ export function useBlogBySlug(slug: string) {
     queryKey: ['blog', slug],
     queryFn: async () => {
       const safeSlug = slug.replace(/[^a-z0-9-]/gi, '')
-      const result = await pb.collection('blogs').getList(1, 1, {
-        filter: `published = true && (slug = "${safeSlug}" || slug_ar = "${safeSlug}")`,
-      })
-      if (result.items.length === 0) throw new Error('Blog not found')
-      return mapBlog(result.items[0] as unknown as Record<string, unknown>)
+      try {
+        const result = await pb.collection('blogs').getList(1, 1, {
+          filter: `published = true && (slug = "${safeSlug}" || slug_ar = "${safeSlug}")`,
+        })
+        if (result.items.length > 0) {
+          const b = mapBlog(result.items[0] as unknown as Record<string, unknown>)
+          return {
+            ...b,
+            coverImage: b.coverImage || `/og/blog-${b.slug}-en.png`,
+          }
+        }
+      } catch {
+        // Fallback to static catalog
+      }
+
+      const match = BLOGS_CATALOG.find(b => b.slug === safeSlug || b.slugAr === safeSlug)
+      if (!match) throw new Error('Blog not found')
+      return match
     },
     enabled: !!slug,
   })

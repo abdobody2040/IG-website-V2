@@ -22,14 +22,26 @@ RewriteCond %{REQUEST_FILENAME} !-f
 RewriteRule ^(.*)$ index.php [QSA,L]
 
 # 4. CORS headers at Apache level — needed for OPTIONS preflight
-# on Hostinger configs where OPTIONS may not reach PHP.
-# These are safe to have alongside index.php's CORS headers.
-Header always set Access-Control-Allow-Origin "*"
+# PHP (index.php) controls CORS via an allowlist and sends the correct headers
+# for both preflight OPTIONS and regular requests. We intentionally do NOT set
+# Access-Control-Allow-Origin here because a static '*' would override the PHP
+# origin allowlist and re-open CORS for all origins (SEC-3 fix).
+# Only non-origin headers are set here as safe defaults:
 Header always set Access-Control-Allow-Methods "GET, POST, PUT, PATCH, DELETE, OPTIONS"
 Header always set Access-Control-Allow-Headers "Authorization, Content-Type, X-Admin-Secret, X-Auth-Token, X-Requested-With"
 Header always set Access-Control-Max-Age "86400"
+Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains"
+Header always set X-Content-Type-Options "nosniff"
 
 # 5. Block direct access to config.php
 <Files "config.php">
   Require all denied
 </Files>
+
+# 6. SEC-7: Block PHP execution in the uploads directory.
+# Even if a .php file were uploaded, Apache must not execute it.
+<Directory "uploads">
+  php_flag engine off
+  Options -ExecCGI -Indexes
+  AddType text/plain .php .php5 .phtml .phar
+</Directory>

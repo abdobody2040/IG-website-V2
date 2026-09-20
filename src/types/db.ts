@@ -196,3 +196,54 @@ export interface User {
   updatedAt: string
   lastSignIn: string
 }
+
+export interface Perk {
+  id: string
+  titleEn: string
+  titleAr: string
+  descriptionEn: string
+  descriptionAr: string
+  partnerName: string | null
+  discountLabel: string | null
+  promoCode: string | null
+  ctaUrl: string | null
+  ctaLabelEn: string | null
+  ctaLabelAr: string | null
+  icon: string
+  badgeEn: string | null
+  badgeAr: string | null
+  color: string
+  bgColor: string
+  sortOrder: number
+  active: boolean
+  logoUrl?: string | null
+  category?: string | null
+  claimType?: string | null
+  offerValue?: string | null
+  createdAt: string
+  updatedAt: string
+}
+
+export interface PerkFormData {
+  title_en: string
+  title_ar: string
+  description_en: string
+  description_ar: string
+  partner_name: string
+  discount_label: string
+  promo_code: string
+  cta_url: string
+  cta_label_en: string
+  cta_label_ar: string
+  icon: string
+  badge_en: string
+  badge_ar: string
+  color: string
+  bg_color: string
+  sort_order: number
+  active: boolean
+  logo_url?: string | null
+  category?: string | null
+  claim_type?: string | null
+  offer_value?: string | null
+}

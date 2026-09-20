@@ -211,9 +211,10 @@ if (error) {
 
 ## Rate Limiting
 
-- **Current:** Not implemented at application level
+- **PHP REST API Rate Limiter (`api/name-checker.php`)**: Implemented IP-based rate limiting (10 requests/minute per IP) logged in `company_name_checks` table for `POST /api/company-name/check`.
 - **Supabase:** Configure in Authentication → Rate Limits
 - **Recommended:** Cloudflare Turnstile on contact form, rate limiting on Edge Functions
+
 
 ## API Versioning
 

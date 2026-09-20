@@ -1,5 +1,5 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { renderHook } from '@testing-library/react'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import { renderHook, act } from '@testing-library/react'
 import { useRequireAuth, useRequireAdmin } from '../hooks/useRequireAuth'
 
 const mockNavigate = vi.fn()
@@ -49,9 +49,20 @@ describe('useRequireAuth', () => {
 })
 
 describe('useRequireAdmin', () => {
+  beforeEach(() => {
+    vi.useFakeTimers()
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
   it('redirects to login when not authenticated', () => {
     mockUseAuth.mockReturnValue({ user: null, isLoading: false, isAuthenticated: false })
     renderHook(() => useRequireAdmin())
+    act(() => {
+      vi.advanceTimersByTime(100)
+    })
     expect(mockNavigate).toHaveBeenCalledWith({ to: '/auth/login' })
   })
 
@@ -62,6 +73,9 @@ describe('useRequireAdmin', () => {
       isAuthenticated: true,
     })
     renderHook(() => useRequireAdmin())
+    act(() => {
+      vi.advanceTimersByTime(100)
+    })
     expect(mockNavigate).toHaveBeenCalledWith({ to: '/client/dashboard' })
   })
 
@@ -72,12 +86,18 @@ describe('useRequireAdmin', () => {
       isAuthenticated: true,
     })
     renderHook(() => useRequireAdmin())
+    act(() => {
+      vi.advanceTimersByTime(100)
+    })
     expect(mockNavigate).not.toHaveBeenCalled()
   })
 
   it('does not redirect while loading', () => {
     mockUseAuth.mockReturnValue({ user: null, isLoading: true, isAuthenticated: false })
     renderHook(() => useRequireAdmin())
+    act(() => {
+      vi.advanceTimersByTime(100)
+    })
     expect(mockNavigate).not.toHaveBeenCalled()
   })
 })

@@ -6,104 +6,176 @@
  *
  * Schedule (example): 0 9 * * * node scripts/send-compliance-reminders.mjs
  *
- * Environment variables (from .env.local or shell):
- *   PB_URL           — PocketBase URL  (default: http://127.0.0.1:8090)
- *   PB_ADMIN_EMAIL   — Admin email for PocketBase authentication
- *   PB_ADMIN_PASS    — Admin password  for PocketBase authentication
- *   RESEND_API_KEY   — Resend API key for sending emails directly
+ * Environment variables (from .env.local or shell / GitHub Actions secrets):
+ *   API_URL          — PHP API base URL  (e.g. https://instantgrow.net/api)
+ *   PB_ADMIN_EMAIL   — Admin user email
+ *   PB_ADMIN_PASS    — Admin user password
+ *   RESEND_API_KEY   — Resend API key for sending emails
  *   FROM_EMAIL       — Sender address  (default: noreply@instantgrow.net)
- *   APP_URL          — App URL for dashboard link (default: https://instantgrow.net)
+ *   APP_URL          — App base URL     (default: https://instantgrow.net)
+ *
+ * NOTE: PB_URL is accepted as a fallback alias for API_URL to avoid
+ * needing to rename the existing GitHub Actions secret immediately.
  */
 
 import 'dotenv/config'
 
-const PB_URL        = process.env.PB_URL         || 'http://127.0.0.1:8090'
-const ADMIN_EMAIL   = process.env.PB_ADMIN_EMAIL
-const ADMIN_PASS    = process.env.PB_ADMIN_PASS
+// ---------------------------------------------------------------------------
+// Configuration
+// ---------------------------------------------------------------------------
+
+// Accept PB_URL as alias so the existing GitHub Actions secret still works.
+// PB_URL was previously set to something like https://instantgrow.net/api
+// If it was the old PocketBase URL (port 8090 etc.) we correct it here.
+const rawApiUrl = process.env.API_URL || process.env.PB_URL || 'https://instantgrow.net/api'
+// Strip any trailing slash for consistent path building
+const API_URL = rawApiUrl.replace(/\/+$/, '')
+
+const ADMIN_EMAIL = process.env.PB_ADMIN_EMAIL
+const ADMIN_PASS  = process.env.PB_ADMIN_PASS
 
 if (!ADMIN_EMAIL || !ADMIN_PASS) {
-  console.error('Error: PB_ADMIN_EMAIL and PB_ADMIN_PASS environment variables must be defined.');
-  process.exit(1);
+  console.error('❌ Error: PB_ADMIN_EMAIL and PB_ADMIN_PASS environment variables must be set.')
+  process.exit(1)
 }
-const RESEND_KEY    = process.env.RESEND_API_KEY
-const FROM_EMAIL    = process.env.FROM_EMAIL     || 'noreply@instantgrow.net'
-const APP_URL       = process.env.APP_URL        || 'https://instantgrow.net'
 
-const REMINDER_WINDOWS = [30, 7] // days before due date to send a reminder
-const OVERDUE_DAYS     = [-1]    // days after due date (1 day overdue)
+const RESEND_KEY  = process.env.RESEND_API_KEY
+const FROM_EMAIL  = process.env.FROM_EMAIL || 'noreply@instantgrow.net'
+const APP_URL     = process.env.APP_URL    || 'https://instantgrow.net'
+
+// Days before due date that trigger a reminder
+const REMINDER_WINDOWS = [30, 7]
+// Days past due date (negative = overdue) that trigger an overdue alert
+const OVERDUE_DAYS     = [-1]
 
 // ---------------------------------------------------------------------------
-// PocketBase admin auth
+// PHP API auth — POST /auth/login  →  { token, record }
 // ---------------------------------------------------------------------------
 
 async function adminLogin() {
-  const res = await fetch(`${PB_URL}/api/admins/auth-with-password`, {
+  const res = await fetch(`${API_URL}/auth/login`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ identity: ADMIN_EMAIL, password: ADMIN_PASS }),
   })
-  if (!res.ok) throw new Error(`PocketBase admin login failed: ${res.status}`)
+  if (!res.ok) {
+    const body = await res.text()
+    throw new Error(`Admin login failed (${res.status}): ${body}`)
+  }
   const { token } = await res.json()
+  if (!token) throw new Error('Admin login returned no token')
+  console.log('✅ Authenticated as admin\n')
   return token
 }
 
 // ---------------------------------------------------------------------------
-// Fetch data
+// Helper: build auth headers for every subsequent request
+// Sends both Authorization AND X-Auth-Token because Hostinger/FastCGI
+// sometimes strips the Authorization header on Apache.
+// ---------------------------------------------------------------------------
+
+function authHeaders(token) {
+  return {
+    'Authorization': `Bearer ${token}`,
+    'X-Auth-Token':  `Bearer ${token}`,
+    'Content-Type':  'application/json',
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Fetch all companies — GET /collections/companies/records?perPage=500
+// Returns items[] containing { id, user, company_name, renewal_due_date, ... }
 // ---------------------------------------------------------------------------
 
 async function fetchAllCompanies(token) {
-  const res = await fetch(
-    `${PB_URL}/api/collections/companies/records?perPage=500&expand=user`,
-    { headers: { Authorization: token } }
-  )
-  if (!res.ok) throw new Error(`Failed to fetch companies: ${res.status}`)
+  const url = `${API_URL}/collections/companies/records?perPage=500&sort=-created`
+  const res = await fetch(url, { headers: authHeaders(token) })
+  if (!res.ok) {
+    const body = await res.text()
+    throw new Error(`Failed to fetch companies (${res.status}): ${body}`)
+  }
   const data = await res.json()
   return data.items || []
 }
 
-async function fetchUserEmail(userId, token) {
-  const res = await fetch(`${PB_URL}/api/collections/users/records/${userId}`, {
-    headers: { Authorization: token },
-  })
-  if (!res.ok) return null
-  const user = await res.json()
-  return { email: user.email, name: user.display_name || user.email }
+// ---------------------------------------------------------------------------
+// Fetch user email — GET /collections/users/records/<id>
+// Returns { email, display_name, name } or null on error
+// ---------------------------------------------------------------------------
+
+async function fetchUser(userId, token) {
+  try {
+    const res = await fetch(`${API_URL}/collections/users/records/${userId}`, {
+      headers: authHeaders(token),
+    })
+    if (!res.ok) return null
+    const user = await res.json()
+    return {
+      email: user.email,
+      name:  user.display_name || user.name || user.email,
+    }
+  } catch {
+    return null
+  }
 }
 
 // ---------------------------------------------------------------------------
-// In-app notification creation
+// Create in-app notification — POST /collections/notifications/records
+// Columns: user, type, title, message, link, read
 // ---------------------------------------------------------------------------
 
 async function createNotification(token, userId, title, message) {
-  await fetch(`${PB_URL}/api/collections/notifications/records`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', Authorization: token },
-    body: JSON.stringify({ user: userId, title, message, read: false }),
-  }).catch(() => {}) // Non-critical
+  try {
+    const res = await fetch(`${API_URL}/collections/notifications/records`, {
+      method: 'POST',
+      headers: authHeaders(token),
+      body: JSON.stringify({
+        user:    userId,
+        type:    'compliance',
+        title,
+        message,
+        link:    '/client/dashboard',
+        read:    false,
+      }),
+    })
+    if (!res.ok) {
+      const body = await res.text()
+      console.warn(`  ⚠️  Notification creation failed (${res.status}): ${body}`)
+    }
+  } catch (err) {
+    console.warn(`  ⚠️  Notification request error: ${err.message}`)
+  }
 }
 
 // ---------------------------------------------------------------------------
-// Email sending via Resend
+// Email via Resend
 // ---------------------------------------------------------------------------
 
 async function sendEmail(to, subject, html) {
   if (!RESEND_KEY) {
-    console.warn(`[skip] No RESEND_API_KEY — would have emailed: ${to} — ${subject}`)
+    console.warn(`  [skip email — no RESEND_API_KEY] Would have sent: ${subject} → ${to}`)
     return
   }
-  const res = await fetch('https://api.resend.com/emails', {
-    method: 'POST',
-    headers: { Authorization: `Bearer ${RESEND_KEY}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      from: `Instant Grow <${FROM_EMAIL}>`,
-      to: [to],
-      subject,
-      html,
-    }),
-  })
-  if (!res.ok) {
-    const body = await res.text()
-    console.error(`[email error] ${res.status}: ${body}`)
+  try {
+    const res = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${RESEND_KEY}`,
+        'Content-Type':  'application/json',
+      },
+      body: JSON.stringify({
+        from:    `Instant Grow <${FROM_EMAIL}>`,
+        to:      [to],
+        subject,
+        html,
+      }),
+    })
+    if (!res.ok) {
+      const body = await res.text()
+      console.error(`  ❌ Email error (${res.status}): ${body}`)
+    }
+  } catch (err) {
+    console.error(`  ❌ Email request failed: ${err.message}`)
   }
 }
 
@@ -145,9 +217,10 @@ function getDaysUntil(dateStr) {
   const now = new Date()
   now.setHours(0, 0, 0, 0)
   due.setHours(0, 0, 0, 0)
-  return Math.ceil((due.getTime() - now.getTime()) / 86400000)
+  return Math.ceil((due.getTime() - now.getTime()) / 86_400_000)
 }
 
+// PHP API field names match the MySQL companies table columns exactly
 const COMPLIANCE_FIELDS = [
   { key: 'renewal_due_date',              label: 'Company Renewal' },
   { key: 'annual_report_due_date',        label: 'Annual Report Filing' },
@@ -160,47 +233,44 @@ const COMPLIANCE_FIELDS = [
 // ---------------------------------------------------------------------------
 
 async function main() {
-  console.log('🔐 Authenticating to PocketBase...')
+  console.log(`🔐 Authenticating to PHP API at ${API_URL} ...`)
   const token = await adminLogin()
-  console.log('✅ Authenticated.\n')
 
-  console.log('📋 Fetching companies...')
+  console.log('📋 Fetching companies ...')
   const companies = await fetchAllCompanies(token)
-  console.log(`Found ${companies.length} companies.\n`)
+  console.log(`   Found ${companies.length} companies.\n`)
 
-  let sent = 0
+  let sent    = 0
   let skipped = 0
 
   for (const company of companies) {
-    const userId = company['user'] || company['user_id']
+    const userId = company.user || company.user_id
     if (!userId) { skipped++; continue }
 
-    const userInfo = await fetchUserEmail(userId, token)
+    const userInfo = await fetchUser(userId, token)
     if (!userInfo?.email) { skipped++; continue }
 
-    const companyName = company['company_name'] || 'Your Company'
+    const companyName = company.company_name || 'Your Company'
 
     for (const field of COMPLIANCE_FIELDS) {
       const dateStr = company[field.key]
-      const days = getDaysUntil(dateStr)
+      const days    = getDaysUntil(dateStr)
       if (days === null) continue
 
-      const shouldSend =
-        REMINDER_WINDOWS.includes(days) || OVERDUE_DAYS.includes(days)
-
+      const shouldSend = REMINDER_WINDOWS.includes(days) || OVERDUE_DAYS.includes(days)
       if (!shouldSend) continue
 
       let urgencyLabel, emailTitle
 
       if (days < 0) {
         urgencyLabel = '🔴 OVERDUE'
-        emailTitle = `Action Required: ${field.label} is Overdue`
+        emailTitle   = `Action Required: ${field.label} is Overdue`
       } else if (days <= 7) {
         urgencyLabel = '🟡 Due in 7 days'
-        emailTitle = `Reminder: ${field.label} Due in ${days} Day${days !== 1 ? 's' : ''}`
+        emailTitle   = `Reminder: ${field.label} Due in ${days} Day${days !== 1 ? 's' : ''}`
       } else {
         urgencyLabel = '🔔 Upcoming'
-        emailTitle = `Upcoming Deadline: ${field.label} in ${days} Days`
+        emailTitle   = `Upcoming Deadline: ${field.label} in ${days} Days`
       }
 
       const bodyHtml = `
@@ -223,25 +293,21 @@ async function main() {
         <p>Please take action promptly to keep your company in good standing.</p>
       `
 
-      await sendEmail(
-        userInfo.email,
-        emailTitle,
-        buildEmailHtml(emailTitle, bodyHtml)
-      )
+      await sendEmail(userInfo.email, emailTitle, buildEmailHtml(emailTitle, bodyHtml))
 
       await createNotification(
         token,
         userId,
         emailTitle,
-        `Compliance reminder for ${companyName}: ${field.label} is ${days < 0 ? 'overdue' : `due in ${days} days`}.`
+        `Compliance reminder for ${companyName}: ${field.label} is ${days < 0 ? 'overdue' : `due in ${days} days`}.`,
       )
 
-      console.log(`[✅] Sent: ${urgencyLabel} — ${companyName} — ${field.label} — ${userInfo.email}`)
+      console.log(`  ✅ Sent: ${urgencyLabel} — ${companyName} — ${field.label} → ${userInfo.email}`)
       sent++
     }
   }
 
-  console.log(`\n✅ Done. ${sent} reminder(s) sent. ${skipped} companies skipped (no user or email).`)
+  console.log(`\n✅ Done. ${sent} reminder(s) sent. ${skipped} companies skipped (no user/email).`)
 }
 
 main().catch(err => {

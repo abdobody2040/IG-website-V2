@@ -52,6 +52,10 @@ export default function BlogListPage() {
   function postTitle(post: typeof blogs[0]) { return (isRTL && post.titleAr) ? post.titleAr : post.title }
   function postExcerpt(post: typeof blogs[0]) { return (isRTL && post.excerptAr) ? post.excerptAr : (post.excerpt || '') }
   function postSlug(post: typeof blogs[0]) { return (isRTL && post.slugAr) ? post.slugAr : post.slug }
+  function postCover(post: typeof blogs[0]) {
+    if (post.coverImage && !post.coverImage.startsWith('/og/')) return post.coverImage
+    return `/og/blog-${post.slug}-${isRTL ? 'ar' : 'en'}.png`
+  }
 
 
   return (
@@ -84,11 +88,14 @@ export default function BlogListPage() {
                 className="block bg-gradient-to-br from-[#1a56ff]/5 to-[#1a56ff]/10 rounded-3xl border border-[#1a56ff]/20 overflow-hidden hover:shadow-lg transition-all group"
               >
                 <div className={`flex flex-col sm:flex-row ${isRTL ? 'sm:flex-row-reverse' : ''}`}>
-                  {featuredPost.coverImage && (
-                    <div className="sm:w-2/5 h-48 sm:h-auto">
-                      <img src={featuredPost.coverImage} alt={postTitle(featuredPost)} className="w-full h-full object-cover" />
-                    </div>
-                  )}
+                  <div className="sm:w-2/5 h-48 sm:h-auto min-h-[220px]">
+                    <img
+                      src={postCover(featuredPost)}
+                      alt={postTitle(featuredPost)}
+                      loading="eager"
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
                   <div className="p-6 sm:p-8 flex flex-col justify-center flex-1">
                     <div className="flex items-center gap-2 mb-3">
                       <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-[#1a56ff] text-white">{b.featured}</span>
@@ -146,31 +153,28 @@ export default function BlogListPage() {
                   key={post.id}
                   to="/blog/$slug"
                   params={{ slug: postSlug(post) }}
-                  className="group bg-white rounded-2xl border border-slate-200 overflow-hidden hover:shadow-md hover:border-[#1a56ff]/20 transition-all"
+                  className="group bg-white rounded-2xl border border-slate-200 overflow-hidden hover:shadow-md hover:border-[#1a56ff]/20 transition-all flex flex-col"
                 >
-                  {post.coverImage ? (
-                    <div className="h-40 overflow-hidden">
-                      <img src={post.coverImage} alt={postTitle(post)} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
-                    </div>
-                  ) : (
-                    <div className="h-40 bg-gradient-to-br from-[#1a56ff]/5 to-slate-50 flex items-center justify-center">
-                      <FileText size={32} className="text-[#1a56ff]/30" />
-                    </div>
-                  )}
-                  <div className="p-5">
-                    <div className="flex flex-wrap gap-1.5 mb-2">
+                  <div className="h-44 sm:h-48 overflow-hidden bg-slate-900">
+                    <img
+                      src={postCover(post)}
+                      alt={postTitle(post)}
+                      loading="lazy"
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    />
+                  </div>
+                  <div className="p-5 flex flex-col flex-1">
+                    <div className="flex items-center gap-2 mb-2">
                       {(Array.isArray(post.tags) ? post.tags : []).slice(0, 2).map(t => (
-                        <span key={t} className="text-[10px] font-semibold text-slate-500 bg-slate-100 rounded-full px-2 py-0.5">{t}</span>
+                        <span key={t} className="text-[11px] font-medium text-[#1a56ff] bg-[#1a56ff]/5 rounded-full px-2 py-0.5">{t}</span>
                       ))}
                     </div>
-                    <h3 className="font-semibold text-slate-900 mb-1.5 group-hover:text-[#1a56ff] transition-colors line-clamp-2">{postTitle(post)}</h3>
-                    {postExcerpt(post) && <p className="text-xs text-slate-500 line-clamp-2 mb-3">{postExcerpt(post)}</p>}
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs text-slate-400 flex items-center gap-1">
-                        <Calendar size={10} /> {formatDateShort(post.createdAt)}
-                      </span>
-                      <span className={`text-xs font-semibold text-[#1a56ff] flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity ${isRTL ? 'flex-row-reverse' : ''}`}>
-                        {b.read} {isRTL ? <ArrowRight size={10} className="rotate-180" /> : <ArrowRight size={10} />}
+                    <h3 className="font-bold text-slate-900 text-base mb-2 group-hover:text-[#1a56ff] transition-colors line-clamp-2">{postTitle(post)}</h3>
+                    {postExcerpt(post) && <p className="text-xs text-slate-500 mb-4 line-clamp-2 flex-1">{postExcerpt(post)}</p>}
+                    <div className="flex items-center justify-between text-xs text-slate-400 pt-3 border-t border-slate-100">
+                      <span>{formatDateShort(post.createdAt)}</span>
+                      <span className="text-[#1a56ff] font-semibold inline-flex items-center gap-1 group-hover:underline">
+                        {b.readArticle} <ArrowRight size={12} className={isRTL ? 'rotate-180' : ''} />
                       </span>
                     </div>
                   </div>

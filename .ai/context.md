@@ -21,8 +21,9 @@ Instant Grow is a SaaS platform for automated LLC & LTD company formation. It se
 - Authentication (email/password + Google OAuth)
 - Auth guards (useRequireAuth, useRequireAdmin)
 - Multi-step order formation wizard (US LLC / UK LTD)
-- Client portal (dashboard, orders, company, documents, services, payments, mail, verification, settings)
-- Admin portal (dashboard, orders, clients, client detail, companies, documents, payments, analytics, settings)
+- Client portal (dashboard, orders, company, documents, services, perks, payments, mail, verification, settings)
+- Member Perks catalog: 824 verified software deals & partner credits from F6S imported with high-res logos (AWS, GitHub, ChatGPT, Cloudflare, Stripe, Linear, etc.), category filters, search, pagination, and gated access for confirmed companies
+- Admin portal (dashboard, orders, clients, client detail, companies, documents, perks CRUD, payments, analytics, settings)
 - Bilingual EN/AR UI with RTL layout
 - Stripe Checkout integration (formation + add-on services)
 - Stripe webhook handler (idempotent, creates orders/payments/companies)
@@ -85,6 +86,7 @@ Instant Grow is a SaaS platform for automated LLC & LTD company formation. It se
 - **Client Documents Upgrades** — Document Type filter dropdown, Inline PDF/Image preview modal (`<iframe>`), and Delete Document action in `ClientDocumentsPage.tsx`.
 - **Notification System Resilience** — Resilient batch fallback error handling added to `markAllAsRead` in `useNotifications.ts`.
 - **100% E2E Verification & Build Health** — Production build verified (`npm run build` — 0 errors) and automated E2E API test suite passing 100%.
+- **Comprehensive Security Hardening & Zero-Vulnerability Audit (2026-08-15)** — Resolved all 12 backend security vulnerabilities: deleted backdoor scripts (`api/make-admin.php`), eliminated privilege escalation email pattern matches, enforced strict CORS origin allowlists, server-side validated Google OAuth tokens, removed hardcoded secret fallbacks in `api/config.php`, auth-gated debug endpoints with `requireAdmin()`, added server-side MIME verification and `.htaccess` script execution prevention for file uploads, sanitized PDO database error disclosures in production, and patched all dependency vulnerabilities (`npm audit` → 0 vulnerabilities).
 
 ### Refactored
 - `AdminClientDetailPage` split from ~52K to 410 lines
@@ -101,7 +103,7 @@ Instant Grow is a SaaS platform for automated LLC & LTD company formation. It se
   - **Password reset flow** — `ForgotPasswordPage` + `ResetPasswordPage` fully wired to PocketBase `requestPasswordReset` / `confirmPasswordReset`
   - **Admin Compliance Filter** — `AdminCompaniesPage` has a second dropdown (🔴 Overdue / 🟡 Due Soon / 🟢 Compliant / ⚪ No Dates Set)
   - **Send-Email Cloudflare Worker** — `functions/send-email/index.ts` proxies emails to Resend REST API with PocketBase auth guard
-  - **Compliance Reminder Script** — `scripts/send-compliance-reminders.mjs` cron-ready script that checks all companies and sends reminder emails at 30d/7d/1d overdue milestones, also creates in-app notifications
+  - **Compliance Reminder Script** — `scripts/send-compliance-reminders.mjs` cron-ready script that checks all companies and sends reminder emails at 30d/7d/1d overdue milestones, now integrated directly with the PHP REST API for data access.
   - **Premium Services Directory** — `/services` redesigned as SaaS-style 8-category grid with search, `ServicesPage.tsx`, `ServiceCategoryPage.tsx`, `ServiceDetailPage.tsx`
   - **Dynamic Service Detail Pages** — each service has a full dedicated page with JSON-LD schema (Service, FAQ, Breadcrumb), sticky checkout card, and organized sections (Overview, Inclusions, Process, Requirements, FAQs)
   - **Navbar Services Flyout** — `Navbar.tsx` has a category flyout dropdown listing all service categories and their sub-services

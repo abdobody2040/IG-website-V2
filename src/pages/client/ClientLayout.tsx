@@ -3,7 +3,7 @@ import { Link, useNavigate } from '@tanstack/react-router'
 import {
   LayoutDashboard, Building2, FileText, Zap,
   Menu, X, LogOut, ChevronRight, Bell, Settings, CreditCard,
-  Mail, ShieldCheck, Briefcase, Plus, ChevronDown, Loader2
+  Mail, ShieldCheck, Briefcase, Plus, ChevronDown, Loader2, Gift
 } from 'lucide-react'
 import { pb } from '../../lib/pocketbase'
 import { useAuth } from '../../hooks/useAuth'
@@ -28,6 +28,7 @@ function useNavItems(): NavItem[] {
     { label: t.client.nav.documents,     href: '/client/documents',     icon: FileText },
     { label: t.client.nav.mailInbox,     href: '/client/mail-inbox',    icon: Mail },
     { label: t.client.nav.services,      href: '/client/services',      icon: Zap },
+    { label: t.client.nav.memberPerks,        href: '/client/perks',         icon: Gift },
     { label: 'Tracking & Analytics',     href: '/client/tracking',      icon: Zap },
     { label: t.client.nav.verifications, href: '/client/verifications', icon: ShieldCheck },
     { label: 'Workspace Settings',       href: '/client/workspace-settings', icon: Briefcase },

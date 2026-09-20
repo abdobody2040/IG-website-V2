@@ -1,23 +1,43 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { Check } from 'lucide-react'
 import { useLang } from '../../i18n/LanguageContext'
 import type { WizardData } from './data'
 import { POPULAR_STATES, ALL_US_STATES } from './data'
 
+const JURISDICTION_STATE_MAP: Record<string, { name: string; fee: number }> = {
+  DE: { name: 'Delaware', fee: 100 },
+  WY: { name: 'Wyoming', fee: 50 },
+  NM: { name: 'New Mexico', fee: 0 },
+}
+
 export function StepCompanyInfo({
-  register, errors, planId, setPlanId, onStateFeeChange
+  register, errors, planId, setPlanId, onStateFeeChange, prefilledJurisdiction
 }: {
   register: ReturnType<typeof useForm<WizardData>>['register']
   errors: ReturnType<typeof useForm<WizardData>>['formState']['errors']
   planId: string
   setPlanId: (id: string) => void
   onStateFeeChange: (fee: number) => void
+  prefilledJurisdiction?: string
 }) {
   const { t } = useLang()
   const isUk = planId.startsWith('uk')
-  const [selectedState, setSelectedState] = useState('')
+  const [selectedState, setSelectedState] = useState(() => {
+    if (prefilledJurisdiction && JURISDICTION_STATE_MAP[prefilledJurisdiction]) {
+      return JURISDICTION_STATE_MAP[prefilledJurisdiction].name
+    }
+    return ''
+  })
   const [showAllStates, setShowAllStates] = useState(false)
+
+  useEffect(() => {
+    if (prefilledJurisdiction && JURISDICTION_STATE_MAP[prefilledJurisdiction]) {
+      const matched = JURISDICTION_STATE_MAP[prefilledJurisdiction]
+      setSelectedState(matched.name)
+      onStateFeeChange(matched.fee)
+    }
+  }, [prefilledJurisdiction, onStateFeeChange])
 
   const handleStateSelect = (stateName: string, fee: number) => {
     setSelectedState(stateName)

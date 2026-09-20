@@ -46,6 +46,7 @@ main.tsx
 │               │   │   ├── ClientCompanyPage
 │               │   │   ├── ClientDocumentsPage
 │               │   │   ├── ClientServicesPage (uses OrderModal)
+│               │   │   ├── ClientPerksPage (Gated 824 F6S deals marketplace with logo/category/search/pagination)
 │               │   │   ├── ClientPaymentsPage
 │               │   │   ├── ClientMailInboxPage
 │               │   │   ├── ClientNotificationsPage
@@ -64,6 +65,7 @@ main.tsx
 │               │       ├── AdminBlogsPage + AdminBlogEditorPage
 │               │       ├── AdminSeoPagesPage + AdminSeoEditorPage
 │               │       ├── AdminServicesPage (CRUD for services collection)
+│               │       ├── AdminPerksPage (CRUD for perks collection & F6S catalog)
 │               │       ├── AdminPagesPage + AdminPageEditorPage (CMS for dynamic pages)
 │               │       ├── AdminHomeEditorPage
 │               │       ├── AdminPriceEditorPage

@@ -188,6 +188,67 @@ export const FALLBACK_SEO_PAGES: SeoPage[] = [
     createdBy: null,
     createdAt: '2026-07-18T18:48:45Z',
     updatedAt: '2026-07-18T18:48:45Z',
+  },
+  {
+    id: 'seo_wyoming_fallback',
+    slug: 'wyoming',
+    countryName: 'Wyoming',
+    countryCode: 'US-WY',
+    metaTitle: 'Form a Wyoming LLC for Non-Residents | Instant Grow LLC',
+    metaDescription: 'Wyoming is the premier state for international founders. $60 annual report fee, 0% state income tax, and full privacy protection.',
+    heroTitle: 'Form a Wyoming LLC Online',
+    heroDescription: 'The #1 state for digital businesses, e-commerce, and international founders. Low fees, strict charging order protection, and zero state tax.',
+    mainKeyword: 'Wyoming LLC',
+    secondaryKeywords: ['Form Wyoming LLC', 'Wyoming LLC non resident', 'Wyoming annual fee'],
+    painPoints: ['Excessive state franchise taxes in other states', 'Lack of ownership privacy', 'High annual compliance costs'],
+    benefits: [
+      { title: '$60 Annual License Tax', desc: 'Wyoming has the lowest ongoing state annual report fees in the United States.' },
+      { title: 'Strong Asset Protection', desc: 'Charging order protection extends to single-member LLCs under Wyoming state law.' },
+      { title: 'Zero State Income Tax', desc: 'Wyoming levies 0% corporate and personal state income taxes.' }
+    ],
+    bestBank: 'Mercury / Relay',
+    bankNotes: 'Wyoming LLCs are recognized and welcomed by all major US digital business banks.',
+    taxNotes: 'Foreign-owned single-member LLCs must file annual IRS Form 5472 and pro-forma 1120. Statutory penalty is $25,000.',
+    faqJson: [
+      { question: 'Why choose Wyoming for an LLC?', answer: 'Wyoming offers the best balance of low ongoing costs ($60/yr), privacy, and legal protection for non-resident founders.' }
+    ],
+    ctaText: 'Form Your Wyoming LLC',
+    featuredImage: null,
+    schemaJson: {},
+    published: true,
+    createdBy: null,
+    createdAt: '2026-07-18T18:48:45Z',
+    updatedAt: '2026-07-18T18:48:45Z',
+  },
+  {
+    id: 'seo_delaware_fallback',
+    slug: 'delaware',
+    countryName: 'Delaware',
+    countryCode: 'US-DE',
+    metaTitle: 'Form a Delaware LLC for Non-Residents | Instant Grow LLC',
+    metaDescription: 'Delaware LLC formation for venture-backed startups and international enterprises. Benefit from the Delaware Court of Chancery.',
+    heroTitle: 'Form a Delaware LLC Online',
+    heroDescription: 'The global benchmark for venture-backed entities and institutional corporate structures.',
+    mainKeyword: 'Delaware LLC',
+    secondaryKeywords: ['Delaware LLC non resident', 'Delaware Court of Chancery', 'Delaware franchise tax'],
+    painPoints: ['$300 annual franchise tax', 'Complex legal requirements'],
+    benefits: [
+      { title: 'Court of Chancery', desc: 'Specialized business court with dedicated corporate law judges.' },
+      { title: 'Investor Standard', desc: 'Recognized and favored by global venture capital and startup accelerators.' }
+    ],
+    bestBank: 'Mercury',
+    bankNotes: 'Delaware LLCs have immediate recognition across all US financial institutions.',
+    taxNotes: 'Mandatory $300 annual franchise tax due June 1st annually.',
+    faqJson: [
+      { question: 'Why choose Delaware?', answer: 'Delaware is ideal if you plan to seek US venture capital or convert to a C-Corp.' }
+    ],
+    ctaText: 'Form Your Delaware LLC',
+    featuredImage: null,
+    schemaJson: {},
+    published: true,
+    createdBy: null,
+    createdAt: '2026-07-18T18:48:45Z',
+    updatedAt: '2026-07-18T18:48:45Z',
   }
 ]
 

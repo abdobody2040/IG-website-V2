@@ -208,7 +208,7 @@ export function generateOrganizationSchema() {
     sameAs: [
       'https://twitter.com/instantgrow',
       'https://linkedin.com/company/instantgrow',
-      'https://www.facebook.com/instantgrow',
+      'https://www.facebook.com/Instant.grow.net',
     ],
     contactPoint: {
       '@type': 'ContactPoint',
@@ -247,8 +247,8 @@ export function generateProfessionalServiceSchema() {
     priceRange: '$$',
     aggregateRating: {
       '@type': 'AggregateRating',
-      ratingValue: '4.9',
-      reviewCount: '2847',
+      ratingValue: '5.0',
+      reviewCount: '5',
       bestRating: '5',
       worstRating: '1',
     },
@@ -270,6 +270,8 @@ export function generateProfessionalServiceSchema() {
     sameAs: [
       'https://twitter.com/instantgrow',
       'https://linkedin.com/company/instantgrow',
+      'https://www.facebook.com/Instant.grow.net',
+      'https://www.trustpilot.com/review/instantgrow.net',
     ],
   }
 }
@@ -292,8 +294,8 @@ export function generateProductSchema(options: {
   ratingValue?: number
 }) {
   const origin = window.location.origin
-  const reviewCount = options.reviewCount ?? 2847
-  const ratingValue = options.ratingValue ?? 4.9
+  const reviewCount = options.reviewCount ?? 5
+  const ratingValue = options.ratingValue ?? 5.0
 
   return {
     '@context': 'https://schema.org',

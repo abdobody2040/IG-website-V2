@@ -256,7 +256,37 @@ CREATE TABLE IF NOT EXISTS `tracking_domains` (
   `status` VARCHAR(50) DEFAULT 'active',
   `created` DATETIME(3) DEFAULT CURRENT_TIMESTAMP(3),
   `updated` DATETIME(3) DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3)
+CREATE TABLE IF NOT EXISTS `company_name_checks` (
+  `id`           VARCHAR(50)  NOT NULL,
+  `country`      VARCHAR(10)  NOT NULL,
+  `jurisdiction` VARCHAR(10)  NOT NULL,
+  `searched_name` VARCHAR(255) NOT NULL,
+  `entity_type`  VARCHAR(50)  DEFAULT NULL,
+  `status`       VARCHAR(50)  NOT NULL,
+  `ip_address`   VARCHAR(45)  DEFAULT NULL,
+  `matches_count` INT         DEFAULT 0,
+  `created`      DATETIME(3)  DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `idx_cnc_created` (`created`),
+  KEY `idx_cnc_ip` (`ip_address`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS `company_name_config` (
+  `id`                  VARCHAR(50) NOT NULL,
+  `jurisdiction`        VARCHAR(10) NOT NULL,
+  `enabled`             TINYINT(1)  DEFAULT 1,
+  `rate_limit_per_min`  INT         DEFAULT 10,
+  `provider`            VARCHAR(50) DEFAULT 'default',
+  `updated`             DATETIME(3) DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uq_cnc_jurisdiction` (`jurisdiction`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+REPLACE INTO `company_name_config` (`id`, `jurisdiction`, `enabled`, `rate_limit_per_min`, `provider`, `updated`) VALUES
+('config_de', 'DE', 1, 10, 'official_registry', NOW(3)),
+('config_wy', 'WY', 1, 10, 'official_registry', NOW(3)),
+('config_nm', 'NM', 1, 10, 'official_registry', NOW(3)),
+('config_gb', 'GB', 1, 10, 'companies_house', NOW(3));
 
 SET FOREIGN_KEY_CHECKS = 1;
 

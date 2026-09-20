@@ -16,9 +16,13 @@ const LanguageContext = createContext<LanguageContextType | null>(null)
 // 2. Browser language (navigator.language) — auto Arabic for ar-* locales
 // 3. Fallback: English
 function detectDefaultLang(): Lang {
-  // Check both storage keys (ig-lang = new, ig_lang = legacy from MenaCountryPage)
-  const saved = localStorage.getItem('ig-lang') ?? localStorage.getItem('ig_lang')
-  if (saved === 'ar' || saved === 'en') return saved
+  try {
+    if (typeof localStorage !== 'undefined' && typeof localStorage.getItem === 'function') {
+      const saved = localStorage.getItem('ig-lang') ?? localStorage.getItem('ig_lang')
+      if (saved === 'ar' || saved === 'en') return saved
+    }
+  } catch { /* ignore */ }
+
 
   // Browser language detection — covers ar, ar-SA, ar-AE, ar-EG, ar-MA etc.
   const browserLang = navigator.language ?? navigator.languages?.[0] ?? ''

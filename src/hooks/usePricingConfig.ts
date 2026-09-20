@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useQuery, useQueryClient, type QueryClient } from '@tanstack/react-query'
 import { pb } from '../lib/pocketbase'
 import { PRICING_DATA } from '../config/pricing'
 
@@ -25,77 +25,49 @@ const emptyMap = (): PricingMap => ({
   oman: { basic: null, premium: null },
 })
 
-let _cache: PricingMap | null = null
-let _fetchPromise: Promise<void> | null = null
-// Version counter — bumped whenever cache is invalidated so hooks re-render
-let _version = 0
-const _listeners: Array<() => void> = []
+// Module-level queryClient ref — set inside the hook so invalidatePricingCache() can call it
+// outside of React component context (e.g., in AdminPriceEditorPage save handler)
+let _queryClient: QueryClient | null = null
 
-function notifyListeners() {
-  _version++
-  for (const l of _listeners) l()
-}
-
-async function loadPricing(): Promise<void> {
-  if (_cache !== null) return
-  if (_fetchPromise) { await _fetchPromise; return }
-  _fetchPromise = (async () => {
-    try {
-      const records = await pb.collection('pricing_config').getFullList<PricingRecord>({ sort: 'region,plan' })
-      const map = emptyMap()
-      for (const r of records) {
-        if (
-          (r.region === 'us' || r.region === 'uk' || r.region === 'uae' || r.region === 'oman') &&
-          (r.plan === 'basic' || r.plan === 'premium')
-        ) {
-          map[r.region][r.plan] = r
-        }
+async function fetchPricing(): Promise<PricingMap> {
+  try {
+    const records = await pb.collection('pricing_config').getFullList<PricingRecord>({ sort: 'region,plan' })
+    const map = emptyMap()
+    for (const r of records) {
+      if (
+        (r.region === 'us' || r.region === 'uk' || r.region === 'uae' || r.region === 'oman') &&
+        (r.plan === 'basic' || r.plan === 'premium')
+      ) {
+        map[r.region][r.plan] = r
       }
-      _cache = map
-    } catch {
-      _cache = emptyMap()
     }
-  })()
-  await _fetchPromise
+    return map
+  } catch {
+    return emptyMap()
+  }
 }
 
+/** Call this after any admin save to pricing_config to instantly sync all consumers */
 export function invalidatePricingCache(): void {
-  _cache = null
-  _fetchPromise = null
-  notifyListeners()
+  _queryClient?.invalidateQueries({ queryKey: ['pricing'] })
 }
 
 export function usePricingConfig(): { pricing: PricingMap; loading: boolean } {
-  const [version, setVersion] = useState(_version)
-  const [pricing, setPricing] = useState<PricingMap>(_cache ?? emptyMap())
-  const [loading, setLoading] = useState(_cache === null)
+  const queryClient = useQueryClient()
+  // Keep module-level ref up to date so invalidatePricingCache() works from outside hooks
+  _queryClient = queryClient
 
-  // Subscribe to cache invalidations
-  useEffect(() => {
-    const onInvalidate = () => setVersion(v => v + 1)
-    _listeners.push(onInvalidate)
-    return () => {
-      const idx = _listeners.indexOf(onInvalidate)
-      if (idx !== -1) _listeners.splice(idx, 1)
-    }
-  }, [])
+  const { data, isLoading } = useQuery({
+    queryKey: ['pricing'],
+    queryFn: fetchPricing,
+    staleTime: 1000 * 60 * 5, // 5 minutes — treated as fresh; admin invalidation forces a refetch
+    gcTime: 1000 * 60 * 10,
+  })
 
-  // (Re-)fetch whenever version changes or cache is missing
-  useEffect(() => {
-    if (_cache !== null) {
-      setPricing(_cache)
-      setLoading(false)
-      return
-    }
-    setLoading(true)
-    loadPricing().then(() => {
-      setPricing(_cache ?? emptyMap())
-      setLoading(false)
-    })
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [version])
-
-  return { pricing, loading }
+  return {
+    pricing: data ?? emptyMap(),
+    loading: isLoading,
+  }
 }
 
 /** Helper: get price from DB record or fall back to static config */

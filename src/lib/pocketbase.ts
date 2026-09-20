@@ -277,7 +277,8 @@ function makeCollection(name: string) {
                       '/auth/google',
                       {
                         method: 'POST',
-                        body: JSON.stringify({ email, name, avatar_url: picture }),
+                        // Pass access_token so the PHP backend can verify with Google's userinfo endpoint (SEC-12)
+                        body: JSON.stringify({ access_token: tokenResponse.access_token, email, name, avatar_url: picture }),
                       },
                       false,
                     )
@@ -311,7 +312,8 @@ function makeCollection(name: string) {
                       '/auth/google',
                       {
                         method: 'POST',
-                        body: JSON.stringify({ email, name, avatar_url: picture }),
+                        // Pass id_token so the PHP backend can verify via Google's tokeninfo endpoint (SEC-12)
+                        body: JSON.stringify({ id_token: response.credential, email, name, avatar_url: picture }),
                       },
                       false,
                     )

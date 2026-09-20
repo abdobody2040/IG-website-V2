@@ -10,7 +10,8 @@ const logos = [
 ]
 
 export default function TrustLogos() {
-  const track = [...logos, ...logos, ...logos, ...logos, ...logos, ...logos, ...logos, ...logos]
+  // Repeat logos to guarantee wide coverage on all screens
+  const baseLogos = [...logos, ...logos, ...logos, ...logos]
 
   return (
     <section className="bg-white border-y border-gray-100 py-6 sm:py-10 overflow-hidden">
@@ -26,39 +27,73 @@ export default function TrustLogos() {
         </motion.p>
       </div>
 
-      {/* Continuous marquee */}
-      <div className="relative">
+      {/* Continuous marquee with explicit LTR container to prevent RTL gaps */}
+      <div className="relative overflow-hidden w-full" style={{ direction: 'ltr' }}>
         {/* Fade edges */}
-        <div className="absolute left-0 top-0 bottom-0 w-12 sm:w-24 z-10 pointer-events-none"
-          style={{ background: 'linear-gradient(90deg, white 0%, transparent 100%)' }} />
-        <div className="absolute right-0 top-0 bottom-0 w-12 sm:w-24 z-10 pointer-events-none"
-          style={{ background: 'linear-gradient(270deg, white 0%, transparent 100%)' }} />
+        <div
+          className="absolute left-0 top-0 bottom-0 w-16 sm:w-32 z-10 pointer-events-none"
+          style={{ background: 'linear-gradient(90deg, white 0%, transparent 100%)' }}
+        />
+        <div
+          className="absolute right-0 top-0 bottom-0 w-16 sm:w-32 z-10 pointer-events-none"
+          style={{ background: 'linear-gradient(270deg, white 0%, transparent 100%)' }}
+        />
 
         <div
-          className="flex items-center gap-6 sm:gap-12 w-max"
-          style={{ animation: 'marquee 30s linear infinite' }}
+          className="flex w-max"
+          style={{
+            animation: 'marquee 25s linear infinite',
+            willChange: 'transform',
+          }}
         >
-          {track.map((logo, i) => (
-            <div
-              key={i}
-              className="flex items-center justify-center shrink-0 opacity-30 hover:opacity-60 transition-opacity duration-300 cursor-default"
-              style={{ minWidth: 60 }}
-            >
-              <span
-                className="text-[14px] sm:text-[18px]"
-                style={{
-                  fontFamily: '"Sora", "Inter", -apple-system, sans-serif',
-                  fontWeight: logo.weight,
-                  letterSpacing: logo.letterSpacing,
-                  color: '#0F172A',
-                }}
+          {/* Track Group 1 */}
+          <div className="flex items-center gap-8 sm:gap-14 pr-8 sm:pr-14 shrink-0">
+            {baseLogos.map((logo, i) => (
+              <div
+                key={`g1-${i}`}
+                className="flex items-center justify-center shrink-0 opacity-35 hover:opacity-75 transition-opacity duration-300 cursor-default"
+                style={{ minWidth: 60 }}
               >
-                {logo.display}
-              </span>
-            </div>
-          ))}
+                <span
+                  className="text-[14px] sm:text-[18px]"
+                  style={{
+                    fontFamily: '"Sora", "Inter", -apple-system, sans-serif',
+                    fontWeight: logo.weight,
+                    letterSpacing: logo.letterSpacing,
+                    color: '#0F172A',
+                  }}
+                >
+                  {logo.display}
+                </span>
+              </div>
+            ))}
+          </div>
+
+          {/* Track Group 2 (Identical duplicate for seamless 0-gap infinite loop) */}
+          <div className="flex items-center gap-8 sm:gap-14 pr-8 sm:pr-14 shrink-0" aria-hidden="true">
+            {baseLogos.map((logo, i) => (
+              <div
+                key={`g2-${i}`}
+                className="flex items-center justify-center shrink-0 opacity-35 hover:opacity-75 transition-opacity duration-300 cursor-default"
+                style={{ minWidth: 60 }}
+              >
+                <span
+                  className="text-[14px] sm:text-[18px]"
+                  style={{
+                    fontFamily: '"Sora", "Inter", -apple-system, sans-serif',
+                    fontWeight: logo.weight,
+                    letterSpacing: logo.letterSpacing,
+                    color: '#0F172A',
+                  }}
+                >
+                  {logo.display}
+                </span>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </section>
   )
 }
+

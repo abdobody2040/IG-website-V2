@@ -178,8 +178,9 @@ export default function ServiceCategoryPage() {
               </div>
             ) : categoryServices.length === 0 ? (
               <div className="bg-white rounded-3xl border border-slate-200/60 shadow-sm p-16 text-center">
-                <Icons.AlertCircle size={48} className="text-slate-300 mx-auto mb-4" />
+                <AlertCircle size={48} className="text-slate-300 mx-auto mb-4" />
                 <h3 className="text-lg font-bold text-slate-900 mb-1">
+
                   {isAr ? 'لا توجد خدمات متاحة' : 'No Services Available'}
                 </h3>
                 <p className="text-slate-500 text-sm">

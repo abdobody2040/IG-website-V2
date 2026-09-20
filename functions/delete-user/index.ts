@@ -2,8 +2,9 @@ class AuthError extends Error {}
 class ValidationError extends Error {}
 
 export interface Env {
-  ALLOWED_ORIGIN: string;
-  PB_URL: string;
+  ALLOWED_ORIGIN?: string;
+  API_URL?: string;
+  PB_URL?: string;
 }
 
 function getCorsOrigin(req: Request, env: Env): string {
@@ -37,8 +38,10 @@ export default {
     if (req.method !== "POST") {
       return jsonResponse(req, env, { error: "Method not allowed" }, 405);
     }
-
-    const pbUrl = env.PB_URL || "http://127.0.0.1:8090";
+    const pbUrl = (env.API_URL || env.PB_URL || "").replace(/\/+$/, "");
+    if (!pbUrl) {
+      return jsonResponse(req, env, { error: "Server misconfiguration: API_URL environment variable is not set" }, 500);
+    }
 
     // 1. Verify caller is authorized and is an admin
     const authHeader = req.headers.get("authorization");

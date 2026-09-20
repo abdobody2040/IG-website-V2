@@ -1,302 +1,242 @@
-# 🚀 Complete "Baby Steps" Deployment Guide for Non-Technical Users
+# 🚀 Complete Deployment Guide — Instant Grow Platform
 
-> 💡 **Who is this guide for?** This guide is written in plain, step-by-step language so **anyone**—even without a programming or DevOps background—can deploy the **Instant Grow** platform to production using **Hostinger**, **Cloudflare**, and **PocketBase**.
+> 💡 **Who is this guide for?** This step-by-step guide explains how to deploy the entire **Instant Grow** platform to production on **Hostinger Web Hosting**, **MySQL**, and **Cloudflare Workers**.
 
 ---
 
-## 🧩 Understand the 3 Main Parts of Your App
-
-Before clicking anything, understand how your website works behind the scenes:
+## 🧩 System Architecture Overview
 
 ```
 ┌─────────────────────────┐       ┌──────────────────────────┐       ┌────────────────────────┐
-│  1. THE WEBSITE         │       │  2. HELPER FUNCTIONS     │       │  3. THE DATABASE       │
-│  (React Frontend)       │ ────► │  (Cloudflare Workers)    │ ────► │  (PocketBase Backend)  │
-│  Hosted on: Hostinger   │       │  Handles Payments/Emails │       │  Stores Users & Orders │
+│  1. REACT FRONTEND      │       │  2. PHP REST API & DB    │       │  3. EDGE WORKERS       │
+│  (SPA in public_html)   │ ────► │  (Hostinger FastCGI +    │ ────► │  (Cloudflare Workers)  │
+│  instantgrow.net        │       │   MySQL Database)        │       │  Stripe / Webhooks     │
 └─────────────────────────┘       └──────────────────────────┘       └────────────────────────┘
 ```
 
-1. **The Website (Frontend):** What visitors see when they open your domain (`https://instantgrow.net`). Hosted on **Hostinger** (Shared Web Hosting or VPS).
-2. **The Database (Backend):** Holds user accounts, LLC/LTD company documents, and orders. Powered by **PocketBase**.
-3. **The Helper Functions (Edge Workers):** Handles Stripe payments, Resend emails, and secure file uploads using **Cloudflare Workers**.
+1. **Frontend (React 19 / Vite):** Single Page Application hosted in `public_html/`.
+2. **Backend API (`api/index.php`):** High-performance PDO REST API with JWT authentication, role guards, server-side Google token verification, and MySQL integration.
+3. **Database (MySQL):** Hostinger MySQL database managed via phpMyAdmin.
+4. **Cloudflare Workers:** Serverless edge functions handling Stripe Checkout sessions and webhooks.
 
 ---
 
-## 📋 Phase 1: Create Required Free Accounts & Gather Keys
+## 📋 Phase 1: Accounts & Credentials Checklist
 
-Before deployment, create the following 4 accounts and save your keys in a secure text file:
+Gather the following credentials before beginning deployment:
 
-### 1. Hostinger Account
-- Sign up at [hostinger.com](https://hostinger.com).
-- You will need a **Web Hosting Plan** (Premium/Business) OR a **VPS Plan** (for PocketBase).
+### 1. Hostinger Hosting
+- Web Hosting plan (Premium, Business, or Cloud).
+- Domain connected (`instantgrow.net` or your custom domain) with SSL enabled.
 
-### 2. Stripe Account (For Payments)
-- Sign up at [stripe.com](https://stripe.com).
-- Go to **Developers** ➔ **API Keys**.
-- Copy your **Secret Key**: `sk_live_...` (or `sk_test_...` for testing).
+### 2. Stripe (Payments)
+- Live API Secret Key: `sk_live_...`
+- Webhook Signing Secret: `whsec_...` (generated in Phase 5).
 
-### 3. Resend Account (For Sending Transactional Emails)
-- Sign up at [resend.com](https://resend.com).
-- Go to **API Keys** ➔ Click **Create API Key**.
-- Copy your key: `re_...`
+### 3. Resend (Transactional Emails)
+- API Key from [resend.com](https://resend.com): `re_...`
+- Verified sending domain (e.g., `instantgrow.net`).
 
-### 4. Cloudflare Account (For Free Workers & Domain Security)
-- Sign up at [cloudflare.com](https://cloudflare.com).
+### 4. Google OAuth 2.0 (Google Sign-In)
+- Client ID from Google Cloud Console: `...apps.googleusercontent.com`
+- Authorized JavaScript Origins: `https://instantgrow.net`, `https://www.instantgrow.net`
+- Authorized Redirect URIs: `https://instantgrow.net`
 
----
-
-## 🌐 Phase 2: Deploying the Website Frontend on Hostinger (hPanel)
-
-This section shows you how to upload the website files to Hostinger's **hPanel** web hosting.
-
-### Step 2.1: Build the Website Files on Your Machine
-1. Open **Command Prompt** (Windows) or **Terminal** (Mac) in your project folder.
-2. Run this command:
-   ```bash
-   npm run build
-   ```
-3. After 10-20 seconds, a folder named **`dist`** will be generated inside your project folder. This contains all your website's ready-to-use HTML, JS, and CSS files.
+### 5. Cloudflare Account
+- Free account on [cloudflare.com](https://cloudflare.com) for edge workers.
 
 ---
 
-### Step 2.2: Upload Files to Hostinger File Manager
+## 🗄️ Phase 2: Database Setup on Hostinger (MySQL)
 
-1. Log in to **Hostinger hPanel** ([hpanel.hostinger.com](https://hpanel.hostinger.com)).
-2. Under **Websites**, click **Manage** next to your domain name.
-3. In the left menu, search for **File Manager** and click **Access Files of your domain**.
+### Step 2.1: Create MySQL Database in hPanel
+1. Log in to **Hostinger hPanel** (`hpanel.hostinger.com`).
+2. Go to **Databases** ➔ **MySQL Databases**.
+3. Create a new database:
+   - **Database Name:** e.g., `u238131962_instantgrow`
+   - **Database Username:** e.g., `u238131962_admin`
+   - **Password:** Strong generated password.
+4. Save the Database Name, User, and Password.
 
-4. Double-click the **`public_html`** folder to open it.
-5. **Delete default files:** If there is a `default.php` or `index.html` file created by Hostinger, delete it.
-6. **Upload your `dist` files:**
-   - Open the **`dist`** folder on your computer.
-   - Select **ALL files and subfolders** inside `dist` (e.g. `index.html`, `assets/`, `_headers`, etc.).
-   - Drag and drop them directly into `public_html` in Hostinger File Manager.
+### Step 2.2: Import Schema & Seed Data via phpMyAdmin
+1. In Hostinger hPanel under **MySQL Databases**, click **Enter phpMyAdmin** next to your database.
+2. Click the **Import** tab in the top navigation bar.
+3. Import the SQL files in the following order:
+   1. **`pocketbase/seed-sql/mysql_schema_v2.sql`** (Creates all 16 tables, columns, and indexes)
+   2. **`pocketbase/seed-sql/MASTER_SEED_ALL.sql`** (Populates pricing plans, 50+ services, blog posts, and country SEO guides)
+   3. **`pocketbase/seed-sql/seed_f6s_perks.sql`** (Populates 824 member perks & founder deals)
+4. Confirm all tables are created cleanly (`users`, `orders`, `companies`, `documents`, `payments`, `services`, `blogs`, `perks`, `pricing_config`, etc.).
 
 ---
 
-### Step 2.3: Fix Page Refresh (Create `.htaccess` for React Routing)
+## ⚙️ Phase 3: Backend API Configuration (`/api`)
 
-Because React handles routing inside the browser, refreshing pages like `/order` or `/admin` on Hostinger will cause a "404 Not Found" error unless you add a `.htaccess` file.
+### Step 3.1: Set Environment Variables in Hostinger hPanel
+Go to **Advanced** ➔ **PHP Configuration** ➔ **Environment Variables** (or configure via Apache / `.htaccess`):
 
-1. In Hostinger File Manager inside **`public_html`**, click the **New File** icon (+).
-2. Name the file: **`.htaccess`** (include the dot at the beginning).
-3. Paste the following exact lines into `.htaccess`:
+| Variable Name | Description | Example / Recommended Value |
+|---|---|---|
+| `DB_HOST` | Database Host | `localhost` |
+| `DB_NAME` | Database Name | `u238131962_instantgrow` |
+| `DB_USER` | Database User | `u238131962_admin` |
+| `DB_PASS` | Database Password | `YourSecurePassword!` |
+| `JWT_SECRET` | Secret key for signing user JWTs (Required) | Generate 64-char random hex string |
+| `ADMIN_SECRET` | Shared secret for Cloudflare webhooks (Required) | Generate 64-char random hex string |
+| `RESEND_API_KEY` | Resend API Key for emails | `re_123456789...` |
+| `GOOGLE_CLIENT_ID` | Google OAuth Client ID for token validation | `748421095690-...apps.googleusercontent.com` |
+| `APP_URL` | Frontend URL | `https://instantgrow.net` |
+| `API_URL` | Backend API URL | `https://instantgrow.net/api` |
+| `DEBUG_MODE` | Detailed error reporting (Disable in production) | `0` or `false` |
 
-```apache
-<IfModule mod_rewrite.c>
-  RewriteEngine On
-  RewriteBase /
-  RewriteRule ^index\.html$ - [L]
-  RewriteCond %{REQUEST_FILENAME} !-f
-  RewriteCond %{REQUEST_FILENAME} !-d
-  RewriteRule . /index.html [L]
-</IfModule>
+> 🔒 **Security Notice:** `api/config.php` has zero hardcoded secret fallbacks. If `JWT_SECRET` or `ADMIN_SECRET` are missing, the API will deliberately return a `500 Server misconfiguration` error.
+
+---
+
+## 🌐 Phase 4: Frontend Build & Deployment
+
+### Step 4.1: Configure Environment Variables
+Create or verify `.env.production` or `.env.local` on your local machine:
+
+```env
+VITE_API_URL=/api
+VITE_GOOGLE_CLIENT_ID=748421095690-am0lfmkfdh1qfu7j0e8t6v6f4jmhottj.apps.googleusercontent.com
+VITE_CHECKOUT_ENDPOINT=https://create-checkout.your-subdomain.workers.dev
 ```
 
-4. Click **Save & Close**.
-
----
-
-## 🗄️ Phase 3: Deploying PocketBase Backend
-
-PocketBase manages your database and user logins.
-
----
-
-### Option A: Deploy PocketBase on Hostinger VPS (Recommended for Hostinger Users)
-
-If you have a Hostinger VPS plan (KVM 1 or KVM 2 running Ubuntu 22.04/24.04):
-
-#### 1. Connect to your Hostinger VPS Terminal
-- In Hostinger hPanel, go to **VPS** ➔ Click **Web Terminal** (or SSH using PuTTY/Terminal).
-
-#### 2. Download and Run PocketBase
-Paste these commands one by one into the terminal:
+### Step 4.2: Build the Production Bundle
+In your local project terminal, run:
 
 ```bash
-# Create directory
-mkdir -p /opt/pocketbase && cd /opt/pocketbase
+npm run build
+```
 
-# Download PocketBase Linux binary
-wget https://github.com/pocketbase/pocketbase/releases/download/v0.22.20/pocketbase_0.22.20_linux_amd64.zip
+This will run TypeScript checks, pre-render dynamic OG preview images, compile the React SPA into `dist/`, and generate `dist/sitemap.xml`.
 
-# Unzip binary
-unzip pocketbase_0.22.20_linux_amd64.zip
-rm pocketbase_0.22.20_linux_amd64.zip
+### Step 4.3: Upload Files to Hostinger File Manager
+1. Open **Hostinger hPanel** ➔ **File Manager** ➔ open `public_html/`.
+2. Delete any default placeholder files (`default.php`, etc.).
+3. Upload all contents of your local **`dist/`** folder directly into `public_html/`:
+   - `assets/`
+   - `index.html`
+   - `favicon.ico`
+   - `sitemap.xml`
+   - `robots.txt`
+   - `_headers`
+4. Upload the **`api/`** directory into `public_html/api/`:
+   - `api/index.php`
+   - `api/config.php`
+   - `api/.htaccess`
+   - `api/uploads/` (ensure directory permissions are `755`)
 
-# Start PocketBase server in background
-./pocketbase serve --http="0.0.0.0:8090"
+### Step 4.4: Verify `.htaccess` Routing & FastCGI Headers
+Ensure `public_html/.htaccess` contains SPA rewrite rules and Authorization header preservation:
+
+```apache
+RewriteEngine On
+RewriteBase /
+
+# Preserve Authorization Header for FastCGI
+SetEnvIf Authorization "(.*)" HTTP_AUTHORIZATION=$1
+RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP_AUTHORIZATION}]
+
+# Route API requests to PHP backend
+RewriteRule ^api/(.*)$ api/index.php [QSA,L]
+
+# SPA Fallback for client-side React routes
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule . /index.html [L]
 ```
 
 ---
 
-### Option B: Deploy PocketBase on Fly.io (Zero VPS Management Option)
+## ⚡ Phase 5: Cloudflare Edge Workers
 
-If you don't want to manage a VPS server manually, use **Fly.io** (free/cheap managed container host):
+Cloudflare Workers process Stripe checkout creation and webhook callbacks asynchronously.
 
-1. Open your local terminal in the project directory:
-   ```bash
-   cd pocketbase
-   ```
-2. Install Fly CLI and log in:
-   ```bash
-   fly auth login
-   ```
-3. Run launch command:
-   ```bash
-   fly launch
-   ```
-4. Follow the automatic prompts. Fly.io will configure the database and start PocketBase automatically.
-
----
-
-### 🔑 Critical First-Boot Step: Create Superuser Admin
-Once PocketBase is running:
-1. Open your browser and go to your PocketBase URL (e.g. `http://YOUR-VPS-IP:8090/_/` or `https://your-pocketbase-app.fly.dev/_/`).
-2. You will be greeted by the **Initial Admin Creation Screen**.
-3. Set your **Admin Email** and **Strong Admin Password**.
-4. Save these credentials securely in your password manager!
-
----
-
-## ⚡ Phase 4: Deploying Cloudflare Workers (Edge Functions)
-
-Cloudflare Workers handle payments, webhook verification, and email dispatch securely without exposing API keys to the browser.
-
-### Step 4.1: Install Wrangler CLI
-Open Command Prompt / Terminal on your computer and run:
-
+### Step 5.1: Install Wrangler & Authenticate
 ```bash
 npm install -g wrangler
 npx wrangler login
 ```
-*(A browser window will open — click **Authorize** to connect Wrangler to your free Cloudflare account).*
+
+### Step 5.2: Deploy `create-checkout` Worker
+```bash
+cd functions/create-checkout
+npx wrangler secret put STRIPE_SECRET_KEY
+npx wrangler secret put API_URL          # e.g., https://instantgrow.net/api
+npx wrangler secret put ADMIN_SECRET     # must match ADMIN_SECRET in PHP
+npx wrangler deploy
+```
+Copy the published URL (e.g., `https://create-checkout.your-subdomain.workers.dev`). Set this as `VITE_CHECKOUT_ENDPOINT` in your frontend environment.
+
+### Step 5.3: Deploy `stripe-webhook` Worker
+```bash
+cd ../stripe-webhook
+npx wrangler secret put STRIPE_SECRET_KEY
+npx wrangler secret put STRIPE_WEBHOOK_SECRET  # From Stripe Dashboard (Phase 6)
+npx wrangler secret put API_URL
+npx wrangler secret put ADMIN_SECRET
+npx wrangler secret put RESEND_API_KEY
+npx wrangler deploy
+```
+Copy the published URL (e.g., `https://stripe-webhook.your-subdomain.workers.dev`).
 
 ---
 
-### Step 4.2: Deploy `send-email` Worker
-1. In your terminal, navigate to:
-   ```bash
-   cd functions/send-email
-   ```
-2. Add your Resend secret key:
-   ```bash
-   npx wrangler secret put RESEND_API_KEY
-   ```
-   *(Paste your `re_...` key when prompted).*
-3. Deploy the worker:
-   ```bash
-   npx wrangler deploy
-   ```
-4. Copy the output URL (e.g., `https://send-email.yourdomain.workers.dev`).
+## 💳 Phase 6: Stripe Live Webhook Configuration
 
----
-
-### Step 4.3: Deploy `create-checkout` Worker
-1. Navigate to:
-   ```bash
-   cd ../create-checkout
-   ```
-2. Add your secret keys:
-   ```bash
-   npx wrangler secret put STRIPE_SECRET_KEY
-   npx wrangler secret put PB_ADMIN_EMAIL
-   npx wrangler secret put PB_ADMIN_PASSWORD
-   ```
-3. Deploy:
-   ```bash
-   npx wrangler deploy
-   ```
-4. Copy the output URL (e.g., `https://create-checkout.yourdomain.workers.dev`).
-
----
-
-### Step 4.4: Deploy `stripe-webhook` Worker
-1. Navigate to:
-   ```bash
-   cd ../stripe-webhook
-   ```
-2. Add your secret keys:
-   ```bash
-   npx wrangler secret put STRIPE_SECRET_KEY
-   npx wrangler secret put PB_ADMIN_EMAIL
-   npx wrangler secret put PB_ADMIN_PASSWORD
-   npx wrangler secret put RESEND_API_KEY
-   ```
-*(We will add `STRIPE_WEBHOOK_SECRET` in Phase 5 right after creating the Stripe endpoint).*
-
----
-
-## 💳 Phase 5: Connecting Stripe Live Payments
-
-### Step 5.1: Create Webhook Endpoint in Stripe
-1. Log in to your **Stripe Dashboard** ([dashboard.stripe.com](https://dashboard.stripe.com)).
-2. Toggle the top-right switch from **Test Mode** to **Live Mode** (or stay in Test Mode if testing).
-3. In the left menu, click **Developers** ➔ **Webhooks**.
-4. Click **+ Add Endpoint**.
-5. Set **Endpoint URL**: Enter your deployed `stripe-webhook` Cloudflare worker URL:
-   `https://stripe-webhook.yourdomain.workers.dev`
-6. Under **Select events**, click **+ Select Events**, search for:
-   `checkout.session.completed`
-7. Click **Add events**, then click **Add Endpoint**.
-
----
-
-### Step 5.2: Copy Webhook Signing Secret to Cloudflare
-1. On the new Webhook page in Stripe, locate the section **Signing secret**.
-2. Click **Reveal** and copy the key starting with `whsec_...`.
-3. In your computer terminal (inside `functions/stripe-webhook`), run:
+1. Log in to [dashboard.stripe.com](https://dashboard.stripe.com).
+2. Navigate to **Developers** ➔ **Webhooks**.
+3. Click **+ Add endpoint**.
+4. **Endpoint URL:** Paste your Cloudflare `stripe-webhook` URL (`https://stripe-webhook.your-subdomain.workers.dev`).
+5. **Events to send:** Select `checkout.session.completed`.
+6. Click **Add endpoint**.
+7. Under **Signing secret**, click **Reveal** and copy the `whsec_...` key.
+8. Store this secret in your `stripe-webhook` worker:
    ```bash
    npx wrangler secret put STRIPE_WEBHOOK_SECRET
    ```
-4. Paste the `whsec_...` key when prompted.
-5. Deploy the final worker:
-   ```bash
-   npx wrangler deploy
-   ```
 
 ---
 
-### Step 5.3: Sync Database Pricing with Stripe Products
-Run the automated sync script to populate 50+ formation services and plans into Stripe:
+## ⏰ Phase 7: Automated Compliance Reminders (Daily Cron)
 
-1. In your project root folder, create/update `.env.local`:
-   ```env
-   STRIPE_SECRET_KEY=sk_live_your_stripe_secret_key
-   PB_URL=https://your-pocketbase-domain.com
-   PB_ADMIN_EMAIL=your-admin-email@example.com
-   PB_ADMIN_PASSWORD=your-admin-password
-   ```
-2. Run the sync command:
-   ```bash
-   npm run db:sync-stripe
-   ```
-3. You will see a green confirmation: `✅ Successfully synced all packages & services with Stripe!`
+The platform includes an automated compliance reminder system (`scripts/send-compliance-reminders.mjs`) that notifies clients at **30 days**, **7 days**, and **1 day** before annual report or franchise tax deadlines.
+
+### GitHub Actions Setup
+Go to your GitHub repository ➔ **Settings** ➔ **Secrets and variables** ➔ **Actions**, and add the following repository secrets:
+
+- `API_URL`: `https://instantgrow.net/api`
+- `PB_ADMIN_EMAIL`: Master admin account email (e.g. `admin@instantgrow.net`)
+- `PB_ADMIN_PASSWORD`: Master admin account password
+- `RESEND_API_KEY`: `re_...`
+
+The cron workflow (`.github/workflows/compliance-reminders.yml`) runs automatically every day at **09:00 UTC**.
 
 ---
 
-## 🧪 Phase 6: Final Verification ("Baby Steps" Checklist)
+## 🧪 Phase 8: Production Verification Checklist
 
-Follow this quick checklist to ensure your live website is 100% operational:
+Perform these tests on the live production URL:
 
-- [ ] **Website Loading:** Visit your domain `https://yourdomain.com` — the landing page should render instantly.
-- [ ] **Language Toggle:** Click **العربية / English** in the top navbar — verify text alignment switches smoothly (LTR ↔ RTL).
-- [ ] **Direct URL Navigation:** Refresh the page on `https://yourdomain.com/order` — verify it loads cleanly without a 404 error (proves `.htaccess` works).
-- [ ] **Order Formation Wizard:** Go through Step 1 to Step 7 in the Formation Wizard, select a package, and click **Proceed to Checkout**. Verify you are redirected to Stripe Checkout cleanly.
-- [ ] **Contact Form Submission:** Fill out the contact form on `https://yourdomain.com/contact`. Check your PocketBase Admin panel (`/_/`) under `contact_messages` collection to confirm the message arrived.
-- [ ] **Admin Dashboard:** Sign in with an admin user account — verify real-time revenue charts and order lists load without errors.
-
----
-
-## 🆘 Troubleshooting Common Issues
-
-| Issue | Cause | Solution |
-| :--- | :--- | :--- |
-| **404 Not Found when refreshing subpages on Hostinger** | Missing `.htaccess` file | Create `.htaccess` inside Hostinger `public_html` with the rewrite rules from Step 2.3. |
-| **Stripe Checkout redirects to an error page** | `VITE_CHECKOUT_ENDPOINT` missing or wrong worker URL | Ensure your `.env.local` contains the correct Cloudflare Worker URL and rebuild with `npm run build`. |
-| **Emails are not received** | Unverified domain in Resend | Go to Resend Dashboard ➔ **Domains** ➔ Add DNS records to Hostinger DNS manager. |
-| **PocketBase CORS Error** | CORS origin restricted | In PocketBase Admin ➔ **Settings** ➔ **Application**, set your production domain `https://yourdomain.com`. |
+- [ ] **Home Page & Language Switching:** Visit `https://instantgrow.net` and switch between Arabic and English. Confirm RTL/LTR alignments.
+- [ ] **Direct URL Refresh:** Navigate to `https://instantgrow.net/services` and reload the page. Confirm no 404 error occurs.
+- [ ] **First-Time Admin Bootstrap:** Register your primary administrator email on a freshly initialized database. Confirm initial administrator assignment.
+- [ ] **Google OAuth Sign-In:** Click "Continue with Google" on `/login`. Verify Google OAuth modal opens, completes, and creates the user profile.
+- [ ] **Order Formation Flow:** Complete Steps 1–6 in the Order Wizard (`/order`), choose a plan, and proceed to Stripe Checkout.
+- [ ] **Member Perks Gate:** Visit `/client/perks` as an unverified user to check the preview state, then view with an active company to browse and search 824 perks.
+- [ ] **Document Upload & MIME Check:** Upload a sample formation PDF in the Client Portal. Confirm the document is securely stored in `api/uploads/` with randomized naming.
+- [ ] **Admin Dashboard Protection:** Verify `/admin` routes and `/api/debug/*` endpoints reject unauthenticated access with 401/403.
 
 ---
 
-🎉 **Congratulations!** Your **Instant Grow** automated company formation platform is now live in production!
+## 🆘 Troubleshooting & Common Fixes
+
+| Issue | Root Cause | Solution |
+|---|---|---|
+| **500 Internal Server Error on API requests** | Missing environment variables in Hostinger | Set `JWT_SECRET` and `ADMIN_SECRET` in PHP configuration. Verify MySQL database credentials in `DB_USER`/`DB_PASS`. |
+| **401 Unauthorized on page refresh in Admin** | FastCGI stripping `Authorization` header | Verify `SetEnvIf Authorization` rule is present in `public_html/.htaccess` and `api/.htaccess`. |
+| **CORS blocked by browser** | Origin not in PHP allowlist | Confirm requests originate from `https://instantgrow.net` or `https://www.instantgrow.net`. Update `$_allowedOrigins` in `api/index.php` if using a staging subdomain. |
+| **404 Not Found on refreshing React routes** | Missing SPA rewrite rule | Ensure `public_html/.htaccess` contains `RewriteRule . /index.html [L]`. |
+| **Uploads failing** | Missing write permissions on `uploads/` | Ensure `public_html/api/uploads/` exists with folder permissions set to `755` (or `775`). |

@@ -417,3 +417,23 @@
 **Trade-offs:**
 - FOUT (Flash of Unstyled Text) may occur for a few milliseconds on slow connections before fonts load; acceptable for performance gains.
 - Requires maintaining async loading pattern in `index.html` instead of simpler CSS imports.
+
+---
+
+## ADR-018: Member Perks Catalog Architecture & Ingestion
+
+**Title:** Dual-layer F6S Perks catalog with active company gating, logo CDN delivery, and zero-DB offline resilience.
+
+**Status:** Approved (2026-08-14)
+
+**Context & Requirements:**
+- Clients who purchase and confirm company formation should receive exclusive access to member discounts, credits, and perks (AWS, GitHub, ChatGPT, Stripe, etc.).
+- Admin team needs full CRUD power over deals.
+- 824 software deals from `f6s_software_full_859.xlsx` need to be accessible immediately without breaking if the remote database is not yet seeded.
+
+**Decision:**
+1. **Active Company Gate**: Only users where `companies.some(c => c.status === 'active' || c.status === 'completed')` are granted access to claim deals. Non-confirmed users see an educational teaser with status tracker.
+2. **Dual-Layer Storage**: Embedded the 824 verified deals into `src/data/f6sPerks.ts` as the fallback in `usePerks.ts`, alongside a MySQL schema table `perks` with a full seed script `pocketbase/seed-sql/seed_f6s_perks.sql`.
+3. **Logo Delivery**: Utilized Google S2 Favicon service (`https://www.google.com/s2/favicons?domain={domain}&sz=128`) for high-resolution brand icons, with automatic onError fallback in React to prevent broken image badges.
+4. **Client UI**: Implemented category pills, search bar, and 24-item pagination for snappy rendering of 800+ items.
+5. **Admin Management**: Admin portal at `/admin/perks` with search, category filtering, active toggle, logo URL configuration, and full CRUD modal.

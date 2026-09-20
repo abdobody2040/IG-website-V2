@@ -59,7 +59,7 @@ function buildEmailHtml(title: string, body: string, cta?: { label: string; href
         </div>
         <!-- Footer -->
         <div style="background:#f8fafc;padding:20px 32px;text-align:center;border-top:1px solid #e2e8f0;">
-          <p style="margin:0;color:#94a3b8;font-size:12px;">© ${new Date().getFullYear()} Instant Grow · <a href="mailto:info@instantgrow.net" style="color:#1a56ff;text-decoration:none;">info@instantgrow.net</a></p>
+          <p style="margin:0;color:#94a3b8;font-size:12px;">© ${new Date().getFullYear()} Instant Grow · <a href="mailto:support@instantgrow.net" style="color:#1a56ff;text-decoration:none;">support@instantgrow.net</a></p>
           <p style="margin:6px 0 0;color:#cbd5e1;font-size:11px;">You're receiving this because you have an account with Instant Grow.</p>
         </div>
       </div>
@@ -239,3 +239,37 @@ export async function sendContactNotificationEmail(params: {
     text: `Contact form message from ${fromName} (${fromEmail})${phone ? ` Phone: ${phone}` : ''}. Subject: ${subject}. Message: ${message}`,
   })
 }
+
+// ── Compliant Review Request (B.2) ──────────────────────────────────────────
+// Sent to all customers upon order completion without bias, incentives, or compensation
+export async function sendCompliantReviewRequestEmail(params: {
+  toEmail: string
+  toName: string
+  companyName: string
+  orderNumber: string
+}) {
+  const { toEmail, toName, companyName, orderNumber } = params
+  const _toName = escapeHtml(toName)
+  const _companyName = escapeHtml(companyName)
+  const _orderNumber = escapeHtml(orderNumber)
+
+  const html = buildEmailHtml(
+    'How was your company formation experience?',
+    `<p>Hi <strong>${_toName}</strong>,</p>
+     <p>Congratulations once again on the successful formation of <strong>${_companyName}</strong> (Order #${_orderNumber})!</p>
+     <p>As a valued client, your honest experience helps other international entrepreneurs and helps us continuously refine our services.</p>
+     <p>Could you take 60 seconds to share your authentic feedback on Trustpilot? Whether positive or constructive, we read and value every genuine review.</p>
+     <p style="font-size:12px;color:#94a3b8;margin-top:24px;border-top:1px solid #f1f5f9;padding-top:12px;">
+       * Compliance Notice: In strict accordance with FTC guidelines and platform review integrity policies, this invitation is delivered to all verified clients upon order completion. No incentives, discounts, or compensations are offered in exchange for reviews.
+     </p>`,
+    { label: 'Share Your Honest Review on Trustpilot', href: 'https://www.trustpilot.com/review/instantgrow.net' }
+  )
+
+  await sendEmail({
+    to: toEmail,
+    subject: `Your feedback on forming ${_companyName} | Instant Grow`,
+    html,
+    text: `Hi ${_toName}, thank you for forming ${_companyName} with Instant Grow. Please share your honest feedback on Trustpilot: https://www.trustpilot.com/review/instantgrow.net`,
+  })
+}
+

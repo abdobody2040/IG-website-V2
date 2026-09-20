@@ -180,13 +180,13 @@ export default function ContactPage() {
                   {isAr ? 'معلومات الاتصال' : 'Contact Information'}
                 </h2>
                 <div className="space-y-5">
-                  <a href="mailto:info@instantgrow.net" className="flex items-start gap-4 group">
+                  <a href="mailto:support@instantgrow.net" className="flex items-start gap-4 group">
                     <div className="w-10 h-10 bg-[#1a56ff]/20 rounded-xl flex items-center justify-center flex-shrink-0 group-hover:bg-[#1a56ff]/40 transition-colors">
                       <Mail size={18} className="text-[#1a56ff]" />
                     </div>
                     <div>
                       <p className="text-white/50 text-xs mb-0.5">{isAr ? 'البريد الإلكتروني' : 'Email'}</p>
-                      <p className="text-white font-medium text-sm">info@instantgrow.net</p>
+                      <p className="text-white font-medium text-sm">support@instantgrow.net</p>
                     </div>
                   </a>
 
@@ -205,8 +205,8 @@ export default function ContactPage() {
                       <Phone size={18} className="text-[#1a56ff]" />
                     </div>
                     <div>
-                      <p className="text-white/50 text-xs mb-0.5">{isAr ? 'المكالمة التأهيلية' : 'Onboarding Call'}</p>
-                      <p className="text-white font-medium text-sm">{isAr ? 'مشمولة في الباقة المميزة' : 'Included in Premium plan'}</p>
+                      <p className="text-white/50 text-xs mb-0.5">{isAr ? 'الهاتف الرسمي' : 'Official Phone'}</p>
+                      <p className="text-white font-medium text-sm">[PHONE]</p>
                     </div>
                   </div>
 
@@ -215,17 +215,23 @@ export default function ContactPage() {
                       <MapPin size={18} className="text-[#1a56ff]" />
                     </div>
                     <div>
-                      <p className="text-white/50 text-xs mb-0.5">{isAr ? 'التوقيت' : 'Response Time'}</p>
-                      <p className="text-white font-medium text-sm">{isAr ? 'خلال 1-2 يوم عمل' : 'Within 1-2 business days'}</p>
+                      <p className="text-white/50 text-xs mb-0.5">{isAr ? 'العنوان المسجل' : 'Registered Address'}</p>
+                      <p className="text-white font-medium text-xs leading-relaxed">[REGISTERED_ADDRESS]</p>
                     </div>
                   </div>
                 </div>
 
+                {/* Official Entity Details */}
+                <div className="mt-6 pt-5 border-t border-white/10 text-xs text-white/60 space-y-1">
+                  <p><span className="text-white/40">{isAr ? 'الكيان القانوني:' : 'Legal Entity:'}</span> Instant Grow LLC</p>
+                  <p><span className="text-white/40">{isAr ? 'رقم التسجيل / الملف:' : 'Registration ID:'}</span> [REGISTRATION_NUMBER]</p>
+                </div>
+
                 {/* Social */}
-                <div className="mt-8 pt-6 border-t border-white/10">
+                <div className="mt-6 pt-5 border-t border-white/10">
                   <p className="text-white/40 text-xs mb-3">{isAr ? 'تابعنا' : 'Follow Us'}</p>
                   <a
-                    href="https://www.facebook.com/profile.php?id=61577661225593"
+                    href="https://www.facebook.com/Instant.grow.net"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-2 bg-white/10 hover:bg-[#1a56ff]/30 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors"
@@ -236,6 +242,19 @@ export default function ContactPage() {
                     Facebook
                   </a>
                 </div>
+              </div>
+
+              {/* Security Advisory: Beware of Similar Domains */}
+              <div className="bg-amber-50 rounded-2xl p-6 border border-amber-300 space-y-2">
+                <h3 className="font-bold text-amber-900 text-sm flex items-center gap-1.5">
+                  <span>⚠️</span>
+                  <span>{isAr ? 'احذر المواقع المشابهة' : 'Security Notice'}</span>
+                </h3>
+                <p className="text-amber-800 text-xs leading-relaxed">
+                  {isAr
+                    ? 'نطاقنا الرسمي الوحيد هو instantgrow.net. احذر من المواقع المشابهة غير المرتبطة بنا (مثل instantgrow.org أو instantgrow.cc). تعامل فقط عبر بريدنا الرسمي support@instantgrow.net.'
+                    : 'Our only official site is instantgrow.net. Beware of unaffiliated websites with similar names (such as instantgrow.org or instantgrow.cc). All authentic correspondence is sent solely via support@instantgrow.net.'}
+                </p>
               </div>
 
               {/* FAQ quick link */}

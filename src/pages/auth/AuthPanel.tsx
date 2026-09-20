@@ -63,9 +63,9 @@ export function AuthPanel() {
       </div>
 
       <div className="relative z-10 space-y-3">
-        <StatBadge emoji="🚀" label={t.auth.llcsFormed} value="24,800+" />
-        <StatBadge emoji="⚡" label={t.auth.avgFormationTime} value="Under 24 hrs" />
-        <StatBadge emoji="⭐" label={t.auth.customerRating} value="4.9 / 5.0" />
+        <StatBadge emoji="🚀" label={t.auth.llcsFormed} value="[VERIFIED_NUMBERS + date/source]" />
+        <StatBadge emoji="⚡" label={t.auth.avgFormationTime} value="2–5 Business Days" />
+        <StatBadge emoji="⭐" label={t.auth.customerRating} value="5.0 / 5.0 (Trustpilot)" />
       </div>
     </div>
   )

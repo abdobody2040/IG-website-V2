@@ -18,17 +18,35 @@ define('DB_CHARSET', 'utf8mb4');
 
 
 // ── Auth ─────────────────────────────────────────────────────────────────────
-define('JWT_SECRET', getenv('JWT_SECRET') ?: 'ig_jwt_9a8b7c6d5e4f3a2b1c0d9e8f7a6b5c4d');
+// SECURITY: No hardcoded fallback. If JWT_SECRET is not set as an env var on
+// Hostinger (hPanel → Advanced → PHP Config), the API will refuse to start.
+$_jwtSecret = get_config_env('JWT_SECRET', '');
+if (!$_jwtSecret) {
+    http_response_code(500);
+    echo json_encode(['code' => 500, 'message' => 'Server misconfiguration: JWT_SECRET env var is not set.']);
+    exit;
+}
+define('JWT_SECRET', $_jwtSecret);
 
 // ── Admin webhook key ────────────────────────────────────────────────────────
 // Cloudflare Worker sends this header: X-Admin-Secret: <value>
-// Must match ADMIN_SECRET env var in Cloudflare
-define('ADMIN_SECRET', getenv('ADMIN_SECRET') ?: 'ig_sec_8f91a2b3c4d5e6f7a8b9c0d1e2f3a4b5');
+// Must match ADMIN_SECRET env var in Cloudflare and Hostinger.
+$_adminSecret = get_config_env('ADMIN_SECRET', '');
+if (!$_adminSecret) {
+    http_response_code(500);
+    echo json_encode(['code' => 500, 'message' => 'Server misconfiguration: ADMIN_SECRET env var is not set.']);
+    exit;
+}
+define('ADMIN_SECRET', $_adminSecret);
 
 // ── Resend email ─────────────────────────────────────────────────────────────
 define('RESEND_API_KEY', getenv('RESEND_API_KEY') ?: '');
 define('FROM_EMAIL',  'noreply@instantgrow.net');
 define('FROM_NAME',   'Instant Grow');
+
+// ── Companies House API (UK Name Search) ──────────────────────────────────────
+define('COMPANIES_HOUSE_API_KEY', get_config_env('COMPANIES_HOUSE_API_KEY', ''));
+
 
 // ── App ──────────────────────────────────────────────────────────────────────
 define('APP_URL',  getenv('APP_URL')  ?: 'https://instantgrow.net');

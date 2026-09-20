@@ -384,3 +384,34 @@ CREATE TABLE `workspace_members` (
   KEY `idx_wm_workspace` (`workspace`),
   KEY `idx_wm_user` (`user`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ── perks ───────────────────────────────────────────────────────────────────
+-- Member perks & discounts, visible only to clients with confirmed companies.
+-- Admin-managed via /admin/perks. Public read; admin-only write.
+CREATE TABLE IF NOT EXISTS `perks` (
+  `id`              VARCHAR(50)   NOT NULL,
+  `title_en`        TEXT          DEFAULT NULL,
+  `title_ar`        TEXT          DEFAULT NULL,
+  `description_en`  LONGTEXT,
+  `description_ar`  LONGTEXT,
+  `partner_name`    TEXT          DEFAULT NULL,
+  `discount_label`  TEXT          DEFAULT NULL,
+  `promo_code`      TEXT          DEFAULT NULL,
+  `cta_url`         TEXT          DEFAULT NULL,
+  `cta_label_en`    TEXT          DEFAULT NULL,
+  `cta_label_ar`    TEXT          DEFAULT NULL,
+  `icon`            TEXT          DEFAULT 'Gift',
+  `badge_en`        TEXT          DEFAULT NULL,
+  `badge_ar`        TEXT          DEFAULT NULL,
+  `color`           TEXT          DEFAULT '#1a56ff',
+  `bg_color`        TEXT          DEFAULT '#e8efff',
+  `sort_order`      INT           DEFAULT 10,
+  `active`          TINYINT(1)    DEFAULT 1,
+  `logo_url`        TEXT          DEFAULT NULL,
+  `category`        TEXT          DEFAULT NULL,
+  `claim_type`      TEXT          DEFAULT NULL,
+  `offer_value`     TEXT          DEFAULT NULL,
+  `created`         DATETIME(3)   DEFAULT NULL,
+  `updated`         DATETIME(3)   DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
