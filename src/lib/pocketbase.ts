@@ -1,9 +1,3 @@
-// src/lib/pocketbase.ts
-// ──────────────────────────────────────────────────────────────────
-// Custom API client that replaces PocketBase SDK.
-// Exposes the exact same `.collection(name)` surface so all hooks and
-// pages work without any changes.
-// ──────────────────────────────────────────────────────────────────
 
 const API_BASE = import.meta.env.VITE_API_URL || '/api'
 

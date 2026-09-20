@@ -1,6 +1,3 @@
-// ─── src/config/pricing.ts ────────────────────────────────────────────────────
-// Bridges legacy PRICING_DATA consumers to src/config/pricingMaster.ts
-// ─────────────────────────────────────────────────────────────────────────────
 
 import { MASTER_PRICING } from './pricingMaster'
 

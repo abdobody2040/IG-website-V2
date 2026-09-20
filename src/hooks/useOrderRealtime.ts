@@ -1,8 +1,3 @@
-// src/hooks/useOrderRealtime.ts
-// ──────────────────────────────────────────────────────────────────
-// Polls for order status changes every 20 seconds (replaces
-// PocketBase SSE subscription which requires a persistent server).
-// ──────────────────────────────────────────────────────────────────
 
 import { useEffect, useRef } from 'react'
 import { pb } from '../lib/pocketbase'

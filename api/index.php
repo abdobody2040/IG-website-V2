@@ -1,8 +1,4 @@
 <?php
-// ─── api/index.php ────────────────────────────────────────────────────────────
-// PHP 8.2 REST API for Instant Grow LLC
-// Replaces PocketBase (stateless, shared-hosting compatible)
-// ─────────────────────────────────────────────────────────────────────────────
 
 declare(strict_types=1);
 
@@ -1467,10 +1463,6 @@ if ($uri === '/webhook/stripe' && $method === 'POST') {
 // ═══════════════════════════════════════════════════════════════════════════
 err('Not found', 404);
 
-// ─── getAuthFromHeader: soft auth check (returns null instead of erroring) ───
-// Uses the same extractBearerToken() helper as requireAuth() so both functions
-// read from ALL 4 possible header locations on Hostinger/FastCGI.
-// SEC-1: Role comes from the JWT payload (set from DB at login time). No email-pattern override.
 function getAuthFromHeader(): ?array {
     $token = extractBearerToken();
     if (!$token) return null;

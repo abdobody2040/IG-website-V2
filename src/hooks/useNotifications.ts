@@ -1,8 +1,3 @@
-// src/hooks/useNotifications.ts
-// ──────────────────────────────────────────────────────────────────
-// Notification hook — no SSE. Uses react-query with 30s refetch
-// interval instead of PocketBase real-time subscriptions.
-// ──────────────────────────────────────────────────────────────────
 
 import { useCallback } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'

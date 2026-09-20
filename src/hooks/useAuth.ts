@@ -1,12 +1,7 @@
-// src/hooks/useAuth.ts
-// ──────────────────────────────────────────────────────────────────
-// Auth hook — works with the new custom ApiClient (no PocketBase SDK).
-// ──────────────────────────────────────────────────────────────────
 
 import { useState, useEffect } from 'react'
-import { pb } from '../lib/pocketbase'
+import { pb, type AuthModel } from "../lib/pocketbase";
 import { updateAuthRole } from '../lib/authState'
-import type { AuthModel } from '../lib/pocketbase'
 
 export interface AppUser {
   id: string

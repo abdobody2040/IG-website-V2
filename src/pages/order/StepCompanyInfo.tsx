@@ -2,8 +2,7 @@ import { useState, useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { Check } from 'lucide-react'
 import { useLang } from '../../i18n/LanguageContext'
-import type { WizardData } from './data'
-import { POPULAR_STATES, ALL_US_STATES } from './data'
+import { POPULAR_STATES, ALL_US_STATES, type WizardData } from "./data";
 
 const JURISDICTION_STATE_MAP: Record<string, { name: string; fee: number }> = {
   DE: { name: 'Delaware', fee: 100 },

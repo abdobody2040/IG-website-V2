@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, Suspense } from "react";
 import {
   createRouter,
   createRoute,
@@ -6,16 +6,14 @@ import {
   Outlet,
   redirect,
 } from '@tanstack/react-router'
-import { LanguageProvider } from './i18n/LanguageContext'
+import { LanguageProvider, useLang } from "./i18n/LanguageContext";
 import { lazyImport } from './lib/lazyImport'
 import { waitForAuthReady, getAuthInfo } from './lib/authState'
 import { pb } from './lib/pocketbase'
-import { Suspense } from 'react'
 
 import Navbar from './components/Navbar'
 import Hero from './components/Hero'
 import { MouseGlow, AmbientBackground } from './components/effects'
-import { useLang } from './i18n/LanguageContext'
 import { setPageMeta, injectJsonLd, generateOrganizationSchema, generateWebSiteSchema, generateProfessionalServiceSchema, generateFaqSchema, generateHowToSchema, getCanonical } from './lib/seo'
 
 // Below-the-fold components lazy-loaded to minimize initial JS bundle

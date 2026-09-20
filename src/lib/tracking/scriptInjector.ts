@@ -184,15 +184,17 @@ function injectLinkedIn(partnerId: string): void {
 }
 
 function injectMetaTag(metaContent: string): void {
-  if (metaContent.includes('<meta')) {
-    const div = document.createElement('div')
-    div.innerHTML = metaContent
-    const node = div.firstElementChild
-    if (node) document.head.appendChild(node)
+  // Use DOM APIs only — never innerHTML — to avoid XSS
+  const meta = document.createElement('meta')
+  if (metaContent.startsWith('<meta ')) {
+    // Extract name and content attributes from the tag string safely
+    const nameMatch = metaContent.match(/name=["']([^"']+)["']/)
+    const contentMatch = metaContent.match(/content=["']([^"']+)["']/)
+    if (nameMatch) meta.name = nameMatch[1]
+    if (contentMatch) meta.content = contentMatch[1]
   } else {
-    const meta = document.createElement('meta')
     meta.name = 'verification'
     meta.content = metaContent
-    document.head.appendChild(meta)
   }
+  document.head.appendChild(meta)
 }

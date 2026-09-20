@@ -9,7 +9,7 @@ routerUse(function (next) {
                 res.header().Set("Content-Security-Policy", "default-src 'none'; frame-ancestors 'none';");
             }
         } catch (err) {
-            // Non-critical — don't block response
+            $app.logger().warn("[security_headers] Failed to set security headers (non-critical):", err.message || err);
         }
         return result;
     };

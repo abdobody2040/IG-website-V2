@@ -1,6 +1,5 @@
 import { motion } from 'framer-motion'
-import { Zap, Globe, Monitor, Shield, CreditCard, RefreshCw } from 'lucide-react'
-import type { LucideIcon } from 'lucide-react'
+import { Zap, Globe, Monitor, Shield, CreditCard, RefreshCw, type LucideIcon } from "lucide-react";
 import { useLang } from '../i18n/LanguageContext'
 
 interface FeatureItem {

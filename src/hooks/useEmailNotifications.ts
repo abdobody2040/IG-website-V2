@@ -31,8 +31,8 @@ async function sendEmail(params: { to: string; subject: string; html: string; te
     if (!res.ok) {
       console.error(`Email send failed (${res.status})`)
     }
-  } catch {
-    console.error('Failed to send email')
+  } catch (err) {
+    console.error('Failed to send email:', err)
   }
 }
 

@@ -1,4 +1,4 @@
-import { useRef, useEffect, useState, useCallback } from 'react'
+import { useRef, useEffect, useState, useCallback, memo } from "react";
 import { Star, ArrowRight, CheckCircle, Phone } from 'lucide-react'
 import { motion, useMotionValue, useTransform } from 'framer-motion'
 import { useLang } from '../i18n/LanguageContext'
@@ -72,7 +72,6 @@ for (let x = 10; x < VW; x += STEP) {
   }
 }
 
-import { memo } from 'react'
 
 const WorldDots = memo(function WorldDots() {
   return (

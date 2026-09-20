@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react'
 import { CheckCircle, ArrowRight, MessageCircle, Mail, FileText, Receipt, Loader2, AlertCircle } from 'lucide-react'
-import { useSearch } from '@tanstack/react-router'
-import { Link } from '@tanstack/react-router'
+import { useSearch, Link } from "@tanstack/react-router";
 import { useLang } from '../../i18n/LanguageContext'
 import { pb } from '../../lib/pocketbase'
 

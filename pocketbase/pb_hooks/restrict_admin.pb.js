@@ -1,6 +1,3 @@
-// ─────────────────────────────────────────────────────────────────────────────
-// Instant Grow — Restrict PocketBase Admin UI to Localhost / SSH Tunnels
-// ─────────────────────────────────────────────────────────────────────────────
 
 routerUse(function (next) {
     return function (c) {

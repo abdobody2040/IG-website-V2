@@ -13,7 +13,7 @@ routerUse(function (next) {
             var limitRecord = null;
             try {
                 limitRecord = dao.findFirstRecordByData("rate_limits", "ip", ip);
-            } catch(err) {}
+            } catch(err) { /* record not found — first request from this IP, continue below */ }
 
             if (limitRecord) {
                 if (now > limitRecord.get("reset_time")) {
@@ -39,7 +39,7 @@ routerUse(function (next) {
                     newRecord.set("reset_time", now + windowMs);
                     dao.saveRecord(newRecord);
                 } catch (collErr) {
-                    // rate_limits collection may not exist — skip silently
+                    $app.logger().warn("[rate_limiter] rate_limits collection unavailable, skipping rate limit record:", collErr.message || collErr);
                 }
             }
         }

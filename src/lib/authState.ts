@@ -1,8 +1,3 @@
-// src/lib/authState.ts
-// ──────────────────────────────────────────────────────────────────
-// Thin module that exposes the current auth state synchronously
-// and waits for it to be ready. No PocketBase SDK dependency.
-// ──────────────────────────────────────────────────────────────────
 
 import { pb } from './pocketbase'
 

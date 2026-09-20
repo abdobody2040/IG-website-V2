@@ -20,7 +20,7 @@ def clean_domain(url):
         if netloc.startswith('www.'):
             netloc = netloc[4:]
         return netloc
-    except:
+    except Exception:
         return ''
 
 known = {

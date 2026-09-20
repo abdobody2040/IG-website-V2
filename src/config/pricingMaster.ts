@@ -1,8 +1,3 @@
-// ─── src/config/pricingMaster.ts ──────────────────────────────────────────────
-// Single Source of Truth for Instant Grow LLC packages, pricing, inclusions,
-// state fees, renewal costs, and timelines.
-// Used by: Homepage, /services, FAQ, ComparisonTable, and scripts/generate-llms-txt.mjs
-// ─────────────────────────────────────────────────────────────────────────────
 
 export interface PricingTier {
   id: string

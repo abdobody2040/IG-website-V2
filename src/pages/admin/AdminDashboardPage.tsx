@@ -8,8 +8,6 @@ import { useRequireAdmin } from '../../hooks/useRequireAuth'
 import type { Order } from '../../types/db'
 import { KPICard } from '../../components/KPICard'
 
-// ─── Constants ───────────────────────────────────────────────────────────────
-
 const STATUS_DOT: Record<string, string> = {
   pending:         'bg-amber-400',
   in_review:       'bg-blue-500',
@@ -45,8 +43,6 @@ const PIPELINE_STEPS = [
   'pending', 'in_review', 'processing', 'documents_filed', 'ein_processing', 'completed',
 ]
 
-// ─── Custom Tooltip ───────────────────────────────────────────────────────────
-
 function RevenueTooltip({ active, payload, label }: { active?: boolean; payload?: { value: number }[]; label?: string }) {
   if (!active || !payload?.length) return null
   return (
@@ -56,8 +52,6 @@ function RevenueTooltip({ active, payload, label }: { active?: boolean; payload?
     </div>
   )
 }
-
-// ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function buildRevenueChart(orders: Order[]) {
   const now = new Date()
@@ -80,8 +74,6 @@ function buildRevenueChart(orders: Order[]) {
   }
   return months
 }
-
-// ─── Pipeline Step ────────────────────────────────────────────────────────────
 
 function PipelineStep({
   status, count, total, isLast,
@@ -116,8 +108,6 @@ function PipelineStep({
     </div>
   )
 }
-
-// ─── Main Page ────────────────────────────────────────────────────────────────
 
 export default function AdminDashboardPage() {
   const { isLoading: authLoading } = useRequireAdmin()

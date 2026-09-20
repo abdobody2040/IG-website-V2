@@ -18,10 +18,6 @@ export interface Env {
   ADMIN_EMAIL: string
 }
 
-// ---------------------------------------------------------------------------
-// CORS
-// ---------------------------------------------------------------------------
-
 function getCorsOrigin(req: Request, env: Env): string {
   const allowed = env.ALLOWED_ORIGIN || ''
   const origin = req.headers.get('origin') || ''
@@ -44,10 +40,6 @@ function jsonResponse(req: Request, env: Env, body: unknown, status = 200): Resp
   })
 }
 
-// ---------------------------------------------------------------------------
-// Auth verification (optional for admin-bound emails)
-// ---------------------------------------------------------------------------
-
 async function verifyAuth(req: Request, env: Env): Promise<string | null> {
   const authHeader = req.headers.get('Authorization') || ''
   const token = authHeader.replace(/^Bearer\s+/i, '').trim()
@@ -66,10 +58,6 @@ async function verifyAuth(req: Request, env: Env): Promise<string | null> {
     return null
   }
 }
-
-// ---------------------------------------------------------------------------
-// Main handler
-// ---------------------------------------------------------------------------
 
 export default {
   async fetch(req: Request, env: Env): Promise<Response> {

@@ -6,9 +6,8 @@ import { getIcon } from '../../lib/iconMap'
 import ClientLayout from './ClientLayout'
 import { useAuth } from '../../hooks/useAuth'
 import { useCompanies } from '../../hooks/useCompanies'
-import { ADDON_SERVICES } from '../../data/addonServices'
+import { ADDON_SERVICES, type Service } from "../../data/addonServices";
 import { useLang } from '../../i18n/LanguageContext'
-import type { Service } from '../../data/addonServices'
 import { OrderModal } from './OrderModal'
 import { useServices } from '../../hooks/useServices'
 

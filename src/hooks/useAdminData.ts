@@ -1,6 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { pb } from '../lib/pocketbase'
-import type { ListResult } from '../lib/pocketbase'
+import { pb, type ListResult } from "../lib/pocketbase";
 import type { Order, User, Company, Document } from '../types/db'
 
 interface QueryOptions {

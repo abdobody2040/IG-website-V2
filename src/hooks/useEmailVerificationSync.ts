@@ -1,9 +1,3 @@
-// src/hooks/useEmailVerificationSync.ts
-// ──────────────────────────────────────────────────────────────────
-// Polls the current user's `verified` field every 30 seconds and
-// updates the local authStore when the admin verifies the account.
-// Replaces the PocketBase SSE real-time subscription (Fixes B-001).
-// ──────────────────────────────────────────────────────────────────
 
 import { useEffect } from 'react'
 import { pb } from '../lib/pocketbase'

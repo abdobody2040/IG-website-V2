@@ -1,8 +1,4 @@
 <?php
-// ─── api/config.php ──────────────────────────────────────────────────────────
-// All configuration. DO NOT commit real secrets to git.
-// Set these as Hostinger Environment Variables (hPanel → Advanced → PHP Config)
-// or just edit the defaults below for quick start.
 
 // Helper to safely get environment variables across CGI/FastCGI/Apache
 function get_config_env($key, $default = '') {
