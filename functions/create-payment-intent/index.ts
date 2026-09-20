@@ -3,13 +3,7 @@ import Stripe from "stripe";
 class AuthError extends Error {}
 class ValidationError extends Error {}
 
-export interface Env {
-  STRIPE_SECRET_KEY: string;
-  ALLOWED_ORIGIN: string;
-  PB_URL: string;
-  PB_ADMIN_EMAIL?: string;
-  PB_ADMIN_PASSWORD?: string;
-}
+import type { StripeEnv as Env } from '../types'
 
 function getCorsOrigin(req: Request, env: Env): string {
   const allowed = env.ALLOWED_ORIGIN || "";

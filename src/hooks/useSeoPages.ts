@@ -4,13 +4,20 @@ import toast from 'react-hot-toast'
 import { logAdminAction } from './useAdminAuditLog'
 import type { SeoPage, SeoPageFormData } from '../types/db'
 
+/** Safely cast a PocketBase result item to a plain key-value record. */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function pbRecord(item: any): Record<string, unknown> {
+  return item as Record<string, unknown>
+}
+
 function parseJson<T>(val: unknown, fallback: T): T {
   if (val === null || val === undefined) return fallback
   if (typeof val === 'object') return val as T
   if (typeof val === 'string' && val.trim()) {
     try {
       return JSON.parse(val) as T
-    } catch {
+    } catch (err) {
+      console.warn('[useSeoPages] JSON.parse failed, returning fallback:', err)
       return fallback
     }
   }
@@ -261,7 +268,7 @@ export function useSeoPages(publishedOnly = false) {
           filter: publishedOnly ? 'published = true' : undefined,
           sort: 'country_name',
         })
-        const items = result.items.map(item => mapSeoPage(item as unknown as Record<string, unknown>))
+        const items = result.items.map(item => mapSeoPage(pbRecord(item)))
         if (items.length > 0) return items
       } catch (err) {
         console.error('Error fetching SEO pages from DB:', err)
@@ -281,7 +288,7 @@ export function useSeoPageBySlug(slug: string) {
           filter: `slug = "${slug}"`,
         })
         if (result.items.length > 0) {
-          page = mapSeoPage(result.items[0] as unknown as Record<string, unknown>)
+          page = mapSeoPage(pbRecord(result.items[0]))
         }
       } catch (err) {
         console.error('Error fetching SEO page by slug from DB:', err)
@@ -326,7 +333,7 @@ export function useCreateSeoPage() {
       })
 
       logAdminAction({ action: 'create', tableName: 'countries_seo_pages', recordId: (record as Record<string, unknown>)['id'] as string })
-      return mapSeoPage(record as unknown as Record<string, unknown>)
+      return mapSeoPage(pbRecord(record))
     },
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['seo-pages'] }); toast.success('SEO page created') },
     onError: (err: Error) => toast.error(err.message || 'Failed to create SEO page'),

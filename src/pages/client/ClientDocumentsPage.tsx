@@ -187,7 +187,8 @@ export default function ClientDocumentsPage() {
     try {
       await pb.collection('documents').delete(docId)
       toast.success('Document deleted')
-    } catch {
+    } catch (err) {
+      console.error('Operation failed:', err)
       toast.error('Failed to delete document')
     }
   }

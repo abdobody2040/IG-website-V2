@@ -108,8 +108,7 @@ export function useUsers({ page = 1, perPage = 20, search = '', role = 'all' }: 
         filters.push(`(email ~ "${search}" || display_name ~ "${search}")`);
       }
 
-      try {
-        const result = await pb.collection('users').getList(page, perPage, {
+      const result = await pb.collection('users').getList(page, perPage, {
           sort: '-created',
           filter: filters.join(' && '),
         })
@@ -118,9 +117,6 @@ export function useUsers({ page = 1, perPage = 20, search = '', role = 'all' }: 
           totalPages: result.totalPages,
           totalItems: result.totalItems,
         }
-      } catch (err) {
-        throw err;
-      }
     },
   })
 }

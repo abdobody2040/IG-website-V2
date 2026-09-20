@@ -22,7 +22,7 @@ export function EditDocumentModal({ doc, onClose, onSaved }: { doc: Document; on
       toast.success('Document updated')
       onSaved()
       onClose()
-    } catch { toast.error('Failed to save') }
+    } catch (err) { console.error('Operation failed:', err); toast.error('Failed to save') }
     finally { setSaving(false) }
   }
 

@@ -79,7 +79,8 @@ export default function WorkspaceSettingsPage() {
       })
       toast.success('Workspace name updated')
       await refreshWorkspaces()
-    } catch {
+    } catch (err) {
+      console.error('Operation failed:', err)
       toast.error('Failed to update workspace name')
     } finally {
       setSavingName(false)
@@ -141,7 +142,8 @@ export default function WorkspaceSettingsPage() {
       await pb.collection('workspace_members').delete(memberId)
       toast.success('Member removed')
       loadMembers()
-    } catch {
+    } catch (err) {
+      console.error('Operation failed:', err)
       toast.error('Failed to remove member')
     }
   }

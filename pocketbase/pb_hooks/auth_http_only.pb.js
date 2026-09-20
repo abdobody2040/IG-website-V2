@@ -9,7 +9,7 @@ routerUse(function (next) {
                 if (req && req.header && typeof req.header.get === "function") {
                     return req.header.get(name) || "";
                 }
-            } catch (_) {}
+            } catch (_) { /* PocketBase API surface varies — fall through to default */ }
             return "";
         }
 
@@ -18,14 +18,14 @@ routerUse(function (next) {
                 if (req && req.header && typeof req.header.set === "function") {
                     req.header.set(name, value);
                 }
-            } catch (_) {}
+            } catch (_) { /* PocketBase API surface varies — fall through silently */ }
         }
 
         // ── Cookie → Authorization injection ───────────────────────────────────
         // Only inject for app-user endpoints. Skip admin endpoints entirely so
         // a stale pb_auth cookie never blocks the Admin UI login.
         var reqPath = "";
-        try { reqPath = req.url.path; } catch (_) {}
+        try { reqPath = req.url.path; } catch (_) { /* req.url may be unavailable in some PB versions */ }
 
         var isAdminEndpoint = (
             reqPath.indexOf("/api/admins") === 0 ||
@@ -35,7 +35,7 @@ routerUse(function (next) {
 
         if (!isAdminEndpoint) {
             var authCookie = null;
-            try { authCookie = c.cookie("pb_auth"); } catch (_) {}
+            try { authCookie = c.cookie("pb_auth"); } catch (_) { /* cookie API may not exist in all contexts */ }
 
             if (authCookie && authCookie.value) {
                 var currentAuth = getHeader("Authorization");
@@ -67,7 +67,7 @@ routerUse(function (next) {
 
                 if (!isExempt) {
                     var csrfCookie = null;
-                    try { csrfCookie = c.cookie("csrf-token"); } catch (_) {}
+                    try { csrfCookie = c.cookie("csrf-token"); } catch (_) { /* cookie API may not exist in all contexts */ }
 
                     var csrfHeader = getHeader("X-CSRF-Token");
 
@@ -143,6 +143,6 @@ routerAdd("POST", "/api/auth/logout", function (c) {
         } else if (typeof resH.Add === "function") {
             resH.Add("Set-Cookie", "csrf-token=; Path=/; SameSite=Lax; Max-Age=0");
         }
-    } catch (_) {}
+    } catch (_) { /* ignore cookie-clearing errors on logout — response is still sent */ }
     return c.json(200, { "success": true });
 });

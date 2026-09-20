@@ -63,7 +63,8 @@ export function UpdateStatusModal({ order, onClose }: Props) {
       await queryClient.invalidateQueries({ queryKey: ['admin', 'orders'] })
       toast.success('Order status updated')
       onClose()
-    } catch {
+    } catch (err) {
+      console.error('Failed to update order:', err)
       toast.error('Failed to update order')
     } finally {
       setSaving(false)

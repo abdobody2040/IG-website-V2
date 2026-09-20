@@ -66,7 +66,8 @@ export function EditCompanyModal({
       logAdminAction({ action: 'update', tableName: 'companies', recordId: company.id });
       toast.success('Company updated successfully')
       onSaved()
-    } catch {
+    } catch (err) {
+      console.error('Operation failed:', err)
       toast.error('Failed to update company')
     } finally {
       setSaving(false)

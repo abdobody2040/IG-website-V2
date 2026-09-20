@@ -101,7 +101,8 @@ export default function ClientSettingsPage() {
         await pb.collection('users').update(user.id, updates)
       }
       toast.success(sp.saved)
-    } catch {
+    } catch (err) {
+      console.error('Operation failed:', err)
       toast.error(sp.saveFailed)
     } finally {
       setSaving(false)
@@ -156,6 +157,7 @@ export default function ClientSettingsPage() {
                               await pb.collection('users').requestVerification(user.email);
                               toast.success('Verification email sent!');
                             } catch (e) {
+                              console.error('Operation failed:', e)
                               toast.error('Failed to send verification email.');
                             }
                           }
@@ -337,7 +339,8 @@ export default function ClientSettingsPage() {
                         a.click()
                         URL.revokeObjectURL(url)
                         toast.success('Data exported successfully')
-                      } catch {
+                      } catch (err) {
+                        console.error('Operation failed:', err)
                         toast.error('Failed to export data')
                       }
                     }}
@@ -366,7 +369,8 @@ export default function ClientSettingsPage() {
                             message: `User ${user.email} requested account deletion.`,
                           })
                           toast.success('Account deletion request submitted. Support will contact you within 24h.')
-                        } catch {
+                        } catch (err) {
+                          console.error('Operation failed:', err)
                           toast.error('Failed to submit request')
                         }
                       }}

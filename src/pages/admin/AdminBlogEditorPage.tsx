@@ -42,7 +42,8 @@ export default function AdminBlogEditorPage() {
       try {
         const record = await pb.collection('blogs').getOne(id)
         if (record) {
-          const b = record as unknown as Record<string, unknown>
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const b = record as any as Record<string, unknown>
           setForm({
             title: b.title as string,
             slug: b.slug as string,

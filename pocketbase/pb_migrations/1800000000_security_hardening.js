@@ -7,19 +7,19 @@ migrate((db) => {
     const users = dao.findCollectionByNameOrId("_pb_users_auth_")
     users.updateRule = "id = @request.auth.id && (@request.data.role:isset = false || @request.auth.role = 'admin')"
     dao.saveCollection(users)
-  } catch (e) { console.log(e) }
+  } catch (e) { console.log("[security_hardening] users rule update failed:", e) }
 
   try {
     const orders = dao.findCollectionByNameOrId("orders")
     orders.createRule = "@request.auth.id != '' && @request.data.user = @request.auth.id"
     dao.saveCollection(orders)
-  } catch (e) { console.log(e) }
+  } catch (e) { console.log("[security_hardening] orders rule update failed:", e) }
 
   try {
     const documents = dao.findCollectionByNameOrId("documents")
     documents.createRule = "@request.auth.id != '' && @request.data.user = @request.auth.id"
     dao.saveCollection(documents)
-  } catch (e) { console.log(e) }
+  } catch (e) { console.log("[security_hardening] documents rule update failed:", e) }
 
   // 2. Create rate_limits
   try {
@@ -41,31 +41,33 @@ migrate((db) => {
       ]
     })
     dao.saveCollection(rateLimits)
-  } catch (e) { console.log(e) }
+  } catch (e) { console.log("[security_hardening] rate_limits creation failed (may already exist):", e) }
 
 }, (db) => {
+  // Rollback — best-effort, errors are expected if collections don't exist
   const dao = new Dao(db)
 
   try {
     const users = dao.findCollectionByNameOrId("_pb_users_auth_")
     users.updateRule = "id = @request.auth.id || @request.auth.role = 'admin'"
     dao.saveCollection(users)
-  } catch (e) {}
+  } catch (e) { /* rollback best-effort — collection may not exist */ void e }
 
   try {
     const orders = dao.findCollectionByNameOrId("orders")
     orders.createRule = "@request.auth.id != ''"
     dao.saveCollection(orders)
-  } catch (e) {}
+  } catch (e) { /* rollback best-effort — collection may not exist */ void e }
 
   try {
     const documents = dao.findCollectionByNameOrId("documents")
     documents.createRule = "@request.auth.id != ''"
     dao.saveCollection(documents)
-  } catch (e) {}
+  } catch (e) { /* rollback best-effort — collection may not exist */ void e }
 
   try {
     const rateLimits = dao.findCollectionByNameOrId("rate_limits")
     dao.deleteCollection(rateLimits)
-  } catch (e) {}
+  } catch (e) { /* rollback best-effort — rate_limits may not exist */ void e }
 })
+

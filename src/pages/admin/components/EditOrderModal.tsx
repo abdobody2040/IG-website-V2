@@ -79,7 +79,7 @@ export function EditOrderModal({ order, onClose, onSaved }: { order: Order; onCl
       toast.success('Order updated')
       onSaved()
       onClose()
-    } catch { toast.error('Failed to save') }
+    } catch (err) { console.error('Failed to save order:', err); toast.error('Failed to save') }
     finally { setSaving(false) }
   }
 

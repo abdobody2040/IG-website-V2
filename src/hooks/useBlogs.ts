@@ -4,6 +4,12 @@ import toast from 'react-hot-toast'
 import type { Blog, BlogFormData } from '../types/db'
 import { logAdminAction } from './useAdminAuditLog'
 
+/** Safely cast a PocketBase result item to a plain key-value record. */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function pbRecord(item: any): Record<string, unknown> {
+  return item as Record<string, unknown>
+}
+
 function parseArrayField(val: unknown): string[] {
   if (Array.isArray(val)) return val
   if (typeof val === 'string' && val.trim()) {
@@ -61,7 +67,7 @@ export function useBlogs(filters?: { published?: boolean; featured?: boolean; li
         
         if (result.items.length > 0) {
           return result.items.map(item => {
-            const b = mapBlog(item as unknown as Record<string, unknown>)
+            const b = mapBlog(pbRecord(item))
             return {
               ...b,
               coverImage: b.coverImage || `/og/blog-${b.slug}-en.png`,
@@ -95,14 +101,15 @@ export function useBlogBySlug(slug: string) {
           filter: `published = true && (slug = "${safeSlug}" || slug_ar = "${safeSlug}")`,
         })
         if (result.items.length > 0) {
-          const b = mapBlog(result.items[0] as unknown as Record<string, unknown>)
+          const b = mapBlog(pbRecord(result.items[0]))
           return {
             ...b,
             coverImage: b.coverImage || `/og/blog-${b.slug}-en.png`,
           }
         }
-      } catch {
+      } catch (err) {
         // Fallback to static catalog
+        console.warn('useBlogs: useBlogBySlug DB fetch failed, using static catalog', err)
       }
 
       const match = BLOGS_CATALOG.find(b => b.slug === safeSlug || b.slugAr === safeSlug)
@@ -140,7 +147,7 @@ export function useCreateBlog() {
       })
 
       logAdminAction({ action: 'create', tableName: 'blogs', recordId: (record as Record<string, unknown>)['id'] as string })
-      return mapBlog(record as unknown as Record<string, unknown>)
+      return mapBlog(pbRecord(record))
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['blogs'] })

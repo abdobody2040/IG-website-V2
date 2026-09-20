@@ -27,7 +27,7 @@ export function EditUserDrawer({ user, onClose, onSaved }: { user: DBUser; onClo
       toast.success('User updated')
       onSaved()
       onClose()
-    } catch { toast.error('Failed to save') }
+    } catch (err) { console.error('Operation failed:', err); toast.error('Failed to save') }
     finally { setSaving(false) }
   }
 

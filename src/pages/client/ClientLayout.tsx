@@ -72,6 +72,7 @@ export default function ClientLayout({ children, currentPath, title }: ClientLay
       setCreateModalOpen(false)
       toast.success('Workspace created!')
     } catch (err) {
+      console.error('Operation failed:', err)
       toast.error('Failed to create workspace')
     } finally {
       setCreating(false)

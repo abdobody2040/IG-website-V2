@@ -185,7 +185,7 @@ export default function AdminClientDetailPage() {
       toast.success(`${deleteTarget.type} deleted`)
       refetchAll()
       setDeleteTarget(null)
-    } catch { toast.error('Failed to delete') }
+    } catch (err) { console.error('Operation failed:', err); toast.error('Failed to delete') }
     finally { setDeleting(false) }
   }
 

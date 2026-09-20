@@ -18,7 +18,7 @@ onModelBeforeCreate(function(e) {
     try {
       secret = $os.getenv("STRIPE_SECRET_KEY");
     } catch (osErr) {
-      // If $os is not available
+      $app.logger().warn("[Stripe Sync Hook] $os.getenv not available:", osErr.message || osErr);
     }
     if (!secret) {
       if (typeof process !== "undefined" && process.env) {
@@ -137,7 +137,7 @@ onModelBeforeUpdate(function(e) {
     try {
       original = $app.dao().findRecordById("services", e.model.get("id"));
     } catch (findErr) {
-      console.warn("⚠️ [Stripe Sync Hook] Could not find original record by ID: " + e.model.get("id"));
+      console.warn("⚠️ [Stripe Sync Hook] Could not find original record by ID: " + e.model.get("id") + " — " + findErr);
     }
 
     if (!original) {

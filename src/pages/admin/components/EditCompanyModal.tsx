@@ -46,7 +46,7 @@ export function EditCompanyModal({ company, onClose, onSaved }: { company: Compa
       toast.success('Company updated')
       onSaved()
       onClose()
-    } catch { toast.error('Failed to save') }
+    } catch (err) { console.error('Operation failed:', err); toast.error('Failed to save') }
     finally { setSaving(false) }
   }
 

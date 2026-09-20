@@ -32,7 +32,8 @@ export default function AdminSeoEditorPage() {
       try {
         const data = await pb.collection('countries_seo_pages').getOne(id)
         if (data) {
-          const d = data as unknown as Record<string, unknown>
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const d = data as any as Record<string, unknown>
           setForm({
             slug: d.slug as string,
             countryName: d.country_name as string,

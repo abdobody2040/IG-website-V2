@@ -190,8 +190,8 @@ function injectMetaTag(metaContent: string): void {
     // Extract name and content attributes from the tag string safely
     const nameMatch = metaContent.match(/name=["']([^"']+)["']/)
     const contentMatch = metaContent.match(/content=["']([^"']+)["']/)
-    if (nameMatch) meta.name = nameMatch[1]
-    if (contentMatch) meta.content = contentMatch[1]
+    if (nameMatch?.[1]) meta.name = nameMatch[1]
+    if (contentMatch?.[1]) meta.content = contentMatch[1]
   } else {
     meta.name = 'verification'
     meta.content = metaContent

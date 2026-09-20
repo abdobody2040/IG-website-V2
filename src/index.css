@@ -229,16 +229,6 @@ html.lenis, html.lenis body {
   overscroll-behavior: contain;
 }
 
-/* Tilt card effect */
-.tilt-card {
-  transform-style: preserve-3d;
-  perspective: 800px;
-}
-
-.tilt-card-inner {
-  transition: transform 0.3s ease;
-}
-
 /* Spotlight card effect */
 .spotlight-card {
   position: relative;
@@ -291,11 +281,6 @@ html.lenis, html.lenis body {
   border: 1px solid rgb(255 255 255 / 10%);
 }
 
-.glass-dark {
-  background: rgb(10 10 15 / 60%);
-  backdrop-filter: blur(16px);
-  border: 1px solid rgb(255 255 255 / 8%);
-}
 
 /* Scroll progress indicator */
 .scroll-progress {

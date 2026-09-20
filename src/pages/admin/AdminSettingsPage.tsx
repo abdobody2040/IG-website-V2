@@ -85,7 +85,8 @@ export default function AdminSettingsPage() {
           filter: `user = "${user.id}"`,
         })
         if (existing.items && existing.items.length > 0) {
-          const p = existing.items[0] as unknown as Record<string, unknown>
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const p = existing.items[0] as any as Record<string, unknown>
           setPrefId(p.id as string)
           setPrefs({
             adminNewOrder: !!p.admin_new_order,
@@ -137,7 +138,8 @@ export default function AdminSettingsPage() {
           <span className="text-slate-800 font-medium">Settings saved successfully</span>
         </div>
       ))
-    } catch {
+    } catch (err) {
+      console.error('Operation failed:', err)
       toast.error('Failed to save settings.')
     } finally {
       setSaving(false)

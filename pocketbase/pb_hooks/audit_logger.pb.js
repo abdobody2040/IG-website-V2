@@ -9,11 +9,11 @@ onRecordAfterCreateRequest(function (e) {
         }
 
         // Skip if a PocketBase superuser/admin is performing this action.
-        try { var pbAdmin = e.httpContext.get("admin"); if (pbAdmin && pbAdmin.id) return; } catch (_) {}
+        try { var pbAdmin = e.httpContext.get("admin"); if (pbAdmin && pbAdmin.id) return; } catch (_) { /* httpContext.get may not be available in all PB versions */ }
 
         // Only log actions performed by authenticated app users.
         var authRecord = null;
-        try { authRecord = e.httpContext.get("authRecord"); } catch (_) {}
+        try { authRecord = e.httpContext.get("authRecord"); } catch (_) { /* httpContext.get may not be available in all PB versions */ }
         var actorId = authRecord ? authRecord.id : null;
         if (!actorId) return;
 
@@ -39,11 +39,11 @@ onRecordAfterUpdateRequest(function (e) {
         }
 
         // Skip if a PocketBase superuser/admin is performing this action.
-        try { var pbAdmin = e.httpContext.get("admin"); if (pbAdmin && pbAdmin.id) return; } catch (_) {}
+        try { var pbAdmin = e.httpContext.get("admin"); if (pbAdmin && pbAdmin.id) return; } catch (_) { /* httpContext.get may not be available in all PB versions */ }
 
         // Only log actions performed by authenticated app users.
         var authRecord = null;
-        try { authRecord = e.httpContext.get("authRecord"); } catch (_) {}
+        try { authRecord = e.httpContext.get("authRecord"); } catch (_) { /* httpContext.get may not be available in all PB versions */ }
         var actorId = authRecord ? authRecord.id : null;
         if (!actorId) return;
 
@@ -69,11 +69,11 @@ onRecordAfterDeleteRequest(function (e) {
         }
 
         // Skip if a PocketBase superuser/admin is performing this action.
-        try { var pbAdmin = e.httpContext.get("admin"); if (pbAdmin && pbAdmin.id) return; } catch (_) {}
+        try { var pbAdmin = e.httpContext.get("admin"); if (pbAdmin && pbAdmin.id) return; } catch (_) { /* httpContext.get may not be available in all PB versions */ }
 
         // Only log actions performed by authenticated app users.
         var authRecord = null;
-        try { authRecord = e.httpContext.get("authRecord"); } catch (_) {}
+        try { authRecord = e.httpContext.get("authRecord"); } catch (_) { /* httpContext.get may not be available in all PB versions */ }
         var actorId = authRecord ? authRecord.id : null;
         if (!actorId) return;
 

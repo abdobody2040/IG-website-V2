@@ -21,7 +21,7 @@ export function EditPaymentModal({ payment, onClose, onSaved }: { payment: any; 
       toast.success('Payment updated')
       onSaved()
       onClose()
-    } catch { toast.error('Failed to save') }
+    } catch (err) { console.error('Operation failed:', err); toast.error('Failed to save') }
     finally { setSaving(false) }
   }
 
